@@ -1,0 +1,107 @@
+# Swim Score
+
+Swim Score tracks games of the card game Schwimmen for fixed groups of friends, live at the table, and ranks players across those games. The UI is German; code and this glossary use English terms with the German display name in parentheses.
+
+## Language
+
+### Structure
+
+**Group** (Gruppe):
+A fixed circle of people who play Schwimmen together, with its own players and games.
+_Avoid_: Tracker, Runde, Tisch
+
+**Game** (Spiel):
+One match of Schwimmen within a Group, from the first deal until a single player is left.
+_Avoid_: Match, Partie
+
+**Round** (Runde):
+One step of a Game that ends with exactly one outcome: a single player loses the Round, or a player throws a Bomb. Ties are always resolved within the Round by a Tiebreak or an Extra Round.
+_Avoid_: Turn, Hand
+
+**Seating Order** (Sitzreihenfolge):
+The fixed clockwise order of a Game's Participants, set at the start; the first Participant is the first Dealer.
+
+### Play
+
+**Life** (Leben):
+A unit a player loses when a Round goes against them; the Rule Set sets how many each player starts a Game with.
+_Avoid_: Heart, Lifes
+
+**Swimmer** (Schwimmer):
+The player who would have lost their last Life but keeps playing on it; there is at most one Swimmer per Game.
+_Avoid_: Swimming player
+
+**Bomb** (Bombe):
+A Round outcome thrown by one player in which every other remaining player loses a Life.
+_Avoid_: Nuke
+
+**Tiebreak** (Stechen):
+How a Round with several lowest-scoring players is decided when more than two players remain: each tied player draws one card from the rest of the deck, starting from the Dealer clockwise, and the lowest loses; repeated among those still tied.
+
+**Extra Round** (Extra-Runde):
+A re-deal by the same Dealer when exactly two players remain and tie; repeated until one of them loses.
+
+**Dealer** (Geber):
+The player who deals the current Round; the role passes to the next remaining player after each Round.
+
+**Winner** (Gewinner):
+The last remaining player of a Game.
+
+**Cancelled Game** (Abgebrochenes Spiel):
+A Game stopped before it had a Winner; it stays in the Group's history but counts towards no statistic.
+_Avoid_: Aborted, Deleted
+
+**Event** (Ereignis):
+A single recorded thing that happened in a Game, such as a player losing a Life or throwing a Bomb; the Game's state at any point follows from its Events.
+_Avoid_: Action, Snapshot
+
+**Rule Set** (Regelwerk):
+The parameters a Game is played under: number of Participants allowed, starting Lives, whether Bombs exist, whether a Swimmer exists. Every Game currently uses the Standard Rule Set (2 to 9 Participants, 3 Lives, Bomb on, Swimmer on).
+_Avoid_: Variant, Mode
+
+### People
+
+**Player** (Spieler):
+A person who belongs to a Group, either linked to an account or a Guest.
+_Avoid_: Member, User
+
+**Guest** (Gast):
+A Player without an account; can later be linked to an account, which then owns the Guest's history.
+
+**Participant** (Teilnehmer):
+A Player taking part in a specific Game.
+
+**Former Player** (Ehemaliger Spieler):
+A Player who was removed from or left a Group; still shown in past Games, but no longer on the Group Leaderboard or selectable for new Games. A deleted account becomes an anonymous Former Player.
+
+**Group Admin** (Verwalter):
+The Player with an account who manages a Group: removes Players, links Guests to accounts, renames the Group. Starts as the Group's creator and can be handed over.
+_Avoid_: Owner, Creator
+
+**Invite** (Einladung):
+A link or QR code that lets a person join a Group, or claim an existing Guest in it. The only way into a Group.
+
+**Spectator** (Zuschauer):
+Anyone watching a running Game read-only via its link, with or without an account.
+
+**Scorekeeper** (Zähler):
+The one Participant with an account who records Events for a Game; any other Participant with an account can take over, except during a short grace period while the current Scorekeeper is offline.
+_Avoid_: Admin, Host
+
+### Statistics
+
+**Group Leaderboard** (Gruppen-Rangliste):
+The ranking of a Group's Players, Guests included, over that Group's completed Games; visible only to the Group's Players.
+_Avoid_: Global leaderboard
+
+**Personal Stats** (Persönliche Statistik):
+One account holder's statistics across all Groups they play in, in total and per Group, shown on their Player Profile.
+
+**Player Profile** (Spielerprofil):
+The page of an account holder showing their Personal Stats; visible to anyone who shares at least one Group with them, with the per-Group breakdown limited to Groups they share.
+
+**Unbreakable**:
+Winning a Game while being its Swimmer.
+
+**Untouchable**:
+Winning a Game without losing a single Life.
