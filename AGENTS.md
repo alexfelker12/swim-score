@@ -11,3 +11,7 @@ Standard-Labels: needs-triage, needs-info, ready-for-agent, ready-for-human, won
 ### Domain docs
 
 Single-context: ein `CONTEXT.md` und `docs/adr/` im Repo-Root. See `docs/agents/domain.md`.
+
+### Workflow
+
+Ein Ticket = ein Branch = ein PR; Agents committen und pushen nicht. See `docs/agents/workflow.md`.
