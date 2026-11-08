@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Link nicht mehr gültig</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+a:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45; display: flex; flex-direction: column; overflow: hidden">
+  <header style="height: 56px; display: flex; align-items: center; gap: 10px; padding: 0 20px; flex-shrink: 0">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="8" style="fill: var(--pr)"></rect><path d="M6 11.5c1.4 0 2.1-1.5 4-1.5s2.6 1.5 4 1.5 2.1-1.5 4-1.5 2.6 1.5 4 1.5" style="fill: none; stroke: var(--onpr); stroke-width: 2.2; stroke-linecap: round"></path><path d="M6 17c1.4 0 2.1-1.5 4-1.5s2.6 1.5 4 1.5 2.1-1.5 4-1.5 2.6 1.5 4 1.5" style="fill: none; stroke: var(--onpr); stroke-width: 2.2; stroke-linecap: round; opacity: .55"></path></svg>
+    <span style="font-size: 18px; font-weight: 600">Swim Score</span>
+  </header>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 0 28px 80px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--mu); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M9 17H7A5 5 0 0 1 7 7h2"></path><path d="M15 7h2a5 5 0 0 1 4 8"></path><path d="M8 12h4"></path><path d="M2 2l20 20"></path></svg>
+      <h1 style="margin: 0; font-size: 26px; font-weight: 700; line-height: 1.2; text-wrap: balance">{{title}}</h1>
+    </div>
+    <p style="margin: 0; color: var(--mu); text-wrap: pretty">{{body}}</p>
+  </div>
+  <div style="padding: 0 16px 24px; display: flex; flex-direction: column; gap: 10px">
+    <a href="{{primaryHref}}" style="height: 56px; border-radius: 14px; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">{{primary}}</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variante":{"editor":"enum","options":["zuschauer","einladung"],"default":"zuschauer"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+class Component extends DCLogic {
+  renderVals() {
+    var inv = this.props.variante === 'einladung';
+    return {
+      tc: this.props.theme === 'light' ? 'th-light' : 'th-dark',
+      title: inv ? 'Diese Einladung gilt nicht mehr' : 'Dieses Spiel ist vorbei',
+      body: inv
+        ? 'Der Verwalter der Gruppe hat den Einladungslink erneuert. Bitte ihn um den aktuellen Link oder QR-Code.'
+        : 'Zuschauer-Links gelten nur, solange ein Spiel läuft. Das Ergebnis sehen alle Spieler der Gruppe in der App.',
+      primary: inv ? 'Zur Startseite' : 'Swim Score öffnen',
+      primaryHref: inv ? 'i15-start.dc.html' : 'i03-anmelden.dc.html'
+    };
+  }
+}
+</script>
+</body>
+</html>

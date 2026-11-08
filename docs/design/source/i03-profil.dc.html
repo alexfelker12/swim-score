@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Profil</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+input[type=date]{color-scheme:inherit}
+.th-dark input[type=date]{color-scheme:dark}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; position: relative; overflow: hidden">
+  <header style="display: grid; grid-template-columns: 52px minmax(0, 1fr) 52px; align-items: center; height: 56px; padding: 0 4px; flex-shrink: 0">
+    <a href="i15-start.dc.html" aria-label="Zurück zur Startseite" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx); justify-self: center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></a>
+    <div style="text-align: center; font-size: 17px; font-weight: 600">Profil</div>
+    <div></div>
+  </header>
+
+  <div style="display: flex; align-items: center; gap: 14px; padding: 4px 20px 14px; flex-shrink: 0">
+    <div aria-hidden="true" style="width: 56px; height: 56px; border-radius: 28px; background: var(--sf2); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; color: var(--pr)">A</div>
+    <div style="display: flex; flex-direction: column">
+      <span style="font-size: 22px; font-weight: 700; line-height: 1.2">Anna</span>
+      <span style="font-size: 14px; color: var(--mu)">@anna</span>
+    </div>
+  </div>
+
+  <div role="tablist" aria-label="Profil" style="margin: 0 16px 14px; padding: 4px; border-radius: 14px; background: var(--sf2); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; flex-shrink: 0">
+    <button type="button" role="tab" aria-selected="{{isDetails}}" onClick="{{showDetails}}" style="height: 40px; border-radius: 10px; border: 0; background: {{dBg}}; color: {{dFg}}; font-weight: {{dFw}}; font-size: 15px">Details</button>
+    <button type="button" role="tab" aria-selected="{{isStats}}" onClick="{{showStats}}" style="height: 40px; border-radius: 10px; border: 0; background: {{sBg}}; color: {{sFg}}; font-weight: {{sFw}}; font-size: 15px">Meine Statistik</button>
+  </div>
+
+  <sc-if value="{{isDetails}}">
+    <div role="tabpanel" style="flex: 1; min-height: 0; overflow: auto; padding: 4px 20px 24px; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+        <div style="display: flex; flex-direction: column">
+          <span style="font-size: 14px; font-weight: 500">Profilbild</span>
+          <span style="font-size: 13px; color: var(--mu)">Sehen alle in deinen Gruppen</span>
+        </div>
+        <button type="button" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 15px; font-weight: 500">Bild ändern</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-name" style="font-size: 14px; font-weight: 500">Anzeigename</label>
+        <input id="p-name" type="text" value="Anna" aria-describedby="p-name-hint" style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+        <span id="p-name-hint" style="font-size: 13px; color: var(--mu)">So heißt du in Spielen und Ranglisten.</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 14px; font-weight: 500">Benutzername</span>
+        <span style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; background: var(--sf2); display: flex; align-items: center; color: var(--mu)">anna</span>
+        <span style="font-size: 13px; color: var(--mu)">Damit meldest du dich an. Lässt sich nicht ändern.</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-mail" style="font-size: 14px; font-weight: 500">E-Mail</label>
+        <input id="p-mail" type="email" value="anna@beispiel.de" aria-describedby="p-mail-hint" style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+        <span id="p-mail-hint" style="font-size: 13px; color: var(--mu)">Nur für dich sichtbar.</span>
+      </div>
+      <button type="button" style="height: 52px; flex-shrink: 0; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600">Änderungen speichern</button>
+
+      <div style="display: flex; flex-direction: column; border-top: 1px solid var(--ln); margin-top: 6px">
+        <button type="button" style="height: 56px; display: flex; align-items: center; border: 0; border-bottom: 1px solid var(--ln); background: transparent; padding: 0; text-align: left">Abmelden</button>
+        <div style="padding: 16px 0 0; display: flex; flex-direction: column; gap: 8px">
+          <button type="button" style="align-self: flex-start; height: 44px; padding: 0; border: 0; background: transparent; color: var(--bo); font-weight: 600">Konto löschen</button>
+          <span style="font-size: 13px; color: var(--mu); text-wrap: pretty">Löscht Name, Bild, E-Mail und Zugangsdaten. In deinen Gruppen stehst du danach als „Ehemaliger Spieler“ in den alten Spielen, die Ergebnisse der anderen bleiben gleich.</span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isStats}}">
+    <div role="tabpanel" style="flex: 1; min-height: 0; overflow: auto; padding: 0 16px 24px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 4px">
+        <h2 style="margin: 0; font-size: 17px; font-weight: 600">Über alle Gruppen</h2>
+        <button type="button" onClick="{{pOpenFn}}" aria-haspopup="dialog" aria-label="Zeitraum: {{pLabel}}. Ändern" style="flex-shrink: 1; min-width: 0; max-width: 210px; height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 10px 0 12px; border-radius: 10px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 14px; font-weight: 600">
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--mu); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+      <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{pLabel}}</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--mu); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="m6 9 6 6 6-6"></path></svg>
+    </button>
+      </div>
+      <dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="7">
+          <div style="padding: 12px 14px; border-radius: 14px; background: var(--sf); border: 1.5px solid var(--ln); display: flex; flex-direction: column-reverse; gap: 2px">
+            <dt style="font-size: 14px; color: var(--mu)">{{s.label}}</dt>
+            <dd style="margin: 0; font-size: 26px; font-weight: 700; line-height: 1.15">{{s.value}}</dd>
+          </div>
+        </sc-for>
+      </dl>
+      <section style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 4px 4px 0; font-size: 17px; font-weight: 600">Nach Gruppe</h2>
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+          <a href="i13-rangliste.dc.html" aria-label="{{g.name}}: Rangliste öffnen" style="padding: 14px 16px; border-radius: 14px; background: var(--sf); border: 1.5px solid var(--ln); display: flex; flex-direction: column; gap: 8px; color: var(--tx); text-decoration: none">
+            <div style="display: flex; align-items: center; gap: 8px"><span style="flex: 1; min-width: 0; font-size: 17px; font-weight: 600">{{g.name}}</span><span style="display: inline-flex; align-items: center; gap: 2px; font-size: 14px; font-weight: 500; color: var(--pr)">Rangliste<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="m9 18 6-6-6-6"></path></svg></span></div>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 14px; color: var(--mu)">
+              <span><span style="display: block; font-size: 18px; font-weight: 700; color: var(--tx)">{{g.games}}</span>Spiele</span>
+              <span><span style="display: block; font-size: 18px; font-weight: 700; color: var(--tx)">{{g.wins}}</span>Siege</span>
+              <span><span style="display: block; font-size: 18px; font-weight: 700; color: var(--tx)">{{g.rate}}</span>Winrate</span>
+            </div>
+          </a>
+        </sc-for>
+      </section>
+    </div>
+  </sc-if>
+  <sc-if value="{{pOpen}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 10; background: var(--scrim); display: flex; flex-direction: column; justify-content: flex-end">
+      <div role="dialog" aria-modal="true" aria-label="Zeitraum wählen" style="background: var(--sf); border-radius: 24px 24px 0 0; border-top: 1px solid var(--ln); padding: 10px 20px 24px; display: flex; flex-direction: column; gap: 14px">
+        <div style="width: 40px; height: 4px; border-radius: 2px; background: var(--ln); align-self: center"></div>
+        <h2 style="margin: 0; font-size: 22px; font-weight: 600">Zeitraum</h2>
+        <div role="radiogroup" aria-label="Zeitraum" style="display: flex; flex-direction: column">
+          <sc-for list="{{pOpts}}" as="o" hint-placeholder-count="5">
+            <button type="button" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 0; border-bottom: 1px solid var(--ln); background: transparent; padding: 4px 4px; text-align: left">
+              <span style="display: flex; flex-direction: column"><span style="font-size: 16px; font-weight: {{o.fw}}">{{o.label}}</span><sc-if value="{{o.hasSub}}"><span style="font-size: 13px; color: var(--mu)">{{o.sub}}</span></sc-if></span>
+              <sc-if value="{{o.on}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--pr); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{pCustom}}">
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 6px"><label for="p-von" style="font-size: 14px; font-weight: 500">Von</label><input id="p-von" type="date" value="2026-03-01" style="height: 52px; box-sizing: border-box; padding: 0 12px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--bg); font-size: 16px"></div>
+            <div style="display: flex; flex-direction: column; gap: 6px"><label for="p-bis" style="font-size: 14px; font-weight: 500">Bis</label><input id="p-bis" type="date" value="2026-06-30" style="height: 52px; box-sizing: border-box; padding: 0 12px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--bg); font-size: 16px"></div>
+          </div>
+        </sc-if>
+        <div style="display: flex; gap: 10px">
+          <button type="button" onClick="{{pCancel}}" style="flex: 1; height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Abbrechen</button>
+          <button type="button" onClick="{{pApply}}" style="flex: 1; height: 52px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600">Übernehmen</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"zeitraumOffen":{"editor":"boolean","default":false},"tab":{"editor":"enum","options":["details","statistik"],"default":"details"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+/* Zeitraum: Auswahl im Bottom Sheet. Jahre nur, in denen es Spiele gibt. */
+var PERIODS = [
+  { id: 'gesamt', label: 'Gesamt', sub: 'Alle Spiele seit März 2024' },
+  { id: '2026', label: '2026', sub: 'Dieses Jahr' },
+  { id: '2025', label: '2025', sub: '' },
+  { id: '2024', label: '2024', sub: '' },
+  { id: 'eigen', label: 'Eigener Zeitraum', sub: 'Von und bis selbst wählen' }
+];
+function periodVals(c) {
+  var st = c.state || {};
+  var startOpen = c.props.zeitraumOffen === true || c.props.zeitraumOffen === 'true';
+  var open = st.pOpen === undefined ? startOpen : st.pOpen;
+  var sel = st.pSel || 'gesamt';
+  var draft = st.pDraft || (startOpen && st.pOpen === undefined ? 'eigen' : sel);
+  var cur = PERIODS.filter(function (p) { return p.id === sel; })[0];
+  return {
+    pOpen: open,
+    pLabel: sel === 'eigen' ? '1. März bis 30. Juni 2026' : cur.label,
+    pOpenFn: function () { c.setState({ pOpen: true, pDraft: sel }); },
+    pOpts: PERIODS.map(function (p) {
+      var on = p.id === draft;
+      return { label: p.label, sub: p.sub, hasSub: !!p.sub, on: on, fw: on ? 600 : 400, pick: function () { c.setState({ pOpen: true, pDraft: p.id }); } };
+    }),
+    pCustom: draft === 'eigen',
+    pApply: function () { c.setState({ pOpen: false, pSel: draft }); },
+    pCancel: function () { c.setState({ pOpen: false, pDraft: sel }); }
+  };
+}
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var src = this.props.tab || 'details';
+    var tab = (this.state && this.state.src === src && this.state.tab) ? this.state.tab : src;
+    var d = tab !== 'statistik';
+    var on = { bg: 'var(--sf)', fg: 'var(--tx)', fw: 600 }, off = { bg: 'transparent', fg: 'var(--mu)', fw: 500 };
+    var a = d ? on : off, b = d ? off : on;
+    var stats = [['82', 'Teilnahmen'], ['18', 'Siege'], ['22 %', 'Winrate'], ['0,41', 'Bomben pro Spiel'], ['29 %', 'Schwimmer-Quote'], ['3', 'Unbreakable'], ['2', 'Untouchable']];
+    return Object.assign(periodVals(this), {
+      tc: this.props.theme === 'light' ? 'th-light' : 'th-dark',
+      isDetails: d, isStats: !d,
+      dBg: a.bg, dFg: a.fg, dFw: a.fw, sBg: b.bg, sFg: b.fg, sFw: b.fw,
+      showDetails: function () { self.setState({ tab: 'details', src: src }); },
+      showStats: function () { self.setState({ tab: 'statistik', src: src }); },
+      stats: stats.map(function (s) { return { value: s[0], label: s[1] }; }),
+      groups: [{ name: 'Donnerstagsrunde', games: 64, wins: 14, rate: '22 %' }, { name: 'Familie am See', games: 18, wins: 4, rate: '22 %' }]
+    });
+  }
+}
+</script>
+</body>
+</html>

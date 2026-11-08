@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Einladung annehmen</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45; display: flex; flex-direction: column; overflow: hidden">
+  <header style="height: 64px; display: flex; align-items: center; gap: 10px; padding: 0 20px; flex-shrink: 0">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="8" style="fill: var(--pr)"></rect><path d="M6 11.5c1.4 0 2.1-1.5 4-1.5s2.6 1.5 4 1.5 2.1-1.5 4-1.5 2.6 1.5 4 1.5" style="fill: none; stroke: var(--onpr); stroke-width: 2.2; stroke-linecap: round"></path><path d="M6 17c1.4 0 2.1-1.5 4-1.5s2.6 1.5 4 1.5 2.1-1.5 4-1.5 2.6 1.5 4 1.5" style="fill: none; stroke: var(--onpr); stroke-width: 2.2; stroke-linecap: round; opacity: .55"></path></svg>
+    <span style="font-size: 18px; font-weight: 600">Swim Score</span>
+  </header>
+  <div style="flex: 1; min-height: 0; overflow: auto; padding: 16px 20px 0; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 15px; color: var(--mu)">Einladung von Anna</div>
+      <h1 style="margin: 0; font-size: 30px; font-weight: 700; line-height: 1.15">Donnerstagsrunde</h1>
+      <div style="font-size: 15px; color: var(--mu)">11 Spieler, 142 Spiele</div>
+    </div>
+
+    <sc-if value="{{hasGuests}}">
+    <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+      <legend style="font-size: 17px; font-weight: 600; padding: 0 0 8px">Wer bist du?</legend>
+      <sc-for list="{{opts}}" as="o" hint-placeholder-count="4">
+        <button type="button" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="min-height: 60px; padding: 10px 16px; border-radius: 14px; border: 1.5px solid {{o.bc}}; background: {{o.bg}}; color: var(--tx); display: flex; align-items: center; gap: 12px; text-align: left">
+          <span style="width: 22px; height: 22px; border-radius: 11px; box-sizing: border-box; border: 2px solid {{o.ring}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><span style="width: 10px; height: 10px; border-radius: 5px; background: {{o.dot}}"></span></span>
+          <span style="display: flex; flex-direction: column"><span style="font-size: 17px; font-weight: 600">{{o.label}}</span><span style="font-size: 14px; color: var(--mu)">{{o.sub}}</span></span>
+        </button>
+      </sc-for>
+    </fieldset>
+    </sc-if>
+    <sc-if value="{{noGuests}}">
+      <p style="margin: 0; font-size: 16px; text-wrap: pretty">Du trittst als neuer Spieler bei. Alle in der Gruppe sehen deinen Anzeigenamen und dein Profilbild, aber nicht deine E-Mail-Adresse.</p>
+    </sc-if>
+  </div>
+  <div style="padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--ln)">
+    <div style="font-size: 14px; color: var(--mu); text-wrap: pretty">{{note}}</div>
+    <a href="i15-start.dc.html" style="height: 56px; border-radius: 14px; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">{{cta}}</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"gaeste":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var g = this.props.gaeste; var guests = !(g === false || g === 'false');
+    var sel = !guests ? 0 : ((this.state && this.state.sel != null) ? this.state.sel : 1);
+    var raw = [
+      { label: 'Ich bin neu hier', sub: 'Als neuer Spieler beitreten' },
+      { label: 'Ich bin Emil', sub: 'Gast, 37 Spiele' },
+      { label: 'Ich bin Hakan', sub: 'Gast, 21 Spiele' },
+      { label: 'Ich bin Kim', sub: 'Gast, 4 Spiele' }
+    ];
+    var opts = raw.map(function (o, i) {
+      var on = i === sel;
+      return { label: o.label, sub: o.sub, on: on, bc: on ? 'var(--pr)' : 'var(--ln)', bg: on ? 'var(--prbg)' : 'var(--sf)', ring: on ? 'var(--pr)' : 'var(--off)', dot: on ? 'var(--pr)' : 'transparent', pick: function () { self.setState({ sel: i }); } };
+    });
+    var guest = sel > 0 ? raw[sel].label.replace('Ich bin ', '') : '';
+    return {
+      tc: this.props.theme === 'light' ? 'th-light' : 'th-dark',
+      opts: opts, hasGuests: guests, noGuests: !guests,
+      note: sel > 0 ? 'Anna bestätigt das. Danach gehören dir die bisherigen Spiele von ' + guest + '. Bis dahin bist du schon dabei.' : 'Du bist sofort Spieler der Gruppe und siehst Spiele und Rangliste.',
+      cta: sel > 0 ? 'Anfrage senden und beitreten' : 'Beitreten'
+    };
+  }
+}
+</script>
+</body>
+</html>

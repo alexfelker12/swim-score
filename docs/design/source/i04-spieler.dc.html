@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Gruppe: Spieler</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+input::placeholder{color:var(--mu)}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45; display: flex; flex-direction: column; overflow: hidden">
+  <header style="display: grid; grid-template-columns: 52px minmax(0, 1fr) 96px; align-items: center; height: 60px; padding: 0 4px; flex-shrink: 0">
+    <a href="i15-start.dc.html" aria-label="Zur Startseite" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx); justify-self: center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></a>
+    <div style="display: flex; flex-direction: column; min-width: 0">
+      <div style="font-size: 20px; font-weight: 700; line-height: 1.2">Donnerstagsrunde</div>
+      <div style="font-size: 13px; color: var(--mu)">11 Spieler</div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 2px; padding-right: 4px">
+      <sc-if value="{{isAdmin}}"><a href="i11-einladen.dc.html" aria-label="Einladen" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx)"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6"></path><path d="M22 11h-6"></path></svg></a></sc-if>
+      <a href="{{settingsHref}}" aria-label="{{settingsLabel}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx)"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M4 21v-7"></path><path d="M4 10V3"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M20 21v-5"></path><path d="M20 12V3"></path><path d="M2 14h4"></path><path d="M10 8h4"></path><path d="M18 16h4"></path></svg></a>
+    </div>
+  </header>
+
+  <nav aria-label="Bereiche der Gruppe" style="margin: 4px 16px 12px; padding: 4px; border-radius: 14px; background: var(--sf2); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; flex-shrink: 0">
+    <a href="i05-gruppe-spiele.dc.html" style="height: 40px; border-radius: 10px; color: var(--mu); font-weight: 500; font-size: 15px; display: flex; align-items: center; justify-content: center; text-decoration: none">Spiele</a>
+    <a href="i13-rangliste.dc.html" style="height: 40px; border-radius: 10px; color: var(--mu); font-weight: 500; font-size: 15px; display: flex; align-items: center; justify-content: center; text-decoration: none">Rangliste</a>
+    <a href="i04-spieler.dc.html" aria-current="page" style="height: 40px; border-radius: 10px; background: var(--sf); color: var(--tx); font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; text-decoration: none">Spieler</a>
+  </nav>
+
+  <div style="flex: 1; min-height: 0; overflow: auto; padding: 0 16px 20px; display: flex; flex-direction: column; gap: 14px">
+    <sc-if value="{{anfrage}}">
+      <section aria-labelledby="h-req" style="padding: 16px; border-radius: 14px; background: var(--sf); border: 1.5px solid var(--pr); display: flex; flex-direction: column; gap: 12px">
+        <h2 id="h-req" style="margin: 0; font-size: 14px; font-weight: 600; color: var(--pr)">Offene Anfrage</h2>
+        <div style="font-size: 17px; text-wrap: pretty"><span style="font-weight: 600">emil_k</span> sagt: „Ich bin Emil“</div>
+        <div style="font-size: 14px; color: var(--mu); text-wrap: pretty">Wenn du bestätigst, gehören die 37 Spiele von Gast Emil ab jetzt diesem Konto. Prüf kurz am Tisch, ob es wirklich Emil ist.</div>
+        <div style="display: flex; gap: 10px">
+          <button type="button" style="flex: 1; height: 48px; border-radius: 12px; border: 1.5px solid var(--ln); background: transparent; font-weight: 500">Ablehnen</button>
+          <button type="button" style="flex: 1; height: 48px; border-radius: 12px; border: 0; background: var(--pr); color: var(--onpr); font-weight: 600">Bestätigen</button>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{canAddGuest}}">
+    <div style="display: flex; gap: 8px">
+      <label for="guest" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Name des Gastes</label>
+      <input id="guest" type="text" placeholder="Gast hinzufügen, z. B. Lena" style="flex: 1; min-width: 0; height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+      <button type="button" aria-label="Gast hinzufügen" style="width: 52px; height: 52px; border-radius: 12px; border: 0; background: var(--prbg); color: var(--pr); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button>
+    </div>
+    </sc-if>
+
+    <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+      <sc-for list="{{players}}" as="p" hint-placeholder-count="11">
+        <li style="border-bottom: 1px solid var(--ln)">
+          <a href="{{p.href}}" style="display: flex; align-items: center; gap: 12px; min-height: 56px; color: var(--tx); text-decoration: none; pointer-events: {{p.pe}}">
+            <span aria-hidden="true" style="width: 36px; height: 36px; border-radius: 18px; background: {{p.avBg}}; color: {{p.avFg}}; border: 1.5px {{p.avBs}} var(--off); box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 15px">{{p.initial}}</span>
+            <span style="flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0">
+              <span style="font-size: 17px; font-weight: 500">{{p.name}}</span>
+              <sc-if value="{{p.me}}"><span style="font-size: 13px; color: var(--mu)">du</span></sc-if>
+            </span>
+            <sc-if value="{{p.admin}}"><span style="padding: 3px 9px; border-radius: 999px; background: var(--prbg); color: var(--pr); font-size: 13px; font-weight: 500">Verwalter</span></sc-if>
+            <sc-if value="{{p.guest}}"><span style="padding: 3px 9px; border-radius: 999px; background: var(--sf2); color: var(--mu); font-size: 13px; font-weight: 500">Gast</span></sc-if>
+          </a>
+        </li>
+      </sc-for>
+    </ul>
+    <a href="{{settingsHref}}" style="font-size: 15px; color: var(--mu); text-decoration: none; padding: 4px 0">2 ehemalige Spieler</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"rolle":{"editor":"enum","options":["verwalter","spieler"],"default":"verwalter"},"anfrage":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+class Component extends DCLogic {
+  renderVals() {
+    var admin = (this.props.rolle || 'verwalter') !== 'spieler';
+    var meName = admin ? 'Anna' : 'Ben';
+    var list = [['Anna'], ['Ben'], ['Carla'], ['Dario'], ['Emil', 'g'], ['Fiona'], ['Greta'], ['Hakan', 'g'], ['Ida'], ['Jonas'], ['Kim', 'g']];
+    var players = list.map(function (p) {
+      var g = p[1] === 'g', me = p[0] === meName;
+      return { name: p[0], initial: p[0].charAt(0), guest: g, me: me, admin: p[0] === 'Anna',
+        href: g ? '#' : 'i14-profil-mitspieler.dc.html', pe: g ? 'none' : 'auto',
+        avBg: g ? 'transparent' : 'var(--sf2)', avFg: g ? 'var(--mu)' : 'var(--pr)', avBs: g ? 'dashed' : 'solid' };
+    });
+    var a = this.props.anfrage;
+    return { tc: this.props.theme === 'light' ? 'th-light' : 'th-dark', players: players, anfrage: admin && (a === true || a === 'true'),
+      isAdmin: admin, canAddGuest: true, settingsHref: admin ? 'i12-verwaltung.dc.html' : 'i12-gruppe-mitglied.dc.html', settingsLabel: admin ? 'Gruppe verwalten' : 'Gruppe' };
+  }
+}
+</script>
+</body>
+</html>

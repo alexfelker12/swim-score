@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Spiel zählen</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:default}
+button:focus-visible,a:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.4; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; position: relative; overflow: hidden">
+
+<sc-if value="{{isGame}}" hint-placeholder-val="{{ true }}">
+  <header style="display: grid; grid-template-columns: 52px minmax(0, 1fr) 52px; align-items: center; height: 56px; padding: 0 4px; flex-shrink: 0">
+    <div style="display: flex; justify-content: center">
+      <sc-if value="{{showBack}}">
+        <a href="i05-gruppe-spiele.dc.html" aria-label="Zur Gruppe" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx)"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></a>
+      </sc-if>
+      <sc-if value="{{isSpect}}">
+        <svg width="28" height="28" viewBox="0 0 28 28" role="img" aria-label="Swim Score"><rect width="28" height="28" rx="8" style="fill: var(--pr)"></rect><path d="M6 11.5c1.4 0 2.1-1.5 4-1.5s2.6 1.5 4 1.5 2.1-1.5 4-1.5 2.6 1.5 4 1.5" style="fill: none; stroke: var(--onpr); stroke-width: 2.2; stroke-linecap: round"></path><path d="M6 17c1.4 0 2.1-1.5 4-1.5s2.6 1.5 4 1.5 2.1-1.5 4-1.5 2.6 1.5 4 1.5" style="fill: none; stroke: var(--onpr); stroke-width: 2.2; stroke-linecap: round; opacity: .55"></path></svg>
+      </sc-if>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 0">
+      <div style="font-size: 20px; font-weight: 600; line-height: 1.2">{{roundLabel}}</div>
+      <div style="font-size: 13px; color: var(--mu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{subLabel}}</div>
+    </div>
+    <div style="display: flex; justify-content: center">
+      <sc-if value="{{showMenu}}">
+        <button type="button" aria-label="Spielmenü" onClick="{{openMenu}}" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 0; background: transparent; color: var(--tx)"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+      </sc-if>
+    </div>
+  </header>
+
+  <div style="padding: 0 16px 8px; flex-shrink: 0">
+    <sc-if value="{{stripZ}}">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 40px; padding: 0 14px; border-radius: 12px; background: var(--sf2); font-size: 14px">
+        <span style="display: flex; align-items: center; gap: 10px"><span style="width: 8px; height: 8px; border-radius: 4px; background: var(--pr)"></span><span style="font-weight: 600">Du zählst</span></span>
+        <span style="color: var(--mu)">alle sehen live mit</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{stripOff}}">
+      <div role="status" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 14px; border-radius: 12px; background: var(--tx); color: var(--bg); font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; flex-shrink: 0"><path d="M2 2l20 20"></path><path d="M5.8 5.8A7 7 0 0 0 6.5 19H17"></path><path d="M21.5 15.5A4.5 4.5 0 0 0 17.5 10h-1.8A7 7 0 0 0 9.5 5.3"></path></svg>
+        <span style="font-weight: 600">{{offlineText}}</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{stripTeil}}">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 48px; padding: 0 4px 0 14px; border-radius: 12px; background: var(--sf2); font-size: 14px">
+        <span><span style="font-weight: 600">{{scorerName}}</span> zählt</span>
+        <button type="button" onClick="{{takeNow}}" style="height: 40px; padding: 0 14px; border-radius: 10px; border: 0; background: var(--prbg); color: var(--pr); font-weight: 600; font-size: 14px">Übernehmen</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{stripLocked}}">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 48px; padding: 0 4px 0 14px; border-radius: 12px; background: var(--sf2); font-size: 14px">
+        <span style="display: flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px var(--mu)"></span><span><span style="font-weight: 600">{{scorerName}}</span> ist seit 0:40 offline</span></span>
+        <button type="button" disabled="{{ true }}" style="height: 40px; padding: 0 12px; border-radius: 10px; border: 0; background: transparent; color: var(--mu); font-weight: 500; font-size: 14px">Übernehmen in 1:20</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{stripTeilOff}}">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 48px; padding: 0 4px 0 14px; border-radius: 12px; background: var(--sf2); font-size: 14px">
+        <span style="display: flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px var(--mu)"></span><span><span style="font-weight: 600">{{scorerName}}</span> ist seit 4 Min. offline</span></span>
+        <button type="button" onClick="{{askTakeover}}" style="height: 40px; padding: 0 14px; border-radius: 10px; border: 0; background: var(--prbg); color: var(--pr); font-weight: 600; font-size: 14px">Übernehmen</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{stripSpect}}">
+      <div style="display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; border-radius: 12px; background: var(--sf2); font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--mu); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        <span>Du schaust zu, <span style="font-weight: 600">{{scorerName}}</span> zählt</span>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{showHint}}">
+    <div style="height: 34px; padding: 0 20px; display: flex; align-items: center; font-size: 15px; color: {{hintColor}}; font-weight: {{hintWeight}}; flex-shrink: 0">{{hint}}</div>
+  </sc-if>
+
+  <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; padding: 0 16px">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+      <button type="button" onClick="{{r.tap}}" disabled="{{r.disabled}}" aria-label="{{r.aria}}" style="position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; box-sizing: border-box; height: {{r.h}}px; padding: 0 18px; border-radius: 14px; border: 1.5px {{r.bs}} {{r.bc}}; background: {{r.bg}}; color: var(--tx); text-align: left; opacity: {{r.op}}; flex-shrink: 0">
+        <span style="display: flex; align-items: center; gap: 12px; min-width: 0">
+          <sc-if value="{{r.vCircle}}">
+            <span style="width: {{r.cs}}px; height: {{r.cs}}px; border-radius: 50%; box-sizing: border-box; border: 1.5px {{r.cBs}} {{r.cBc}}; background: {{r.cBg}}; color: {{r.cFg}}; display: flex; align-items: center; justify-content: center; font-size: {{r.cFs}}px; font-weight: 700; flex-shrink: 0">
+              <sc-if value="{{r.cNum}}"><span>{{r.lives}}</span></sc-if>
+              <sc-if value="{{r.isSwimmer}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round"><path d="M2 9c.6.5 1.2 1 2.5 1C7 10 7 8 9.5 8c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path><path d="M2 15c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path></svg></sc-if>
+            </span>
+          </sc-if>
+          <span style="font-size: {{r.fs}}px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+          <sc-if value="{{r.counts}}">
+            <span style="display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; background: var(--sf2); color: var(--mu); font-size: 13px; font-weight: 500; flex-shrink: 0">zählt</span>
+          </sc-if>
+        </span>
+        <sc-if value="{{r.vSticks}}">
+          <span style="display: flex; gap: 6px; flex-shrink: 0">
+            <sc-for list="{{r.marks}}" as="k" hint-placeholder-count="3"><span style="width: 7px; height: {{r.sh}}px; border-radius: 4px; {{k.st}}"></span></sc-for>
+          </span>
+        </sc-if>
+        <sc-if value="{{r.vDots}}">
+          <span style="display: flex; gap: 7px; flex-shrink: 0">
+            <sc-for list="{{r.marks}}" as="k" hint-placeholder-count="3"><span style="width: {{r.ds}}px; height: {{r.ds}}px; border-radius: 50%; {{k.st}}"></span></sc-for>
+          </span>
+        </sc-if>
+        <sc-if value="{{r.vHearts}}">
+          <span style="display: flex; gap: 4px; flex-shrink: 0">
+            <sc-for list="{{r.marks}}" as="k" hint-placeholder-count="3"><svg width="{{r.hs}}" height="{{r.hs}}" viewBox="0 0 24 24" aria-hidden="true" style="fill: {{k.hf}}; stroke: {{k.hc}}; stroke-width: 2; stroke-linejoin: round"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"></path></svg></sc-for>
+          </span>
+        </sc-if>
+        <sc-if value="{{r.vBar}}">
+          <span style="display: flex; gap: 4px; width: 84px; flex-shrink: 0">
+            <sc-for list="{{r.marks}}" as="k" hint-placeholder-count="3"><span style="flex: 1; height: 10px; border-radius: 5px; {{k.st}}"></span></sc-for>
+          </span>
+        </sc-if>
+        <sc-if value="{{r.vNum}}">
+          <span style="display: flex; align-items: baseline; gap: 6px; flex-shrink: 0"><span style="font-size: {{r.nfs}}px; font-weight: 700; line-height: 1">{{r.lives}}</span><span style="font-size: 13px; color: var(--mu)">Leben</span></span>
+        </sc-if>
+        <sc-if value="{{r.isSwimmer}}">
+          <span style="display: inline-flex; align-items: center; gap: 6px; color: var(--swim); font-size: 15px; font-weight: 600; flex-shrink: 0"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M2 9c.6.5 1.2 1 2.5 1C7 10 7 8 9.5 8c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path><path d="M2 15c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path></svg>schwimmt</span>
+        </sc-if>
+        <sc-if value="{{r.isOut}}">
+          <span style="font-size: 14px; color: var(--mu); flex-shrink: 0">ausgeschieden</span>
+        </sc-if>
+        <sc-if value="{{r.dealer}}">
+          <span style="position: absolute; left: -6px; bottom: -7px; z-index: 2; display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: 999px; background: linear-gradient(var(--prbg), var(--prbg)), var(--sf); box-shadow: 0 0 0 2px var(--bg); color: var(--pr); font-size: 12px; font-weight: 600; line-height: 1"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"><rect x="3" y="6" width="12" height="16" rx="2"></rect><path d="M9 2h10a2 2 0 0 1 2 2v14"></path></svg>Dealer</span>
+        </sc-if>
+      </button>
+    </sc-for>
+    <sc-if value="{{hasHidden}}">
+      <button type="button" onClick="{{toggleHide}}" style="height: 40px; margin-top: 6px; border: 0; background: transparent; color: var(--mu); font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px">{{hiddenText}}<span style="color: var(--pr); font-weight: 600">Anzeigen</span></button>
+    </sc-if>
+  </div>
+
+  <div style="padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0">
+    <sc-if value="{{hasLast}}">
+      <div style="display: flex; align-items: center; gap: 4px; min-height: 56px; box-sizing: border-box; padding: 6px 6px 6px 14px; border-radius: 14px; background: var(--sf2)">
+        <div style="flex: 1; min-width: 0">
+          <div style="font-size: 12px; color: var(--mu)">{{lastRound}}</div>
+          <div style="font-size: 15px; font-weight: 500; line-height: 1.3; text-wrap: pretty">{{lastText}}</div>
+        </div>
+        <sc-if value="{{canTb}}">
+          <button type="button" onClick="{{openTb}}" style="height: 44px; padding: 0 12px; border-radius: 10px; border: 0; background: transparent; color: var(--pr); font-size: 14px; font-weight: 600">Stechen</button>
+        </sc-if>
+        <sc-if value="{{canUndo}}">
+          <button type="button" onClick="{{undo}}" style="height: 44px; padding: 0 12px; border-radius: 10px; border: 0; background: var(--sf); color: var(--tx); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg>Rückgängig</button>
+        </sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{noLast}}">
+      <div style="display: flex; align-items: center; min-height: 56px; padding: 0 14px; border-radius: 14px; background: var(--sf2); font-size: 15px; color: var(--mu)">{{noLastText}}</div>
+    </sc-if>
+    <sc-if value="{{showActions}}">
+      <div style="display: flex; gap: 10px">
+        <sc-if value="{{bombMode}}">
+          <button type="button" onClick="{{cancelBomb}}" style="flex: 1; height: 56px; border-radius: 14px; border: 1.5px solid var(--ln); background: var(--sf); color: var(--tx); font-size: 16px; font-weight: 500">Keine Bombe</button>
+        </sc-if>
+        <sc-if value="{{canExtra}}">
+          <button type="button" onClick="{{addExtra}}" style="flex: 1; height: 56px; border-radius: 14px; border: 1.5px solid var(--ln); background: var(--sf); color: var(--tx); font-size: 16px; font-weight: 500">Extra-Runde</button>
+        </sc-if>
+        <sc-if value="{{normalMode}}">
+          <button type="button" onClick="{{startBomb}}" style="flex: 1; height: 56px; border-radius: 14px; border: 1.5px solid var(--bomb); background: var(--bombbg); color: var(--bomb); font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><circle cx="11" cy="13" r="8"></circle><path d="m15.5 7.5 2.3-2.3a2 2 0 0 1 2.8 0l.3.3"></path><path d="M21 3l1-1"></path></svg>Bombe</button>
+        </sc-if>
+      </div>
+    </sc-if>
+  </div>
+</sc-if>
+
+<sc-if value="{{isEnd}}" hint-placeholder-val="{{ false }}">
+  <header style="display: grid; grid-template-columns: 52px minmax(0, 1fr) 52px; align-items: center; height: 56px; padding: 0 4px; flex-shrink: 0">
+    <div style="display: flex; justify-content: center">
+      <a href="i05-gruppe-spiele.dc.html" aria-label="Zur Gruppe" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx)"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></a>
+    </div>
+    <div style="text-align: center; font-size: 17px; font-weight: 600">Spiel beendet</div>
+    <div></div>
+  </header>
+  <div style="padding: 24px 24px 28px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 12px">
+      <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--pr); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 5h2a2 2 0 0 1 0 4h-2"></path><path d="M7 5H5a2 2 0 0 0 0 4h2"></path></svg>
+      <h1 style="margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15">{{winnerName}} gewinnt</h1>
+    </div>
+    <div style="font-size: 15px; color: var(--mu)">{{endMeta}}</div>
+  </div>
+  <div style="padding: 0 16px; display: flex; flex-direction: column">
+    <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr) 64px 64px; gap: 8px; padding: 0 12px 6px; font-size: 13px; color: var(--mu)">
+      <span>Platz</span><span></span><span style="text-align: right">Leben</span><span style="text-align: right">Bomben</span>
+    </div>
+    <sc-for list="{{places}}" as="p" hint-placeholder-count="6">
+      <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr) 64px 64px; gap: 8px; align-items: center; height: 48px; padding: 0 12px; border-top: 1px solid var(--ln)">
+        <span style="font-size: 17px; font-weight: 600; color: {{p.placeColor}}">{{p.place}}</span>
+        <span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+          <span style="font-size: 17px; font-weight: {{p.weight}}">{{p.name}}</span>
+          <sc-if value="{{p.swim}}"><span style="display: inline-flex; padding: 2px 8px; border-radius: 999px; background: var(--swimbg); color: var(--swim); font-size: 12px; font-weight: 600">Schwimmer</span></sc-if>
+        </span>
+        <span style="text-align: right; font-size: 15px; color: var(--mu)">−{{p.lost}}</span>
+        <span style="text-align: right; font-size: 15px; color: var(--mu)">{{p.bombs}}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="flex: 1"></div>
+  <div style="padding: 0 16px 20px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: center; gap: 8px; min-height: 56px; box-sizing: border-box; padding: 6px 6px 6px 14px; border-radius: 14px; background: var(--sf2)">
+      <div style="flex: 1; font-size: 14px; color: var(--mu); line-height: 1.35">Falsch gezählt? Der letzte Schritt lässt sich noch 9 Minuten zurücknehmen.</div>
+      <button type="button" onClick="{{undo}}" style="height: 44px; padding: 0 12px; border-radius: 10px; border: 0; background: var(--sf); color: var(--tx); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg>Rückgängig</button>
+    </div>
+    <button type="button" onClick="{{restart}}" style="height: 56px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600">Nochmal mit denselben Teilnehmern</button>
+    <a href="i05-gruppe-spiele.dc.html" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: var(--sf); color: var(--tx); font-size: 16px; font-weight: 500; display: flex; align-items: center; justify-content: center; text-decoration: none; box-sizing: border-box">Zur Gruppe</a>
+  </div>
+</sc-if>
+
+<sc-if value="{{isCancelled}}" hint-placeholder-val="{{ false }}">
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 0 28px">
+    <h1 style="margin: 0; font-size: 28px; font-weight: 700">Spiel abgebrochen</h1>
+    <p style="margin: 0; color: var(--mu); text-wrap: pretty">Es bleibt in der Spielliste der Gruppe sichtbar und zählt in keine Statistik.</p>
+  </div>
+  <div style="padding: 0 16px 20px; display: flex; flex-direction: column; gap: 10px">
+    <button type="button" onClick="{{restart}}" style="height: 56px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600">Neues Spiel mit denselben Teilnehmern</button>
+    <a href="i05-gruppe-spiele.dc.html" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: var(--sf); color: var(--tx); font-size: 16px; font-weight: 500; display: flex; align-items: center; justify-content: center; text-decoration: none; box-sizing: border-box">Zur Gruppe</a>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasSheet}}" hint-placeholder-val="{{ false }}">
+  <div style="position: absolute; inset: 0; z-index: 10; background: var(--scrim); display: flex; flex-direction: column; justify-content: flex-end">
+    <div role="dialog" aria-modal="true" aria-label="{{sheetLabel}}" style="background: var(--sf); border-radius: 24px 24px 0 0; border-top: 1px solid var(--ln); padding: 10px 20px 24px; display: flex; flex-direction: column; gap: 16px">
+      <div style="width: 40px; height: 4px; border-radius: 2px; background: var(--ln); align-self: center"></div>
+
+      <sc-if value="{{shConflict}}">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 22px; font-weight: 600">Wer wird Schwimmer?</h2>
+          <p style="margin: 0; color: var(--mu); font-size: 15px; text-wrap: pretty">{{conflictText}}</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{conflictOpts}}" as="o" hint-placeholder-count="2">
+            <button type="button" onClick="{{o.pick}}" style="height: 60px; padding: 0 18px; border-radius: 14px; border: 1.5px solid var(--swim); background: var(--swimbg); color: var(--tx); display: flex; align-items: center; justify-content: space-between; font-size: 19px; font-weight: 600"><span>{{o.name}}</span><span style="display: inline-flex; align-items: center; gap: 6px; color: var(--swim); font-size: 14px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M2 9c.6.5 1.2 1 2.5 1C7 10 7 8 9.5 8c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path><path d="M2 15c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path></svg>schwimmt</span></button>
+          </sc-for>
+        </div>
+        <button type="button" onClick="{{closeSheet}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Bombe zurücknehmen</button>
+      </sc-if>
+
+      <sc-if value="{{shWinner}}">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 6px; text-align: center">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 12px">
+            <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--pr); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 5h2a2 2 0 0 1 0 4h-2"></path><path d="M7 5H5a2 2 0 0 0 0 4h2"></path></svg>
+            <h2 style="margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em">{{winnerName}} gewinnt</h2>
+          </div>
+          <p style="margin: 0; color: var(--mu); font-size: 15px; text-wrap: pretty">{{winnerText}}</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <button type="button" onClick="{{confirmWinner}}" style="height: 56px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600">Spiel beenden</button>
+          <button type="button" onClick="{{closeSheet}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Zurück, falsch getippt</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{shTb}}">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 22px; font-weight: 600">Stechen angeben</h2>
+          <p style="margin: 0; color: var(--mu); font-size: 15px; text-wrap: pretty">{{tbText}}</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <div style="height: 52px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf2); display: flex; align-items: center; justify-content: space-between; box-sizing: border-box"><span style="font-weight: 600">{{tbLoser}}</span><span style="font-size: 13px; color: var(--mu)">verloren</span></div>
+          <sc-for list="{{tbOpts}}" as="o" hint-placeholder-count="3">
+            <button type="button" onClick="{{o.toggle}}" aria-pressed="{{o.on}}" style="height: 52px; padding: 0 14px; border-radius: 12px; border: 1.5px solid {{o.bc}}; background: {{o.bg}}; color: var(--tx); display: flex; align-items: center; justify-content: space-between; font-weight: 600"><span>{{o.name}}</span><sc-if value="{{o.on}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--pr); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round"><path d="M20 6 9 17l-5-5"></path></svg></sc-if></button>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 10px">
+          <button type="button" onClick="{{closeSheet}}" style="flex: 1; height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Abbrechen</button>
+          <button type="button" onClick="{{saveTb}}" disabled="{{tbDisabled}}" style="flex: 1; height: 52px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600; opacity: {{tbOpacity}}">Speichern</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{shMenu}}">
+        <h2 style="margin: 0; font-size: 20px; font-weight: 600">Spiel</h2>
+        <div style="display: flex; flex-direction: column">
+          <a href="i06-verlauf.dc.html" style="height: 56px; display: flex; align-items: center; gap: 14px; color: var(--tx); text-decoration: none; font-size: 16px; border-bottom: 1px solid var(--ln)"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg>Spielverlauf</a>
+          <button type="button" onClick="{{openShare}}" style="height: 56px; display: flex; align-items: center; gap: 14px; border: 0; border-bottom: 1px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; text-align: left; padding: 0"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 14h3v3h-3z"></path><path d="M21 14v7h-4"></path></svg>Zuschauer einladen</button>
+          <button type="button" onClick="{{toggleHide}}" role="switch" aria-checked="{{hideOn}}" style="height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 0; border-bottom: 1px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; text-align: left; padding: 0"><span style="display: flex; align-items: center; gap: 14px"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><path d="M3 3l18 18"></path></svg>Ausgeschiedene ausblenden</span><span style="width: 44px; height: 26px; border-radius: 13px; background: {{switchBg}}; display: flex; align-items: center; padding: 3px; box-sizing: border-box; justify-content: {{switchJust}}"><span style="width: 20px; height: 20px; border-radius: 10px; background: {{switchKnob}}"></span></span></button>
+          <sc-if value="{{menuCancel}}">
+            <button type="button" onClick="{{askCancel}}" style="height: 56px; display: flex; align-items: center; gap: 14px; border: 0; background: transparent; color: var(--bo); font-size: 16px; text-align: left; padding: 0"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><circle cx="12" cy="12" r="9"></circle><path d="M15 9l-6 6"></path><path d="M9 9l6 6"></path></svg>Spiel abbrechen</button>
+          </sc-if>
+        </div>
+        <button type="button" onClick="{{closeSheet}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Schließen</button>
+      </sc-if>
+
+      <sc-if value="{{shCancel}}">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 22px; font-weight: 600">Spiel abbrechen?</h2>
+          <p style="margin: 0; color: var(--mu); font-size: 15px; text-wrap: pretty">Das Spiel bleibt in der Spielliste der Gruppe sichtbar, zählt aber in keine Statistik. Das lässt sich nicht zurücknehmen.</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <button type="button" onClick="{{confirmCancel}}" style="height: 56px; border-radius: 14px; border: 0; background: var(--bo); color: #1B0B07; font-size: 16px; font-weight: 600">Spiel abbrechen</button>
+          <button type="button" onClick="{{closeSheet}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Weiterspielen</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{shShare}}">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 22px; font-weight: 600">Zuschauer einladen</h2>
+          <p style="margin: 0; color: var(--mu); font-size: 15px; text-wrap: pretty">Wer den Code scannt, sieht das Spiel live, auch ohne Konto. Der Link gilt nur, solange das Spiel läuft.</p>
+        </div>
+        <div style="align-self: center; width: 212px; height: 212px; padding: 14px; box-sizing: border-box; border-radius: 16px; background: #FFFFFF; display: grid; grid-template-columns: repeat(21, minmax(0, 1fr)); grid-auto-rows: 1fr" role="img" aria-label="QR-Code für den Zuschauer-Link">
+          <sc-for list="{{qr}}" as="q" hint-placeholder-count="441"><span style="background: {{q.c}}"></span></sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 6px 0 14px; border-radius: 12px; background: var(--sf2)">
+          <span style="flex: 1; min-width: 0; font-size: 14px; color: var(--mu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">swimscore.app/z/k7Qm2xTr9fWd</span>
+          <button type="button" style="height: 40px; padding: 0 12px; border-radius: 10px; border: 0; background: var(--sf); color: var(--tx); font-size: 14px; font-weight: 500">Kopieren</button>
+        </div>
+        <div style="display: flex; gap: 10px">
+          <button type="button" onClick="{{closeSheet}}" style="flex: 1; height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Fertig</button>
+          <button type="button" style="flex: 1; height: 52px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600">Link teilen</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{shTakeover}}">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 22px; font-weight: 600">Zählen übernehmen?</h2>
+          <p style="margin: 0; color: var(--mu); font-size: 15px; text-wrap: pretty">{{takeoverText}}</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <button type="button" onClick="{{takeNow}}" style="height: 56px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600">Trotzdem übernehmen</button>
+          <button type="button" onClick="{{closeSheet}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Abbrechen</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{shDiscarded}}">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--bomb); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+            <h2 style="margin: 0; font-size: 22px; font-weight: 600">{{scorerName}} zählt jetzt</h2>
+          </div>
+          <p style="margin: 0; color: var(--mu); font-size: 15px; text-wrap: pretty">{{discardText}}</p>
+        </div>
+        <button type="button" onClick="{{closeSheet}}" style="height: 56px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600">Verstanden</button>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scenario":{"editor":"enum","options":["r1","ben","bombmode","bombe","konflikt","schwimmer","einschwimmer","stechen","extra","gewinner","ende","menue","abbrechen","ausgeblendet","teilnehmer","teilen","zuschauer","gesperrt","warnung","abgeloest","offline"],"default":"r1"},"leben":{"editor":"enum","options":["balken","herzen","striche","punkte","zahl","kreis"],"default":"balken"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+var N6 = ['Anna', 'Ben', 'Carla', 'Dario', 'Emil', 'Fiona'];
+var N9 = ['Anna', 'Ben', 'Carla', 'Dario', 'Emil', 'Fiona', 'Greta', 'Hakan', 'Ida'];
+function L(p, tb) { return tb ? { t: 'lost', p: p, tb: tb } : { t: 'lost', p: p }; }
+function B(p, sw) { return sw === undefined ? { t: 'bomb', p: p } : { t: 'bomb', p: p, sw: sw }; }
+var X = { t: 'extra' };
+/* Beispielpartie: R1 Ben verliert, R2 Dario verliert, R3 Bombe Anna (kein Konflikt),
+   R4 Bombe Carla mit Konflikt (Dario schwimmt, Ben raus), R5 Emil raus (Schwimmer gab es schon),
+   R6 Fiona raus nach Stechen, R7 Anna, R8 Carla, R9 Carla raus, R10 Extra-Runde, Dario raus, Anna gewinnt */
+var G2 = [L(1), L(3)];
+var G3 = G2.concat([B(0)]);
+var G4 = G3.concat([B(2, 3)]);
+var G5 = G4.concat([L(4)]);
+var G6 = G5.concat([L(5, [5, 0, 2])]);
+var G9 = G6.concat([L(0), L(2), L(2)]);
+var G10 = G9.concat([X]);
+var N9E = [L(1), L(1), L(1), L(3), L(3), L(3), L(7), L(7), L(7), L(0)];
+var SC = {
+  r1: { names: N6, ev: [] },
+  ben: { names: N6, ev: [L(1)] },
+  bombmode: { names: N6, ev: G2, mode: 'bomb' },
+  bombe: { names: N6, ev: G3 },
+  konflikt: { names: N6, ev: G3, sheet: 'conflict', pending: B(2) },
+  schwimmer: { names: N6, ev: G4 },
+  einschwimmer: { names: N6, ev: G5 },
+  stechen: { names: N6, ev: G5.concat([L(5)]), sheet: 'tb', tbSel: [5, 0] },
+  extra: { names: N6, ev: G10 },
+  gewinner: { names: N6, ev: G10, sheet: 'winner', pending: L(3) },
+  ende: { names: N6, ev: G10.concat([L(3)]) },
+  menue: { names: N6, ev: G4, sheet: 'menu' },
+  abbrechen: { names: N6, ev: G4, sheet: 'cancel' },
+  ausgeblendet: { names: N9, ev: N9E, hide: true },
+  teilnehmer: { names: N9, ev: N9E, role: 'teil', scorer: 1 },
+  teilen: { names: N6, ev: G4, sheet: 'share' },
+  zuschauer: { names: N6, ev: G4, role: 'spect', scorer: 1 },
+  gesperrt: { names: N6, ev: G4, role: 'locked', scorer: 0 },
+  warnung: { names: N6, ev: G4, role: 'teiloff', scorer: 0, sheet: 'takeover' },
+  abgeloest: { names: N6, ev: G4, role: 'teil', scorer: 2, sheet: 'discarded' },
+  offline: { names: N6, ev: G4, offline: 3 }
+};
+var QR = (function () {
+  var cells = [];
+  function finder(x, y, cx, cy) {
+    var dx = x - cx, dy = y - cy;
+    if (dx < -1 || dy < -1 || dx > 7 || dy > 7) return null;
+    if (dx < 0 || dy < 0 || dx > 6 || dy > 6) return false;
+    return dx === 0 || dx === 6 || dy === 0 || dy === 6 || (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4);
+  }
+  for (var y = 0; y < 21; y++) {
+    for (var x = 0; x < 21; x++) {
+      var v = finder(x, y, 0, 0);
+      if (v === null) v = finder(x, y, 14, 0);
+      if (v === null) v = finder(x, y, 0, 14);
+      if (v === null) v = ((x * 7 + y * 13 + x * y * 3) % 5) < 2;
+      cells.push({ c: v ? '#10212A' : 'transparent' });
+    }
+  }
+  return cells;
+})();
+function joinN(a) { if (a.length < 2) return a.join(''); return a.slice(0, -1).join(', ') + ' und ' + a[a.length - 1]; }
+function gen(n) { return /[sxzß]$/i.test(n) ? n + '’' : n + 's'; }
+function aliveList(s) { var a = []; for (var i = 0; i < s.n; i++) if (!s.out[i]) a.push(i); return a; }
+/* Regel: höchstens ein Schwimmer pro Spiel. Wer nach dem ersten Schwimmer sein letztes Leben verliert, scheidet direkt aus. */
+function bombInfo(s, p) {
+  var others = aliveList(s).filter(function (i) { return i !== p; });
+  var ones = s.swimUsed ? [] : others.filter(function (i) { return s.lives[i] === 1; });
+  return { others: others, ones: ones, conflict: ones.length > 1 };
+}
+function applyEv(s, e) {
+  var nm = s.names, r = s.round, before = aliveList(s).length;
+  if (e.t === 'extra') {
+    s.extra++; s.extraTotal++;
+    s.log.push({ round: r, kind: 'extra', text: 'Extra-Runde, Dealer bleibt ' + nm[s.dealer], before: before });
+    return;
+  }
+  var outs = [], text = '';
+  if (e.t === 'lost') {
+    var p = e.p, res;
+    s.lost[p]++;
+    if (p === s.swim) { s.out[p] = true; s.swim = -1; outs.push(p); res = 'out'; }
+    else if (s.lives[p] > 1) { s.lives[p]--; res = 'life'; }
+    else {
+      s.lives[p] = 0;
+      if (!s.swimUsed) { s.swim = p; s.swimUsed = true; s.wasSwim[p] = true; res = 'swim'; }
+      else { s.out[p] = true; outs.push(p); res = 'outrule'; }
+    }
+    text = res === 'life' ? nm[p] + ' verliert ein Leben' : (res === 'swim' ? nm[p] + ' schwimmt jetzt' : nm[p] + ' scheidet aus');
+    if (e.tb && e.tb.length) text += ', Stechen mit ' + joinN(e.tb.filter(function (i) { return i !== p; }).map(function (i) { return nm[i]; }));
+    else if (res === 'outrule') text += ', es gab schon einen Schwimmer';
+  } else {
+    var info = bombInfo(s, e.p);
+    var chosen = info.ones.length === 1 ? info.ones[0] : (info.ones.length > 1 ? e.sw : -1);
+    info.others.forEach(function (i) {
+      s.lost[i]++;
+      if (i === s.swim) { s.out[i] = true; outs.push(i); return; }
+      if (s.lives[i] > 1) { s.lives[i]--; return; }
+      s.lives[i] = 0;
+      if (i === chosen) return;
+      s.out[i] = true; outs.push(i);
+    });
+    if (s.swim >= 0 && s.out[s.swim]) s.swim = -1;
+    var swamNow = chosen !== undefined && chosen >= 0;
+    if (swamNow) { s.swim = chosen; s.swimUsed = true; s.wasSwim[chosen] = true; }
+    s.bombs[e.p]++;
+    text = nm[e.p] + ' wirft eine Bombe';
+    if (swamNow) text += ', ' + nm[chosen] + ' schwimmt';
+    if (outs.length) text += ', ' + joinN(outs.map(function (i) { return nm[i]; })) + (outs.length > 1 ? ' scheiden aus' : ' scheidet aus');
+  }
+  outs.forEach(function (o) { s.outOrder.push({ p: o, round: r }); });
+  s.log.push({ round: r, kind: e.t, text: text, before: before, tb: !!(e.tb && e.tb.length) });
+  var al = aliveList(s);
+  if (al.length <= 1) { s.done = true; s.winner = al.length ? al[0] : -1; return; }
+  s.round++; s.extra = 0;
+  var d = s.dealer;
+  do { d = (d + 1) % s.n; } while (s.out[d]);
+  s.dealer = d;
+}
+function replay(names, evs) {
+  var n = names.length;
+  var s = { n: n, names: names, lives: [], out: [], swim: -1, swimUsed: false, dealer: 0, round: 1, extra: 0, extraTotal: 0, outOrder: [], bombs: [], lost: [], wasSwim: [], log: [], done: false, winner: -1 };
+  for (var i = 0; i < n; i++) { s.lives.push(3); s.out.push(false); s.bombs.push(0); s.lost.push(0); s.wasSwim.push(false); }
+  evs.forEach(function (e) { applyEv(s, e); });
+  return s;
+}
+
+class Component extends DCLogic {
+  st() {
+    var sc = this.props.scenario || 'r1';
+    var cur = this.state;
+    if (cur && cur.sc === sc) return cur;
+    var d = SC[sc] || SC.r1;
+    return { sc: sc, names: d.names, ev: d.ev.slice(), mode: d.mode || 'normal', sheet: d.sheet || null, pending: d.pending || null, tbSel: (d.tbSel || []).slice(), hide: !!d.hide, role: d.role || 'zaehler', scorer: d.scorer == null ? 0 : d.scorer, offline: d.offline || 0, cancelled: false };
+  }
+  renderVals() {
+    var self = this;
+    var S = this.st();
+    var nm = S.names, n = nm.length;
+    var s = replay(nm, S.ev);
+    var isZ = S.role === 'zaehler';
+    var lv = this.props.leben || 'balken';
+    var up = function (ch) { self.setState(Object.assign({}, S, ch)); };
+    var commit = function (e) {
+      var t = replay(nm, S.ev.concat([e]));
+      if (t.done) up({ sheet: 'winner', pending: e, mode: 'normal' });
+      else up({ ev: S.ev.concat([e]), sheet: null, pending: null, mode: 'normal' });
+    };
+    var tap = function (i) {
+      return function () {
+        if (!isZ || S.sheet || s.out[i]) return;
+        if (S.mode === 'bomb') {
+          var info = bombInfo(s, i);
+          if (info.conflict) { up({ sheet: 'conflict', pending: { t: 'bomb', p: i }, mode: 'normal' }); return; }
+          commit({ t: 'bomb', p: i });
+        } else commit({ t: 'lost', p: i });
+      };
+    };
+
+    var stripH = (S.role === 'teil' || S.role === 'locked' || S.role === 'teiloff') ? 56 : 48;
+    var hintH = isZ ? 34 : 0;
+    var bottomH = isZ ? 154 : 88;
+    var idx = [];
+    for (var i = 0; i < n; i++) if (!(S.hide && s.out[i])) idx.push(i);
+    var hiddenCount = S.hide ? s.out.filter(Boolean).length : 0;
+    var avail = 844 - 56 - stripH - hintH - bottomH - (hiddenCount ? 46 : 0) - 8;
+    var h = Math.floor((avail - 6 * (idx.length - 1)) / idx.length);
+    h = Math.max(52, Math.min(88, h));
+    var big = h >= 70;
+    var rows = idx.map(function (i) {
+      var out = s.out[i], sw = s.swim === i && !out, bombSel = S.mode === 'bomb' && !out && isZ;
+      var showLives = !out && !sw;
+      var marks = [];
+      for (var k = 0; k < 3; k++) {
+        var on = k < s.lives[i];
+        marks.push({
+          st: on ? 'background: var(--tx)' : 'box-shadow: inset 0 0 0 1.5px var(--off)',
+          hf: on ? 'var(--bo)' : 'none', hc: on ? 'var(--bo)' : 'var(--off)'
+        });
+      }
+      var status = out ? 'ausgeschieden' : (sw ? 'schwimmt' : s.lives[i] + ' Leben');
+      var act = (isZ && !out) ? (S.mode === 'bomb' ? '. Tippen: wirft die Bombe' : '. Tippen: verliert die Runde') : '';
+      return {
+        name: nm[i], h: h, fs: big ? 21 : 18, sh: big ? 28 : 24, ds: big ? 16 : 13, hs: big ? 24 : 20, nfs: big ? 26 : 22,
+        bs: out ? 'dashed' : 'solid',
+        bc: bombSel ? 'var(--bomb)' : (sw ? 'var(--swim)' : 'var(--ln)'),
+        bg: out ? 'transparent' : 'var(--sf)', op: out ? '.5' : '1',
+        dealer: !out && s.dealer === i, counts: !isZ && S.scorer === i,
+        isSwimmer: sw, isOut: out, lives: s.lives[i], marks: marks,
+        vSticks: showLives && lv === 'striche', vDots: showLives && lv === 'punkte', vHearts: showLives && lv === 'herzen',
+        vBar: showLives && lv === 'balken', vNum: showLives && lv === 'zahl', vCircle: lv === 'kreis',
+        cs: big ? 40 : 34, cFs: big ? 20 : 17, cNum: showLives,
+        cBg: sw ? 'var(--swimbg)' : (out ? 'transparent' : 'var(--sf2)'), cFg: sw ? 'var(--swim)' : 'var(--tx)',
+        cBs: out ? 'dashed' : 'solid', cBc: sw ? 'var(--swim)' : (out ? 'var(--off)' : 'transparent'),
+        tap: tap(i), disabled: !isZ || out,
+        aria: nm[i] + ', ' + status + (s.dealer === i && !out ? ', Dealer' : '') + act
+      };
+    });
+
+    var last = s.log.length ? s.log[s.log.length - 1] : null;
+    var lastLost = null;
+    for (var j = S.ev.length - 1; j >= 0; j--) { if (S.ev[j].t === 'lost') { lastLost = S.ev[j]; break; } if (S.ev[j].t !== 'extra') break; }
+    var alive = aliveList(s);
+
+    var sheetLabels = { conflict: 'Schwimmer wählen', winner: 'Gewinner bestätigen', tb: 'Stechen angeben', menu: 'Spielmenü', cancel: 'Spiel abbrechen', share: 'Zuschauer einladen', takeover: 'Zählen übernehmen', discarded: 'Zähler gewechselt' };
+
+    var conflictText = '', conflictOpts = [];
+    if (S.sheet === 'conflict' && S.pending) {
+      var ci = bombInfo(s, S.pending.p);
+      conflictText = gen(nm[S.pending.p]) + ' Bombe trifft ' + joinN(ci.ones.map(function (q) { return nm[q]; })) + ' mit dem letzten Leben. Eine Person wird Schwimmer, die anderen scheiden aus.';
+      conflictOpts = ci.ones.map(function (q) { return { name: nm[q], pick: function () { commit(Object.assign({}, S.pending, { sw: q })); } }; });
+    }
+    var winnerName = '', winnerText = '';
+    if (S.sheet === 'winner' && S.pending) {
+      var wt = replay(nm, S.ev.concat([S.pending]));
+      winnerName = nm[wt.winner];
+      winnerText = wt.log[wt.log.length - 1].text + '. Damit endet das Spiel nach ' + wt.round + ' Runden.';
+    }
+    if (s.done) winnerName = nm[s.winner];
+
+    var tbText = '', tbLoser = '', tbOpts = [], tbOk = false;
+    if (S.sheet === 'tb' && lastLost) {
+      var loser = lastLost.p;
+      var prev = replay(nm, S.ev.slice(0, S.ev.lastIndexOf(lastLost)));
+      tbLoser = nm[loser];
+      tbText = 'Wer war mit ' + nm[loser] + ' im Stechen? Wähle mindestens eine Person.';
+      tbOpts = aliveList(prev).filter(function (q) { return q !== loser; }).map(function (q) {
+        var on = S.tbSel.indexOf(q) >= 0;
+        return { name: nm[q], on: on, bc: on ? 'var(--pr)' : 'var(--ln)', bg: on ? 'var(--prbg)' : 'transparent', toggle: function () {
+          var sel = S.tbSel.slice(); var at = sel.indexOf(q);
+          if (at >= 0) sel.splice(at, 1); else sel.push(q);
+          up({ tbSel: sel });
+        } };
+      });
+      tbOk = S.tbSel.filter(function (q) { return q !== loser; }).length >= 1;
+    }
+
+    var places = [];
+    if (s.done) {
+      places.push({ p: s.winner, place: 1 });
+      var rank = 2, k2 = s.outOrder.length - 1;
+      while (k2 >= 0) {
+        var rr = s.outOrder[k2].round, grp = [];
+        while (k2 >= 0 && s.outOrder[k2].round === rr) { grp.push(s.outOrder[k2].p); k2--; }
+        grp.forEach(function (q) { places.push({ p: q, place: rank }); });
+        rank += grp.length;
+      }
+      places = places.map(function (x) {
+        return { place: x.place, name: nm[x.p], lost: s.lost[x.p], bombs: s.bombs[x.p], swim: s.wasSwim[x.p], weight: x.place === 1 ? 700 : 500, placeColor: x.place === 1 ? 'var(--pr)' : 'var(--mu)' };
+      });
+    }
+    var endMeta = s.round + ' Runden' + (s.extraTotal ? ', ' + s.extraTotal + (s.extraTotal === 1 ? ' Extra-Runde' : ' Extra-Runden') : '') + ', ' + n + ' Teilnehmer';
+
+    return {
+      tc: this.props.theme === 'light' ? 'th-light' : 'th-dark',
+      isGame: !s.done && !S.cancelled,
+      isEnd: s.done && !S.cancelled,
+      isCancelled: !!S.cancelled,
+      showBack: S.role !== 'spect', isSpect: S.role === 'spect', showMenu: S.role !== 'spect',
+      roundLabel: 'Runde ' + s.round,
+      subLabel: s.extra > 0 ? (s.extra === 1 ? 'Extra-Runde, ' : s.extra + '. Extra-Runde, ') + 'Dealer bleibt ' + nm[s.dealer] : 'Donnerstagsrunde',
+      stripZ: isZ && !S.offline, stripOff: isZ && !!S.offline,
+      offlineText: 'Offline, ' + S.offline + ' Runden nicht gesendet',
+      stripTeil: S.role === 'teil', stripLocked: S.role === 'locked', stripTeilOff: S.role === 'teiloff', stripSpect: S.role === 'spect',
+      scorerName: nm[S.scorer],
+      showHint: isZ, hint: S.mode === 'bomb' ? 'Wer hat die Bombe geworfen?' : 'Wer hat die Runde verloren?',
+      hintColor: S.mode === 'bomb' ? 'var(--bomb)' : 'var(--mu)', hintWeight: S.mode === 'bomb' ? 600 : 400,
+      rows: rows,
+      hasHidden: hiddenCount > 0, hiddenText: hiddenCount + ' Ausgeschiedene ausgeblendet.',
+      hasLast: !!last, noLast: !last,
+      lastRound: last ? 'Runde ' + last.round : '', lastText: last ? last.text : '',
+      noLastText: 'Noch keine Runde gezählt. ' + nm[s.dealer] + ' ist Dealer.',
+      canTb: isZ && !!last && last.kind === 'lost' && !last.tb && last.before > 2 && S.mode !== 'bomb',
+      canUndo: isZ && !!last,
+      showActions: isZ,
+      bombMode: S.mode === 'bomb', normalMode: S.mode !== 'bomb',
+      canExtra: isZ && alive.length === 2 && S.mode !== 'bomb',
+      openMenu: function () { up({ sheet: 'menu' }); },
+      closeSheet: function () { up({ sheet: null, pending: null }); },
+      startBomb: function () { up({ mode: 'bomb' }); },
+      cancelBomb: function () { up({ mode: 'normal' }); },
+      addExtra: function () { up({ ev: S.ev.concat([{ t: 'extra' }]) }); },
+      undo: function () { if (S.ev.length) up({ ev: S.ev.slice(0, -1), sheet: null, pending: null, mode: 'normal' }); },
+      openTb: function () { if (lastLost) up({ sheet: 'tb', tbSel: [lastLost.p] }); },
+      saveTb: function () {
+        if (!tbOk) return;
+        var ev = S.ev.slice(); var at = ev.lastIndexOf(lastLost);
+        var sel = S.tbSel.indexOf(lastLost.p) >= 0 ? S.tbSel.slice() : S.tbSel.concat([lastLost.p]);
+        ev[at] = { t: 'lost', p: lastLost.p, tb: sel };
+        up({ ev: ev, sheet: null });
+      },
+      toggleHide: function () { up({ hide: !S.hide }); },
+      askCancel: function () { up({ sheet: 'cancel' }); },
+      confirmCancel: function () { up({ sheet: null, cancelled: true }); },
+      openShare: function () { up({ sheet: 'share' }); },
+      takeNow: function () { up({ role: 'zaehler', sheet: null }); },
+      askTakeover: function () { up({ sheet: 'takeover' }); },
+      confirmWinner: function () { up({ ev: S.ev.concat([S.pending]), sheet: null, pending: null }); },
+      restart: function () { up({ ev: [], sheet: null, pending: null, mode: 'normal', cancelled: false, role: 'zaehler' }); },
+      hasSheet: !!S.sheet, sheetLabel: sheetLabels[S.sheet] || '',
+      shConflict: S.sheet === 'conflict', shWinner: S.sheet === 'winner', shTb: S.sheet === 'tb', shMenu: S.sheet === 'menu',
+      shCancel: S.sheet === 'cancel', shShare: S.sheet === 'share', shTakeover: S.sheet === 'takeover', shDiscarded: S.sheet === 'discarded',
+      conflictText: conflictText, conflictOpts: conflictOpts,
+      winnerName: winnerName, winnerText: winnerText,
+      tbText: tbText, tbLoser: tbLoser, tbOpts: tbOpts, tbDisabled: !tbOk, tbOpacity: tbOk ? '1' : '.45',
+      menuCancel: isZ, hideOn: S.hide,
+      switchBg: S.hide ? 'var(--pr)' : 'var(--ln)', switchJust: S.hide ? 'flex-end' : 'flex-start', switchKnob: S.hide ? 'var(--onpr)' : 'var(--tx)',
+      qr: QR,
+      takeoverText: nm[S.scorer] + ' ist seit 4 Minuten offline. Runden, die ' + nm[S.scorer] + ' in dieser Zeit gezählt und noch nicht gesendet hat, gehen verloren.',
+      discardText: 'Du warst offline, als ' + nm[S.scorer] + ' übernommen hat. Deine 2 nicht gesendeten Runden wurden verworfen. Gleicht den Stand am Tisch ab, angezeigt wird jetzt der gespeicherte Stand.',
+      places: places, endMeta: endMeta
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,931 @@
+{
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "Main.dc.html": {
+   "h": 1180,
+   "page": "grundlagen",
+   "title": "Grundlagen: Farben, Schrift, Bausteine",
+   "w": 1280,
+   "x": 0,
+   "y": 0
+  },
+  "SpielScreen.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 #6 #7 Prototyp: Spiel zählen",
+   "w": 390,
+   "x": 0,
+   "y": 0
+  },
+  "hell-rangliste.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "hell",
+   "title": "Hell: Rangliste",
+   "w": 390,
+   "x": 1410,
+   "y": 0
+  },
+  "hell-runde.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "hell",
+   "title": "Hell: Spiel zählen",
+   "w": 390,
+   "x": 0,
+   "y": 0
+  },
+  "hell-spielende.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "hell",
+   "title": "Hell: Spielende",
+   "w": 390,
+   "x": 470,
+   "y": 0
+  },
+  "hell-start.dc.html": {
+   "h": 844,
+   "page": "hell",
+   "title": "Hell: Startseite",
+   "w": 390,
+   "x": 940,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i03-anmelden.dc.html": {
+   "h": 844,
+   "page": "konto",
+   "title": "#3 Anmelden",
+   "w": 390,
+   "x": 0,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i03-profil.dc.html": {
+   "h": 844,
+   "page": "konto",
+   "title": "#3 #12 Profil: Details (Konto löschen)",
+   "w": 390,
+   "x": 1880,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i03-registrieren.dc.html": {
+   "h": 844,
+   "page": "konto",
+   "title": "#3 Registrieren",
+   "w": 390,
+   "x": 470,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i04-gruppe-anlegen.dc.html": {
+   "h": 844,
+   "page": "gruppe",
+   "title": "#4 Gruppe anlegen",
+   "w": 390,
+   "x": 0,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i04-spieler.dc.html": {
+   "h": 844,
+   "page": "gruppe",
+   "title": "#4 Spieler mit Gästen",
+   "w": 390,
+   "x": 940,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i05-ben-verliert.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Ben verliert ein Leben",
+   "w": 390,
+   "x": 1880,
+   "y": 1200
+  },
+  "i05-bombe-konflikt.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Bombe mit Konflikt: Schwimmer wählen",
+   "w": 390,
+   "x": 3290,
+   "y": 1200
+  },
+  "i05-bombe-ohne-konflikt.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Bombe ohne Konflikt",
+   "w": 390,
+   "x": 2820,
+   "y": 1200
+  },
+  "i05-bombe-waehlen.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Bombe: Werfer wählen (Runde 3)",
+   "w": 390,
+   "x": 2350,
+   "y": 1200
+  },
+  "i05-ein-schwimmer.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Emil scheidet aus: nur ein Schwimmer pro Spiel",
+   "w": 390,
+   "x": 4230,
+   "y": 1200
+  },
+  "i05-gewinner.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Gewinner bestätigen",
+   "w": 390,
+   "x": 940,
+   "y": 2400
+  },
+  "i05-gruppe-spiele.dc.html": {
+   "h": 844,
+   "page": "gruppe",
+   "title": "#5 #6 Gruppenseite: Spielliste",
+   "w": 390,
+   "x": 470,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i05-leben-balken.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "Leben: Balken (für die Entwicklung gewählt)",
+   "w": 390,
+   "x": 1410,
+   "y": 3600
+  },
+  "i05-leben-herzen.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "Leben: Herzen (Alternative)",
+   "w": 390,
+   "x": 940,
+   "y": 3600
+  },
+  "i05-leben-kreis.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "Leben: Zahl im Kreis",
+   "w": 390,
+   "x": 2350,
+   "y": 3600
+  },
+  "i05-leben-punkte.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "Leben: Punkte",
+   "w": 390,
+   "x": 470,
+   "y": 3600
+  },
+  "i05-leben-striche.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "Leben: Striche",
+   "w": 390,
+   "x": 0,
+   "y": 3600
+  },
+  "i05-leben-zahl.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "Leben: Zahl",
+   "w": 390,
+   "x": 1880,
+   "y": 3600
+  },
+  "i05-runde-1.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Runde 1",
+   "w": 390,
+   "x": 1410,
+   "y": 1200
+  },
+  "i05-schwimmer.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Dario wird Schwimmer (per Wahl)",
+   "w": 390,
+   "x": 3760,
+   "y": 1200
+  },
+  "i05-spielende.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 #6 #15 Spielende, Rückgängig, Nochmal",
+   "w": 390,
+   "x": 1410,
+   "y": 2400
+  },
+  "i05-start-spiel.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Spiel starten",
+   "w": 390,
+   "x": 0,
+   "y": 1200
+  },
+  "i05-start-zu-viele.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Spiel starten: über 9 Spielern",
+   "w": 390,
+   "x": 940,
+   "y": 1200
+  },
+  "i05-start-zu-wenig.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#5 Spiel starten: unter 2 Spielern",
+   "w": 390,
+   "x": 470,
+   "y": 1200
+  },
+  "i06-abbrechen.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#6 Spiel abbrechen",
+   "w": 390,
+   "x": 2350,
+   "y": 2400
+  },
+  "i06-ausgeblendet.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#6 9 Spieler, Ausgeschiedene ausgeblendet",
+   "w": 390,
+   "x": 3290,
+   "y": 2400
+  },
+  "i06-menue.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#6 #8 Spielmenü",
+   "w": 390,
+   "x": 1880,
+   "y": 2400
+  },
+  "i06-verlauf.dc.html": {
+   "h": 844,
+   "page": "spiel",
+   "title": "#6 #7 #9 Spielverlauf Runde für Runde",
+   "w": 390,
+   "x": 2820,
+   "y": 2400,
+   "is_interactive": true
+  },
+  "i07-extra-runde.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#7 Extra-Runde bei zwei Übrigen",
+   "w": 390,
+   "x": 470,
+   "y": 2400
+  },
+  "i07-stechen.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "spiel",
+   "title": "#7 Stechen angeben",
+   "w": 390,
+   "x": 0,
+   "y": 2400
+  },
+  "i08-link-abgelaufen.dc.html": {
+   "h": 844,
+   "page": "live",
+   "title": "#8 Zuschauer-Link abgelaufen",
+   "w": 390,
+   "x": 1410,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i08-teilnehmer-live.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "live",
+   "title": "#8 #9 Teilnehmer sieht live mit (9 Spieler)",
+   "w": 390,
+   "x": 0,
+   "y": 0
+  },
+  "i08-zuschauer-teilen.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "live",
+   "title": "#8 Zuschauer-Link und QR-Code",
+   "w": 390,
+   "x": 470,
+   "y": 0
+  },
+  "i08-zuschauer.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "live",
+   "title": "#8 Zuschauer-Ansicht ohne Konto",
+   "w": 390,
+   "x": 940,
+   "y": 0
+  },
+  "i09-abgeloest.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "live",
+   "title": "#9 #10 Abgelöster Zähler",
+   "w": 390,
+   "x": 940,
+   "y": 1200
+  },
+  "i09-uebernahme-gesperrt.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "live",
+   "title": "#9 Zähler offline, Übernahme gesperrt",
+   "w": 390,
+   "x": 0,
+   "y": 1200
+  },
+  "i09-uebernahme-warnung.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "live",
+   "title": "#9 Übernahme mit Warnung",
+   "w": 390,
+   "x": 470,
+   "y": 1200
+  },
+  "i10-offline-zaehlen.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "live",
+   "title": "#10 Offline zählen",
+   "w": 390,
+   "x": 1410,
+   "y": 1200
+  },
+  "i11-anfrage-bestaetigen.dc.html": {
+   "h": 844,
+   "page": "gruppe",
+   "title": "#11 Verwalter bestätigt Anfrage",
+   "w": 390,
+   "x": 1410,
+   "y": 1200,
+   "is_interactive": true
+  },
+  "i11-einladen.dc.html": {
+   "h": 844,
+   "page": "gruppe",
+   "title": "#11 Einladung teilen",
+   "w": 390,
+   "x": 0,
+   "y": 1200,
+   "is_interactive": true
+  },
+  "i11-einladung-annehmen.dc.html": {
+   "h": 844,
+   "page": "gruppe",
+   "title": "#11 Einladung mit Gästen: „Ich bin …“",
+   "w": 390,
+   "x": 470,
+   "y": 1200,
+   "is_interactive": true
+  },
+  "i11-einladung-ungueltig.dc.html": {
+   "h": 844,
+   "page": "gruppe",
+   "title": "#11 Einladung ungültig",
+   "w": 390,
+   "x": 1880,
+   "y": 1200,
+   "is_interactive": true
+  },
+  "i12-verwaltung.dc.html": {
+   "h": 844,
+   "page": "gruppe",
+   "title": "#12 Gruppenverwaltung",
+   "w": 390,
+   "x": 1410,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i13-rangliste-winrate.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "statistik",
+   "title": "#13 Winrate mit Mindestanzahl",
+   "w": 390,
+   "x": 1410,
+   "y": 0
+  },
+  "i13-rangliste.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "statistik",
+   "title": "#13 Gruppen-Rangliste: Siege",
+   "w": 390,
+   "x": 0,
+   "y": 0
+  },
+  "i14-profil-mitspieler.dc.html": {
+   "h": 844,
+   "page": "statistik",
+   "title": "#14 Profil eines Mitspielers",
+   "w": 390,
+   "x": 2350,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i14-profil.dc.html": {
+   "h": 844,
+   "page": "statistik",
+   "title": "#14 Eigenes Spielerprofil",
+   "w": 390,
+   "x": 1880,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i15-start-laden.dc.html": {
+   "h": 844,
+   "page": "konto",
+   "title": "#15 Startseite lädt",
+   "w": 390,
+   "x": 1880,
+   "y": 1200,
+   "is_interactive": true
+  },
+  "i15-start-leer.dc.html": {
+   "h": 844,
+   "page": "konto",
+   "title": "#15 #4 Startseite leer",
+   "w": 390,
+   "x": 1410,
+   "y": 1200,
+   "is_interactive": true
+  },
+  "i15-start.dc.html": {
+   "h": 844,
+   "page": "konto",
+   "title": "#15 Startseite mit laufendem Spiel",
+   "w": 390,
+   "x": 0,
+   "y": 1200,
+   "is_interactive": true
+  },
+  "i16-neues-passwort.dc.html": {
+   "h": 844,
+   "page": "konto",
+   "title": "#16 Neues Passwort setzen",
+   "w": 390,
+   "x": 1410,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i16-passwort-vergessen.dc.html": {
+   "h": 844,
+   "page": "konto",
+   "title": "#16 Passwort vergessen",
+   "w": 390,
+   "x": 940,
+   "y": 0,
+   "is_interactive": true
+  },
+  "i03-profil-statistik.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "konto",
+   "title": "#3 #14 Profil: Meine Statistik",
+   "w": 390,
+   "x": 2350,
+   "y": 0
+  },
+  "i15-start-ohne-spiel.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "konto",
+   "title": "#15 Startseite ohne laufendes Spiel",
+   "w": 390,
+   "x": 470,
+   "y": 1200
+  },
+  "i15-start-mehrere.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "konto",
+   "title": "#15 Startseite mit zwei laufenden Spielen",
+   "w": 390,
+   "x": 940,
+   "y": 1200
+  },
+  "i12-gast-verknuepfen.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "gruppe",
+   "title": "#11 #12 Gast direkt mit Konto verknüpfen",
+   "w": 390,
+   "x": 1880,
+   "y": 0
+  },
+  "i11-einladung-ohne-gaeste.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "gruppe",
+   "title": "#11 Einladung ohne Gäste",
+   "w": 390,
+   "x": 940,
+   "y": 1200
+  },
+  "i04-spieler-mitglied.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "gruppe",
+   "title": "#4 Spieler-Tab ohne Verwalter-Rolle",
+   "w": 390,
+   "x": 0,
+   "y": 2400
+  },
+  "i12-gruppe-mitglied.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "gruppe",
+   "title": "#12 Gruppe ohne Verwalter-Rolle: austreten",
+   "w": 390,
+   "x": 470,
+   "y": 2400
+  },
+  "i13-zeitraum.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "statistik",
+   "title": "#13 #14 Zeitraum wählen",
+   "w": 390,
+   "x": 940,
+   "y": 0
+  },
+  "i13-kennzahl.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "statistik",
+   "title": "#13 Kennzahl wählen",
+   "w": 390,
+   "x": 470,
+   "y": 0
+  }
+ },
+ "createdOnFiles": {
+  "at": "2026-11-05T21:15:00Z",
+  "v": 1
+ },
+ "designSystems": [],
+ "launch": {
+  "page": "grundlagen",
+  "view": "canvas"
+ },
+ "noteOrder": [
+  "t-grund",
+  "t-proto",
+  "s-proto",
+  "s-stechen",
+  "t-ablauf1",
+  "t-ablauf2",
+  "t-live1",
+  "t-live2",
+  "t-konto",
+  "t-start",
+  "t-gruppe",
+  "t-einladung",
+  "t-stat",
+  "t-hell",
+  "s-hell",
+  "t-leben",
+  "s-leben",
+  "s-passwort",
+  "t-mitglied",
+  "s-mitglied",
+  "s-einladung"
+ ],
+ "notes": {
+  "s-hell": {
+   "fill": "gray",
+   "page": "hell",
+   "size": 24,
+   "text": "Jeder Screen hat im Tweaks-Tab den Schalter „theme“ (dark/light). Diese vier zeigen die helle Variante als Referenz.",
+   "w": 380,
+   "x": 1880,
+   "y": 0
+  },
+  "s-leben": {
+   "fill": "teal",
+   "page": "spiel",
+   "size": 24,
+   "text": "Gleicher Spielstand (Runde 5) in sechs Darstellungen: Anna und Carla 2 Leben, Emil und Fiona 1, Dario schwimmt, Ben ist raus.\n\nFür die Entwicklung: Balken (Standard in allen Screens). Herzen sind die Alternative.\n\nÜberlegung, noch nicht entschieden: ein Schalter in den Einstellungen, mit dem man zwischen mehreren Darstellungen wählt. Der Tweak „leben“ an der Spielansicht zeigt, wie das aussehen würde.",
+   "w": 400,
+   "x": 2820,
+   "y": 3600
+  },
+  "s-proto": {
+   "fill": "teal",
+   "page": "spiel",
+   "size": 24,
+   "text": "Im Play-Modus zählbar, mit echter Spiellogik (Schwimmer (höchstens einer pro Spiel), Bombe mit Konflikt, Dealer-Rotation, Gewinner-Bestätigung, Rückgängig, Stechen, Extra-Runde).\n\nTipp auf eine Zeile = diese Person verliert die Runde. Bombe = erst „Bombe“, dann den Werfer tippen.\n\nAlle Ablauf-Screens unten sind Zustände genau dieser Komponente (SpielScreen.dc.html, Prop „scenario“).",
+   "w": 420,
+   "x": 470,
+   "y": 0
+  },
+  "s-stechen": {
+   "fill": "orange",
+   "page": "spiel",
+   "size": 24,
+   "text": "Vorschlag Stechen (#7): Der Verlust wird sofort mit einem Tipp gespeichert. Danach bietet die Leiste unten „Stechen“ an, um die Beteiligten nachzutragen. So kostet der Normalfall nie einen zweiten Tipp.",
+   "w": 420,
+   "x": 940,
+   "y": 0
+  },
+  "t-ablauf1": {
+   "kind": "title1",
+   "maxW": 4620,
+   "page": "spiel",
+   "text": "Ablauf: Start, erste Runden, Bomben, Schwimmer",
+   "w": 240,
+   "x": 0,
+   "y": 900
+  },
+  "t-ablauf2": {
+   "kind": "title1",
+   "maxW": 3680,
+   "page": "spiel",
+   "text": "Ablauf: Stechen bis Spielende, Korrekturen, Verlauf",
+   "w": 240,
+   "x": 0,
+   "y": 2100
+  },
+  "t-einladung": {
+   "kind": "title1",
+   "maxW": 2270,
+   "page": "gruppe",
+   "text": "Einladung und Gast beanspruchen",
+   "w": 240,
+   "x": 0,
+   "y": 900
+  },
+  "t-grund": {
+   "kind": "title1",
+   "maxW": 1280,
+   "page": "grundlagen",
+   "text": "Swim Score: Grundlagen",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "t-gruppe": {
+   "kind": "title1",
+   "maxW": 2270,
+   "page": "gruppe",
+   "text": "Gruppe",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "t-hell": {
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "hell",
+   "text": "Helle Variante",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "t-konto": {
+   "kind": "title1",
+   "maxW": 2740,
+   "page": "konto",
+   "text": "Konto",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "t-leben": {
+   "kind": "title1",
+   "maxW": 2740,
+   "page": "spiel",
+   "text": "Varianten: Leben darstellen",
+   "w": 240,
+   "x": 0,
+   "y": 3300
+  },
+  "t-live1": {
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "live",
+   "text": "Live mitsehen und Zuschauer",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "t-live2": {
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "live",
+   "text": "Zähler übernehmen und offline zählen",
+   "w": 240,
+   "x": 0,
+   "y": 900
+  },
+  "t-proto": {
+   "kind": "title1",
+   "maxW": 1300,
+   "page": "spiel",
+   "text": "Prototyp: ein Spiel klickbar durchzählen",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "t-start": {
+   "kind": "title1",
+   "maxW": 2270,
+   "page": "konto",
+   "text": "Startseite",
+   "w": 240,
+   "x": 0,
+   "y": 900
+  },
+  "t-stat": {
+   "kind": "title1",
+   "maxW": 2740,
+   "page": "statistik",
+   "text": "Rangliste und Spielerprofil",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "s-passwort": {
+   "fill": "teal",
+   "page": "konto",
+   "size": 24,
+   "w": 420,
+   "x": 2350,
+   "y": 1200,
+   "text": "Passwort zurücksetzen (#16):\n1. Anmelden: „Passwort vergessen?“ unter dem Passwortfeld\n2. Passwort vergessen: E-Mail eingeben, Link wird verschickt\n3. Link in der E-Mail öffnet „Neues Passwort“\n4. Nach dem Speichern zurück zur Anmeldung\n\nIm Play-Modus sind die Links klickbar."
+  },
+  "t-mitglied": {
+   "kind": "title1",
+   "maxW": 1330,
+   "page": "gruppe",
+   "text": "Ohne Verwalter-Rolle",
+   "w": 240,
+   "x": 0,
+   "y": 2100
+  },
+  "s-mitglied": {
+   "fill": "teal",
+   "page": "gruppe",
+   "size": 24,
+   "w": 420,
+   "x": 940,
+   "y": 2400,
+   "text": "Spieler ohne Verwalter-Rolle sehen Spiele, Rangliste und Spielerliste wie der Verwalter. Gäste anlegen dürfen alle Spieler mit Konto, auch direkt beim Spielstart.\n\nEs fehlen: Einladen (Icon oben), offene Anfragen und alle Verwaltungsaktionen. Über das Einstellungs-Icon kommen sie zu „Gruppe“: Name, wer Verwalter ist, ehemalige Spieler, Gruppe verlassen."
+  },
+  "s-einladung": {
+   "fill": "teal",
+   "page": "gruppe",
+   "size": 24,
+   "w": 420,
+   "x": 2350,
+   "y": 1200,
+   "text": "Wer den Link oder QR-Code öffnet:\n• nicht angemeldet: erst Anmelden oder Registrieren, dann zurück zur Einladung\n• schon Spieler der Gruppe: direkt zur Gruppenseite\n• Gruppe hat offene Gäste: „Wer bist du?“ mit „Ich bin neu hier“ und den Gästen\n• keine Gäste: nur „Beitreten“"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "SpielScreen.dc.html",
+  "i05-start-spiel.dc.html",
+  "i05-start-zu-wenig.dc.html",
+  "i05-start-zu-viele.dc.html",
+  "i05-runde-1.dc.html",
+  "i05-ben-verliert.dc.html",
+  "i05-bombe-waehlen.dc.html",
+  "i05-bombe-ohne-konflikt.dc.html",
+  "i05-bombe-konflikt.dc.html",
+  "i05-schwimmer.dc.html",
+  "i05-ein-schwimmer.dc.html",
+  "i07-stechen.dc.html",
+  "i07-extra-runde.dc.html",
+  "i05-gewinner.dc.html",
+  "i05-spielende.dc.html",
+  "i06-menue.dc.html",
+  "i06-abbrechen.dc.html",
+  "i06-verlauf.dc.html",
+  "i06-ausgeblendet.dc.html",
+  "i05-leben-striche.dc.html",
+  "i05-leben-punkte.dc.html",
+  "i05-leben-herzen.dc.html",
+  "i05-leben-balken.dc.html",
+  "i05-leben-zahl.dc.html",
+  "i05-leben-kreis.dc.html",
+  "i08-teilnehmer-live.dc.html",
+  "i08-zuschauer-teilen.dc.html",
+  "i08-zuschauer.dc.html",
+  "i08-link-abgelaufen.dc.html",
+  "i09-uebernahme-gesperrt.dc.html",
+  "i09-uebernahme-warnung.dc.html",
+  "i09-abgeloest.dc.html",
+  "i10-offline-zaehlen.dc.html",
+  "i03-anmelden.dc.html",
+  "i03-registrieren.dc.html",
+  "i16-passwort-vergessen.dc.html",
+  "i16-neues-passwort.dc.html",
+  "i03-profil.dc.html",
+  "i03-profil-statistik.dc.html",
+  "i15-start.dc.html",
+  "i15-start-ohne-spiel.dc.html",
+  "i15-start-mehrere.dc.html",
+  "i15-start-leer.dc.html",
+  "i15-start-laden.dc.html",
+  "i04-gruppe-anlegen.dc.html",
+  "i05-gruppe-spiele.dc.html",
+  "i04-spieler.dc.html",
+  "i12-verwaltung.dc.html",
+  "i12-gast-verknuepfen.dc.html",
+  "i11-einladen.dc.html",
+  "i11-einladung-annehmen.dc.html",
+  "i11-einladung-ohne-gaeste.dc.html",
+  "i11-anfrage-bestaetigen.dc.html",
+  "i11-einladung-ungueltig.dc.html",
+  "i04-spieler-mitglied.dc.html",
+  "i12-gruppe-mitglied.dc.html",
+  "i13-rangliste.dc.html",
+  "i13-kennzahl.dc.html",
+  "i13-zeitraum.dc.html",
+  "i13-rangliste-winrate.dc.html",
+  "i14-profil.dc.html",
+  "i14-profil-mitspieler.dc.html",
+  "hell-runde.dc.html",
+  "hell-spielende.dc.html",
+  "hell-start.dc.html",
+  "hell-rangliste.dc.html"
+ ],
+ "pages": [
+  {
+   "id": "grundlagen",
+   "name": "Grundlagen"
+  },
+  {
+   "id": "spiel",
+   "name": "Spiel zählen"
+  },
+  {
+   "id": "live",
+   "name": "Live, Übernahme, Offline"
+  },
+  {
+   "id": "konto",
+   "name": "Konto und Startseite"
+  },
+  {
+   "id": "gruppe",
+   "name": "Gruppe und Einladung"
+  },
+  {
+   "id": "statistik",
+   "name": "Rangliste und Profil"
+  },
+  {
+   "id": "hell",
+   "name": "Helle Variante"
+  }
+ ],
+ "title": "Swim Score – Mobile-Design"
+}

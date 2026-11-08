@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Gruppen-Rangliste</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+input[type=date]{color-scheme:inherit}
+.th-dark input[type=date]{color-scheme:dark}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; position: relative; overflow: hidden">
+  <header style="display: grid; grid-template-columns: 52px minmax(0, 1fr) 96px; align-items: center; height: 60px; padding: 0 4px; flex-shrink: 0">
+    <a href="i15-start.dc.html" aria-label="Zur Startseite" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx); justify-self: center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></a>
+    <div style="display: flex; flex-direction: column; min-width: 0">
+      <div style="font-size: 20px; font-weight: 700; line-height: 1.2">Donnerstagsrunde</div>
+      <div style="font-size: 13px; color: var(--mu)">11 Spieler</div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 2px; padding-right: 4px">
+      <a href="i11-einladen.dc.html" aria-label="Einladen" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx)"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6"></path><path d="M22 11h-6"></path></svg></a>
+      <a href="i12-verwaltung.dc.html" aria-label="Gruppe verwalten" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx)"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M4 21v-7"></path><path d="M4 10V3"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M20 21v-5"></path><path d="M20 12V3"></path><path d="M2 14h4"></path><path d="M10 8h4"></path><path d="M18 16h4"></path></svg></a>
+    </div>
+  </header>
+
+  <nav aria-label="Bereiche der Gruppe" style="margin: 4px 16px 10px; padding: 4px; border-radius: 14px; background: var(--sf2); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; flex-shrink: 0">
+    <a href="i05-gruppe-spiele.dc.html" style="height: 40px; border-radius: 10px; color: var(--mu); font-weight: 500; font-size: 15px; display: flex; align-items: center; justify-content: center; text-decoration: none">Spiele</a>
+    <a href="i13-rangliste.dc.html" aria-current="page" style="height: 40px; border-radius: 10px; background: var(--sf); color: var(--tx); font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; text-decoration: none">Rangliste</a>
+    <a href="i04-spieler.dc.html" style="height: 40px; border-radius: 10px; color: var(--mu); font-weight: 500; font-size: 15px; display: flex; align-items: center; justify-content: center; text-decoration: none">Spieler</a>
+  </nav>
+
+  <div style="display: flex; gap: 8px; padding: 2px 16px 6px; flex-shrink: 0">
+      <button type="button" onClick="{{mOpenFn}}" aria-haspopup="dialog" aria-label="Kennzahl: {{curLabel}}. Ändern" style="flex: 1; min-width: 0; height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 12px; border-radius: 12px; border: 1.5px solid var(--pr); background: var(--prbg); color: var(--pr); font-size: 15px; font-weight: 600">
+        <sc-if value="{{cur.iSiege}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 5h2a2 2 0 0 1 0 4h-2"></path><path d="M7 5H5a2 2 0 0 0 0 4h2"></path></svg></sc-if>
+        <sc-if value="{{cur.iWinrate}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg></sc-if>
+        <sc-if value="{{cur.iTeilnahmen}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></sc-if>
+        <sc-if value="{{cur.iBomben}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><circle cx="11" cy="13" r="8"></circle><path d="m15.5 7.5 2.3-2.3a2 2 0 0 1 2.8 0l.3.3"></path><path d="M21 3l1-1"></path></svg></sc-if>
+        <sc-if value="{{cur.iSchwimmer}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M2 9c.6.5 1.2 1 2.5 1C7 10 7 8 9.5 8c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path><path d="M2 15c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path></svg></sc-if>
+        <sc-if value="{{cur.iUnbreakable}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg></sc-if>
+        <sc-if value="{{cur.iUntouchable}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M11.5 2.3a.53.53 0 0 1 .95 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.76a.53.53 0 0 1 .3.9l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.9l5.16-.76a2.12 2.12 0 0 0 1.6-1.16z"></path></svg></sc-if>
+        <span style="flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{curLabel}}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="m6 9 6 6 6-6"></path></svg>
+      </button>
+      <button type="button" onClick="{{pOpenFn}}" aria-haspopup="dialog" aria-label="Zeitraum: {{pLabel}}. Ändern" style="flex: 0 1 auto; min-width: 0; max-width: 46%; height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 10px 0 12px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 15px; font-weight: 600">
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--mu); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{pLabel}}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--mu); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="m6 9 6 6 6-6"></path></svg>
+      </button>
+    </div>
+  <div style="padding: 0 20px 6px; font-size: 13px; color: var(--mu); flex-shrink: 0">{{hint}}</div>
+  <ol style="list-style: none; margin: 0; padding: 0 16px 20px; flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+      <li style="border-bottom: 1px solid var(--ln)">
+        <a href="{{r.href}}" style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 54px; color: var(--tx); text-decoration: none; pointer-events: {{r.pe}}">
+          <span style="font-size: 16px; font-weight: 600; color: {{r.rankColor}}; text-align: center">{{r.rank}}</span>
+          <span style="display: flex; align-items: center; gap: 8px; min-width: 0"><span style="font-size: 17px; font-weight: {{r.nameW}}">{{r.name}}</span><sc-if value="{{r.guest}}"><span style="font-size: 13px; color: var(--mu)">Gast</span></sc-if></span>
+          <span style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 18px; font-weight: 700; color: {{r.valColor}}">{{r.value}}</span><span style="font-size: 12px; color: var(--mu)">{{r.sub}}</span></span>
+        </a>
+      </li>
+    </sc-for>
+    <sc-if value="{{hasPending}}">
+      <li style="padding: 18px 4px 6px; font-size: 14px; font-weight: 600; color: var(--mu)">Noch nicht gewertet, unter 5 Spielen</li>
+      <sc-for list="{{pending}}" as="r" hint-placeholder-count="1">
+        <li style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 48px; border-bottom: 1px solid var(--ln); color: var(--mu)">
+          <span></span>
+          <span style="display: flex; align-items: center; gap: 8px"><span style="font-size: 16px">{{r.name}}</span><sc-if value="{{r.guest}}"><span style="font-size: 13px">Gast</span></sc-if></span>
+          <span style="font-size: 14px">{{r.sub}}</span>
+        </li>
+      </sc-for>
+    </sc-if>
+  </ol>
+
+  <sc-if value="{{pOpen}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 10; background: var(--scrim); display: flex; flex-direction: column; justify-content: flex-end">
+      <div role="dialog" aria-modal="true" aria-label="Zeitraum wählen" style="background: var(--sf); border-radius: 24px 24px 0 0; border-top: 1px solid var(--ln); padding: 10px 20px 24px; display: flex; flex-direction: column; gap: 14px; max-height: 92%; overflow: auto; box-sizing: border-box">
+        <div style="width: 40px; height: 4px; border-radius: 2px; background: var(--ln); align-self: center; flex-shrink: 0"></div>
+        <h2 style="margin: 0; font-size: 22px; font-weight: 600">Zeitraum</h2>
+        <div role="radiogroup" aria-label="Zeitraum" style="display: flex; flex-direction: column">
+          <sc-for list="{{pOpts}}" as="o" hint-placeholder-count="5">
+            <button type="button" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 0; border-bottom: 1px solid var(--ln); background: transparent; padding: 4px 4px; text-align: left">
+              <span style="display: flex; flex-direction: column"><span style="font-size: 16px; font-weight: {{o.fw}}">{{o.label}}</span><sc-if value="{{o.hasSub}}"><span style="font-size: 13px; color: var(--mu)">{{o.sub}}</span></sc-if></span>
+              <sc-if value="{{o.on}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--pr); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{pCustom}}">
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 6px"><label for="p-von" style="font-size: 14px; font-weight: 500">Von</label><input id="p-von" type="date" value="2026-03-01" style="height: 52px; box-sizing: border-box; padding: 0 12px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--bg); font-size: 16px"></div>
+            <div style="display: flex; flex-direction: column; gap: 6px"><label for="p-bis" style="font-size: 14px; font-weight: 500">Bis</label><input id="p-bis" type="date" value="2026-06-30" style="height: 52px; box-sizing: border-box; padding: 0 12px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--bg); font-size: 16px"></div>
+          </div>
+        </sc-if>
+        <div style="display: flex; gap: 10px">
+          <button type="button" onClick="{{pCancel}}" style="flex: 1; height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Abbrechen</button>
+          <button type="button" onClick="{{pApply}}" style="flex: 1; height: 52px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600">Übernehmen</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{mOpen}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 10; background: var(--scrim); display: flex; flex-direction: column; justify-content: flex-end">
+      <div role="dialog" aria-modal="true" aria-label="Kennzahl wählen" style="background: var(--sf); border-radius: 24px 24px 0 0; border-top: 1px solid var(--ln); padding: 10px 20px 24px; display: flex; flex-direction: column; gap: 14px; max-height: 92%; overflow: auto; box-sizing: border-box">
+        <div style="width: 40px; height: 4px; border-radius: 2px; background: var(--ln); align-self: center; flex-shrink: 0"></div>
+        <h2 style="margin: 0; font-size: 22px; font-weight: 600">Kennzahl</h2>
+        <div role="radiogroup" aria-label="Kennzahl" style="display: flex; flex-direction: column">
+          <sc-for list="{{chips}}" as="c" hint-placeholder-count="7">
+            <button type="button" role="radio" aria-checked="{{c.on}}" onClick="{{c.pickClose}}" style="min-height: 56px; display: flex; align-items: center; gap: 12px; border: 0; border-bottom: 1px solid var(--ln); background: transparent; padding: 4px 4px; text-align: left; color: var(--tx)">
+              <span style="width: 36px; height: 36px; border-radius: 10px; background: {{c.icoBg}}; color: {{c.icoFg}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+                <sc-if value="{{c.iSiege}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 5h2a2 2 0 0 1 0 4h-2"></path><path d="M7 5H5a2 2 0 0 0 0 4h2"></path></svg></sc-if>
+                <sc-if value="{{c.iWinrate}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg></sc-if>
+                <sc-if value="{{c.iTeilnahmen}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></sc-if>
+                <sc-if value="{{c.iBomben}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><circle cx="11" cy="13" r="8"></circle><path d="m15.5 7.5 2.3-2.3a2 2 0 0 1 2.8 0l.3.3"></path><path d="M21 3l1-1"></path></svg></sc-if>
+                <sc-if value="{{c.iSchwimmer}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M2 9c.6.5 1.2 1 2.5 1C7 10 7 8 9.5 8c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path><path d="M2 15c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path></svg></sc-if>
+                <sc-if value="{{c.iUnbreakable}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg></sc-if>
+                <sc-if value="{{c.iUntouchable}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M11.5 2.3a.53.53 0 0 1 .95 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.76a.53.53 0 0 1 .3.9l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.9l5.16-.76a2.12 2.12 0 0 0 1.6-1.16z"></path></svg></sc-if>
+              </span>
+              <span style="flex: 1; display: flex; flex-direction: column"><span style="font-size: 16px; font-weight: {{c.fw}}">{{c.label}}</span><span style="font-size: 13px; color: var(--mu)">{{c.desc}}</span></span>
+              <sc-if value="{{c.on}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--pr); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"kennzahl":{"editor":"enum","options":["siege","winrate","teilnahmen","bomben","schwimmer","unbreakable","untouchable"],"default":"siege"},"zeitraumOffen":{"editor":"boolean","default":false},"kennzahlOffen":{"editor":"boolean","default":false},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+var P = [
+  { n: 'Anna', g: 64, w: 14, b: 27, s: 19, ub: 3, ut: 2 },
+  { n: 'Ben', g: 71, w: 15, b: 22, s: 24, ub: 4, ut: 1 },
+  { n: 'Carla', g: 58, w: 11, b: 31, s: 15, ub: 1, ut: 3 },
+  { n: 'Dario', g: 49, w: 7, b: 12, s: 17, ub: 2, ut: 0 },
+  { n: 'Emil', g: 37, w: 6, b: 9, s: 10, ub: 1, ut: 1, guest: true },
+  { n: 'Fiona', g: 44, w: 8, b: 15, s: 9, ub: 0, ut: 2 },
+  { n: 'Greta', g: 22, w: 3, b: 6, s: 8, ub: 0, ut: 0 },
+  { n: 'Hakan', g: 21, w: 5, b: 11, s: 4, ub: 1, ut: 1, guest: true },
+  { n: 'Ida', g: 30, w: 4, b: 7, s: 11, ub: 0, ut: 0 },
+  { n: 'Jonas', g: 9, w: 1, b: 2, s: 3, ub: 0, ut: 0 },
+  { n: 'Kim', g: 4, w: 1, b: 1, s: 1, ub: 0, ut: 1, guest: true }
+];
+function pct(x) { return Math.round(x * 100) + ' %'; }
+function dec(x) { return x.toFixed(2).replace('.', ','); }
+var M = {
+  siege: { label: 'Siege', val: function (p) { return p.w; }, fmt: String, sub: function (p) { return 'aus ' + p.g + ' Spielen'; }, hint: 'Meiste Siege' },
+  winrate: { label: 'Winrate', min: 5, val: function (p) { return p.w / p.g; }, fmt: pct, sub: function (p) { return p.w + ' von ' + p.g; }, hint: 'Siege pro Spiel, ab 5 Spielen' },
+  teilnahmen: { label: 'Teilnahmen', val: function (p) { return p.g; }, fmt: String, sub: function () { return 'Spiele'; }, hint: 'Meiste Spiele' },
+  bomben: { label: 'Bomben pro Spiel', min: 5, val: function (p) { return p.b / p.g; }, fmt: dec, sub: function (p) { return p.b + ' Bomben'; }, hint: 'Ab 5 Spielen' },
+  schwimmer: { label: 'Schwimmer-Quote', min: 5, val: function (p) { return p.s / p.g; }, fmt: pct, sub: function (p) { return p.s + ' von ' + p.g; }, hint: 'Wie oft geschwommen, ab 5 Spielen' },
+  unbreakable: { label: 'Unbreakable', val: function (p) { return p.ub; }, fmt: String, sub: function () { return 'als Schwimmer gewonnen'; }, hint: 'Siege als Schwimmer' },
+  untouchable: { label: 'Untouchable', val: function (p) { return p.ut; }, fmt: String, sub: function () { return 'ohne Lebensverlust'; }, hint: 'Siege ohne verlorenes Leben' }
+};
+var ORDER = ['siege', 'winrate', 'teilnahmen', 'bomben', 'schwimmer', 'unbreakable', 'untouchable'];
+/* Zeitraum: Auswahl im Bottom Sheet. Jahre nur, in denen es Spiele gibt. */
+var PERIODS = [
+  { id: 'gesamt', label: 'Gesamt', sub: 'Alle Spiele seit März 2024' },
+  { id: '2026', label: '2026', sub: 'Dieses Jahr' },
+  { id: '2025', label: '2025', sub: '' },
+  { id: '2024', label: '2024', sub: '' },
+  { id: 'eigen', label: 'Eigener Zeitraum', sub: 'Von und bis selbst wählen' }
+];
+function periodVals(c) {
+  var st = c.state || {};
+  var startOpen = c.props.zeitraumOffen === true || c.props.zeitraumOffen === 'true';
+  var open = st.pOpen === undefined ? startOpen : st.pOpen;
+  var sel = st.pSel || 'gesamt';
+  var draft = st.pDraft || (startOpen && st.pOpen === undefined ? 'eigen' : sel);
+  var cur = PERIODS.filter(function (p) { return p.id === sel; })[0];
+  return {
+    pOpen: open,
+    pLabel: sel === 'eigen' ? '1. März bis 30. Juni 2026' : cur.label,
+    pOpenFn: function () { c.setState({ pOpen: true, pDraft: sel }); },
+    pOpts: PERIODS.map(function (p) {
+      var on = p.id === draft;
+      return { label: p.label, sub: p.sub, hasSub: !!p.sub, on: on, fw: on ? 600 : 400, pick: function () { c.setState({ pDraft: p.id }); } };
+    }),
+    pCustom: draft === 'eigen',
+    pApply: function () { c.setState({ pOpen: false, pSel: draft }); },
+    pCancel: function () { c.setState({ pOpen: false, pDraft: sel }); }
+  };
+}
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var st = this.state || {};
+    var key = (st.k && st.src === this.props.kennzahl) ? st.k : (this.props.kennzahl || 'siege');
+    var m = M[key];
+    var ranked = [], pending = [];
+    P.forEach(function (p) { if (m.min && p.g < m.min) pending.push(p); else ranked.push(p); });
+    ranked.sort(function (a, b) { return m.val(b) - m.val(a); });
+    var rank = 0, prev = null;
+    var rows = ranked.map(function (p, i) {
+      var v = m.val(p);
+      if (prev === null || v !== prev) rank = i + 1;
+      prev = v;
+      return { rank: rank, name: p.n, guest: !!p.guest, value: m.fmt(v), sub: m.sub(p),
+        rankColor: rank === 1 ? 'var(--pr)' : 'var(--mu)', valColor: rank === 1 ? 'var(--pr)' : 'var(--tx)', nameW: rank === 1 ? 600 : 500,
+        href: p.guest ? '#' : 'i14-profil-mitspieler.dc.html', pe: p.guest ? 'none' : 'auto' };
+    });
+    var flag = function (v) { return v === true || v === 'true'; };
+    var mOpen = st.mOpen === undefined ? flag(this.props.kennzahlOffen) : st.mOpen;
+    var iconFlags = function (k) { return { iSiege: k === 'siege', iWinrate: k === 'winrate', iTeilnahmen: k === 'teilnahmen', iBomben: k === 'bomben', iSchwimmer: k === 'schwimmer', iUnbreakable: k === 'unbreakable', iUntouchable: k === 'untouchable' }; };
+    var chips = ORDER.map(function (k) {
+      var on = k === key;
+      return Object.assign(iconFlags(k), { label: M[k].label, desc: M[k].hint, on: on, bc: on ? 'var(--pr)' : 'var(--ln)', bg: on ? 'var(--prbg)' : 'transparent', fg: on ? 'var(--pr)' : 'var(--tx)', fw: on ? 600 : 500,
+        icoBg: on ? 'var(--prbg)' : 'var(--sf2)', icoFg: on ? 'var(--pr)' : 'var(--tx)',
+        pickClose: function () { self.setState({ k: k, src: self.props.kennzahl, mOpen: false }); } });
+    });
+    var pv = periodVals(this);
+    return Object.assign(pv, {
+      tc: this.props.theme === 'light' ? 'th-light' : 'th-dark',
+      chips: chips, rows: rows, hint: m.hint,
+      cur: iconFlags(key), curLabel: m.label,
+      mOpen: mOpen, mOpenFn: function () { self.setState({ mOpen: true }); },
+      hasPending: pending.length > 0,
+      pending: pending.map(function (p) { return { name: p.n, guest: !!p.guest, sub: p.g + ' von 5 Spielen' }; })
+    });
+  }
+}
+</script>
+</body>
+</html>

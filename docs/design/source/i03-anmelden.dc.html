@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Anmelden</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Google+Sans:wght@500&family=Roboto:wght@500&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+input::placeholder{color:var(--mu)}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45; display: flex; flex-direction: column; overflow: hidden">
+  <header style="height: 72px; display: flex; align-items: center; gap: 10px; padding: 0 24px; flex-shrink: 0">
+    <sc-if value="{{showBack}}">
+      <a href="i03-anmelden.dc.html" aria-label="Zurück zur Anmeldung" style="width: 44px; height: 44px; margin-left: -12px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx)"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></a>
+    </sc-if>
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="8" style="fill: var(--pr)"></rect><path d="M6 11.5c1.4 0 2.1-1.5 4-1.5s2.6 1.5 4 1.5 2.1-1.5 4-1.5 2.6 1.5 4 1.5" style="fill: none; stroke: var(--onpr); stroke-width: 2.2; stroke-linecap: round"></path><path d="M6 17c1.4 0 2.1-1.5 4-1.5s2.6 1.5 4 1.5 2.1-1.5 4-1.5 2.6 1.5 4 1.5" style="fill: none; stroke: var(--onpr); stroke-width: 2.2; stroke-linecap: round; opacity: .55"></path></svg>
+    <span style="font-size: 18px; font-weight: 600">Swim Score</span>
+  </header>
+
+  <sc-if value="{{vLogin}}">
+    <div style="display: flex; flex-direction: column; gap: 20px; padding: 28px 24px 28px; flex: 1; min-height: 0; overflow: auto">
+      <h1 style="margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em">Anmelden</h1>
+      <button type="button" style="height: 48px; border-radius: 14px; border: 1px solid {{gStroke}}; background: {{gFill}}; color: {{gText}}; display: flex; align-items: center; justify-content: center; padding: 0 12px; font-family: 'Google Sans', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 20px; font-weight: 500"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true" style="flex-shrink: 0; margin-right: 10px"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>Mit Google anmelden</button>
+      <div style="display: flex; align-items: center; gap: 12px; color: var(--mu); font-size: 14px"><span style="flex: 1; height: 1px; background: var(--ln)"></span>oder<span style="flex: 1; height: 1px; background: var(--ln)"></span></div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="l-user" style="font-size: 14px; font-weight: 500">Benutzername</label>
+        <input id="l-user" type="text" autocomplete="username" value="anna" style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="l-pw" style="font-size: 14px; font-weight: 500">Passwort</label>
+        <div style="position: relative">
+          <input id="l-pw" type="{{lpw.type}}" autocomplete="current-password" value="geheim123" style="width: 100%; height: 52px; box-sizing: border-box; padding: 0 52px 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+          <button type="button" onClick="{{lpw.toggle}}" aria-label="{{lpw.label}}" aria-pressed="{{lpw.shown}}" style="position: absolute; right: 4px; top: 4px; width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--mu); display: flex; align-items: center; justify-content: center">
+            <sc-if value="{{lpw.hidden}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></svg></sc-if>
+            <sc-if value="{{lpw.shown}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M10.73 5.08a10.74 10.74 0 0 1 11.2 6.57 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-1.44 2.49"></path><path d="M14.08 14.16a3 3 0 0 1-4.24-4.24"></path><path d="M17.48 17.5a10.75 10.75 0 0 1-15.42-5.15 1 1 0 0 1 0-.7 10.75 10.75 0 0 1 4.45-5.14"></path><path d="m2 2 20 20"></path></svg></sc-if>
+          </button>
+        </div>
+        <a href="i16-passwort-vergessen.dc.html" style="align-self: flex-end; min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 600; color: var(--pr); text-decoration: none">Passwort vergessen?</a>
+      </div>
+      <a href="i15-start.dc.html" style="height: 56px; flex-shrink: 0; border-radius: 14px; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Anmelden</a>
+      <div style="flex: 1"></div>
+      <div style="text-align: center; font-size: 15px; color: var(--mu)">Noch kein Konto? <a href="i03-registrieren.dc.html" style="color: var(--pr); font-weight: 600; text-decoration: none">Registrieren</a></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{vRegister}}">
+    <div style="display: flex; flex-direction: column; gap: 16px; padding: 12px 24px 28px; flex: 1; min-height: 0; overflow: auto">
+      <h1 style="margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em">Konto anlegen</h1>
+      <button type="button" style="height: 48px; flex-shrink: 0; border-radius: 14px; border: 1px solid {{gStroke}}; background: {{gFill}}; color: {{gText}}; display: flex; align-items: center; justify-content: center; padding: 0 12px; font-family: 'Google Sans', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 20px; font-weight: 500"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true" style="flex-shrink: 0; margin-right: 10px"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>Mit Google registrieren</button>
+      <div style="display: flex; align-items: center; gap: 12px; color: var(--mu); font-size: 14px"><span style="flex: 1; height: 1px; background: var(--ln)"></span>oder<span style="flex: 1; height: 1px; background: var(--ln)"></span></div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="r-user" style="font-size: 14px; font-weight: 500">Benutzername</label>
+        <input id="r-user" type="text" autocomplete="username" placeholder="z. B. emil_k" aria-describedby="r-user-hint" style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+        <span id="r-user-hint" style="font-size: 13px; color: var(--mu)">Damit meldest du dich an. Deinen Anzeigenamen änderst du später im Profil.</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="r-mail" style="font-size: 14px; font-weight: 500">E-Mail</label>
+        <input id="r-mail" type="email" autocomplete="email" aria-describedby="r-mail-hint" style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+        <span id="r-mail-hint" style="font-size: 13px; color: var(--mu)">Nur für das Zurücksetzen des Passworts. Niemand in deinen Gruppen sieht sie.</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="r-pw" style="font-size: 14px; font-weight: 500">Passwort</label>
+        <div style="position: relative">
+          <input id="r-pw" type="{{rpw.type}}" autocomplete="new-password" aria-describedby="r-pw-hint" style="width: 100%; height: 52px; box-sizing: border-box; padding: 0 52px 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+          <button type="button" onClick="{{rpw.toggle}}" aria-label="{{rpw.label}}" aria-pressed="{{rpw.shown}}" style="position: absolute; right: 4px; top: 4px; width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--mu); display: flex; align-items: center; justify-content: center">
+            <sc-if value="{{rpw.hidden}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></svg></sc-if>
+            <sc-if value="{{rpw.shown}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M10.73 5.08a10.74 10.74 0 0 1 11.2 6.57 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-1.44 2.49"></path><path d="M14.08 14.16a3 3 0 0 1-4.24-4.24"></path><path d="M17.48 17.5a10.75 10.75 0 0 1-15.42-5.15 1 1 0 0 1 0-.7 10.75 10.75 0 0 1 4.45-5.14"></path><path d="m2 2 20 20"></path></svg></sc-if>
+          </button>
+        </div>
+        <span id="r-pw-hint" style="font-size: 13px; color: var(--mu)">Mindestens 8 Zeichen.</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="r-pw2" style="font-size: 14px; font-weight: 500">Passwort bestätigen</label>
+        <div style="position: relative">
+          <input id="r-pw2" type="{{rpw2.type}}" autocomplete="new-password" style="width: 100%; height: 52px; box-sizing: border-box; padding: 0 52px 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+          <button type="button" onClick="{{rpw2.toggle}}" aria-label="{{rpw2.label}}" aria-pressed="{{rpw2.shown}}" style="position: absolute; right: 4px; top: 4px; width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--mu); display: flex; align-items: center; justify-content: center">
+            <sc-if value="{{rpw2.hidden}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></svg></sc-if>
+            <sc-if value="{{rpw2.shown}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M10.73 5.08a10.74 10.74 0 0 1 11.2 6.57 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-1.44 2.49"></path><path d="M14.08 14.16a3 3 0 0 1-4.24-4.24"></path><path d="M17.48 17.5a10.75 10.75 0 0 1-15.42-5.15 1 1 0 0 1 0-.7 10.75 10.75 0 0 1 4.45-5.14"></path><path d="m2 2 20 20"></path></svg></sc-if>
+          </button>
+        </div>
+      </div>
+      <a href="i11-einladung-annehmen.dc.html" style="height: 56px; flex-shrink: 0; border-radius: 14px; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Konto anlegen</a>
+      <div style="text-align: center; font-size: 15px; color: var(--mu); padding-top: 4px">Schon ein Konto? <a href="i03-anmelden.dc.html" style="color: var(--pr); font-weight: 600; text-decoration: none">Anmelden</a></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{vForgot}}">
+    <div style="display: flex; flex-direction: column; gap: 18px; padding: 28px 24px 28px; flex: 1">
+      <h1 style="margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em">Passwort vergessen</h1>
+      <p style="margin: 0; color: var(--mu); text-wrap: pretty">Gib die E-Mail-Adresse deines Kontos ein. Wir schicken dir einen Link, mit dem du ein neues Passwort setzt.</p>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="f-mail" style="font-size: 14px; font-weight: 500">E-Mail</label>
+        <input id="f-mail" type="email" autocomplete="email" value="anna@beispiel.de" style="height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+      </div>
+      <button type="button" style="height: 56px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600">Link senden</button>
+      <div role="status" style="display: flex; gap: 12px; padding: 14px; border-radius: 12px; background: var(--sf2); font-size: 15px">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--pr); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; margin-top: 2px"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 6L2 7"></path></svg>
+        <span style="text-wrap: pretty">Wenn es zu dieser Adresse ein Konto gibt, ist der Link unterwegs. Er gilt eine Stunde und führt zu „Neues Passwort“. Schau auch im Spam-Ordner nach.</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{vReset}}">
+    <div style="display: flex; flex-direction: column; gap: 18px; padding: 28px 24px 28px; flex: 1">
+      <h1 style="margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em">Neues Passwort</h1>
+      <p style="margin: 0; color: var(--mu); text-wrap: pretty">Für das Konto <span style="color: var(--tx); font-weight: 600">anna</span>. Danach meldest du dich damit an.</p>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="n-pw" style="font-size: 14px; font-weight: 500">Neues Passwort</label>
+        <div style="position: relative">
+          <input id="n-pw" type="{{npw.type}}" autocomplete="new-password" value="neuespasswort" style="width: 100%; height: 52px; box-sizing: border-box; padding: 0 52px 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+          <button type="button" onClick="{{npw.toggle}}" aria-label="{{npw.label}}" aria-pressed="{{npw.shown}}" style="position: absolute; right: 4px; top: 4px; width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--mu); display: flex; align-items: center; justify-content: center">
+            <sc-if value="{{npw.hidden}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></svg></sc-if>
+            <sc-if value="{{npw.shown}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M10.73 5.08a10.74 10.74 0 0 1 11.2 6.57 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-1.44 2.49"></path><path d="M14.08 14.16a3 3 0 0 1-4.24-4.24"></path><path d="M17.48 17.5a10.75 10.75 0 0 1-15.42-5.15 1 1 0 0 1 0-.7 10.75 10.75 0 0 1 4.45-5.14"></path><path d="m2 2 20 20"></path></svg></sc-if>
+          </button>
+        </div>
+        <span style="font-size: 13px; color: var(--mu)">Mindestens 8 Zeichen.</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="n-pw2" style="font-size: 14px; font-weight: 500">Passwort bestätigen</label>
+        <div style="position: relative">
+          <input id="n-pw2" type="{{npw2.type}}" autocomplete="new-password" value="neuespasswor" aria-invalid="true" aria-describedby="n-err" style="width: 100%; height: 52px; box-sizing: border-box; padding: 0 52px 0 14px; border-radius: 12px; border: 1.5px solid var(--bo); background: var(--sf); font-size: 16px">
+          <button type="button" onClick="{{npw2.toggle}}" aria-label="{{npw2.label}}" aria-pressed="{{npw2.shown}}" style="position: absolute; right: 4px; top: 4px; width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--mu); display: flex; align-items: center; justify-content: center">
+            <sc-if value="{{npw2.hidden}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></svg></sc-if>
+            <sc-if value="{{npw2.shown}}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M10.73 5.08a10.74 10.74 0 0 1 11.2 6.57 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-1.44 2.49"></path><path d="M14.08 14.16a3 3 0 0 1-4.24-4.24"></path><path d="M17.48 17.5a10.75 10.75 0 0 1-15.42-5.15 1 1 0 0 1 0-.7 10.75 10.75 0 0 1 4.45-5.14"></path><path d="m2 2 20 20"></path></svg></sc-if>
+          </button>
+        </div>
+        <span id="n-err" style="font-size: 13px; color: var(--bo)">Die beiden Passwörter sind nicht gleich.</span>
+      </div>
+      <a href="i03-anmelden.dc.html" style="height: 56px; border-radius: 14px; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Passwort speichern</a>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ansicht":{"editor":"enum","options":["anmelden","registrieren","vergessen","neu"],"default":"anmelden"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var v = this.props.ansicht || 'anmelden';
+    var light = this.props.theme === 'light';
+    var shown = (this.state && this.state.shown) || {};
+    var pw = function (key) {
+      var on = !!shown[key];
+      return {
+        type: on ? 'text' : 'password', shown: on, hidden: !on,
+        label: on ? 'Passwort verbergen' : 'Passwort anzeigen',
+        toggle: function () { var n = Object.assign({}, shown); n[key] = !on; self.setState({ shown: n }); }
+      };
+    };
+    return {
+      tc: light ? 'th-light' : 'th-dark',
+      vLogin: v === 'anmelden', vRegister: v === 'registrieren', vForgot: v === 'vergessen', vReset: v === 'neu',
+      showBack: v === 'vergessen' || v === 'neu',
+      gFill: light ? '#FFFFFF' : '#131314', gStroke: light ? '#747775' : '#8E918F', gText: light ? '#1F1F1F' : '#E3E3E3',
+      lpw: pw('lpw'), rpw: pw('rpw'), rpw2: pw('rpw2'), npw: pw('npw'), npw2: pw('npw2')
+    };
+  }
+}
+</script>
+</body>
+</html>

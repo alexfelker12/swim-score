@@ -1,0 +1,94 @@
+/*
+ * Swim Score: Design-Tokens (final, Stand 08.11.2026)
+ *
+ * Ersetzt die Farbwerte in den Blöcken `:root` und `.dark` von src/styles.css.
+ * chart-* und sidebar-* sind nicht entworfen: unverändert lassen.
+ * Dunkel ist der Standard (<html class="dark">), Hell die Alternative.
+ *
+ * Kürzel in den Design-Quellen (docs/design/source/*.dc.html) → Token hier:
+ *   --bg → --background      --sf → --card/--popover   --sf2 → --muted/--secondary/--accent
+ *   --ln → --border/--input  --off → --life-off        --tx → --foreground
+ *   --mu → --muted-foreground --pr → --primary         --onpr → --primary-foreground
+ *   --prbg → --primary-muted --swim → --swimmer       --swimbg → --swimmer-muted
+ *   --bomb → --bomb          --bombbg → --bomb-muted   --bo → --destructive
+ *   --bobg → --destructive-muted                      --scrim → --scrim
+ */
+
+:root {
+    /* Hell: Grund „Kühl“, Primär „Petrol“ */
+    --background: #f3f7f7;
+    --foreground: #10212a;
+    --card: #ffffff;
+    --card-foreground: #10212a;
+    --popover: #ffffff;
+    --popover-foreground: #10212a;
+    --primary: #147a93;
+    --primary-foreground: #ffffff;
+    --secondary: #e7eff0;
+    --secondary-foreground: #10212a;
+    --muted: #e7eff0;
+    --muted-foreground: #536970;
+    --accent: #e7eff0;
+    --accent-foreground: #10212a;
+    --destructive: #c23a28;
+    --destructive-foreground: #ffffff; /* im Design-Canvas noch #1B0B07, das hat nur ca. 3:1 Kontrast: Weiß verwenden */
+    --border: #d0dde0;
+    --input: #d0dde0;
+    --ring: #147a93;
+    --radius: 0.625rem; /* 10 px */
+
+    /* App-spezifisch */
+    --primary-muted: rgba(20, 122, 147, 0.1);
+    --swimmer: #2456c9;
+    --swimmer-muted: rgba(36, 86, 201, 0.1);
+    --bomb: #9a5b00;
+    --bomb-muted: rgba(214, 140, 20, 0.14);
+    --destructive-muted: rgba(194, 58, 40, 0.09);
+    --life-off: #b4c6ca; /* Umriss verlorener Leben, ausgeschiedene Ränder */
+    --scrim: rgba(16, 33, 42, 0.45); /* Hintergrund hinter Bottom Sheets */
+}
+
+.dark {
+    /* Dunkel: Grund „Graphit“, Primär „Türkis“ */
+    --background: #131517;
+    --foreground: #eceef0;
+    --card: #1b1e21;
+    --card-foreground: #eceef0;
+    --popover: #1b1e21;
+    --popover-foreground: #eceef0;
+    --primary: #5cc2d6;
+    --primary-foreground: #062a31;
+    --secondary: #24282c;
+    --secondary-foreground: #eceef0;
+    --muted: #24282c;
+    --muted-foreground: #a1a8ae;
+    --accent: #24282c;
+    --accent-foreground: #eceef0;
+    --destructive: #f07a66;
+    --destructive-foreground: #1b0b07;
+    --border: #30353a;
+    --input: #30353a;
+    --ring: #5cc2d6;
+
+    --primary-muted: rgba(92, 194, 214, 0.14);
+    --swimmer: #5b8ff2;
+    --swimmer-muted: rgba(91, 143, 242, 0.15);
+    --bomb: #f3ba4e;
+    --bomb-muted: rgba(243, 186, 78, 0.13);
+    --destructive-muted: rgba(240, 122, 102, 0.13);
+    --life-off: #4a5157;
+    --scrim: rgba(4, 6, 8, 0.66);
+}
+
+/* In den bestehenden `@theme inline`-Block von src/styles.css ergänzen: */
+/*
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-primary-muted: var(--primary-muted);
+    --color-swimmer: var(--swimmer);
+    --color-swimmer-muted: var(--swimmer-muted);
+    --color-bomb: var(--bomb);
+    --color-bomb-muted: var(--bomb-muted);
+    --color-destructive-muted: var(--destructive-muted);
+    --color-life-off: var(--life-off);
+    --color-scrim: var(--scrim);
+*/

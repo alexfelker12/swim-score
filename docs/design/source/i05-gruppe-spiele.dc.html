@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Gruppe: Spiele</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45; display: flex; flex-direction: column; overflow: hidden">
+  <header style="display: grid; grid-template-columns: 52px minmax(0, 1fr) 96px; align-items: center; height: 60px; padding: 0 4px; flex-shrink: 0">
+    <a href="i15-start.dc.html" aria-label="Zur Startseite" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx); justify-self: center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></a>
+    <div style="display: flex; flex-direction: column; min-width: 0">
+      <div style="font-size: 20px; font-weight: 700; line-height: 1.2">Donnerstagsrunde</div>
+      <div style="font-size: 13px; color: var(--mu)">11 Spieler</div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 2px; padding-right: 4px">
+      <a href="i11-einladen.dc.html" aria-label="Einladen" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx)"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6"></path><path d="M22 11h-6"></path></svg></a>
+      <a href="i12-verwaltung.dc.html" aria-label="Gruppe verwalten" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx)"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M4 21v-7"></path><path d="M4 10V3"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M20 21v-5"></path><path d="M20 12V3"></path><path d="M2 14h4"></path><path d="M10 8h4"></path><path d="M18 16h4"></path></svg></a>
+    </div>
+  </header>
+
+  <nav aria-label="Bereiche der Gruppe" style="margin: 4px 16px 12px; padding: 4px; border-radius: 14px; background: var(--sf2); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; flex-shrink: 0">
+    <a href="i05-gruppe-spiele.dc.html" aria-current="page" style="height: 40px; border-radius: 10px; background: var(--sf); color: var(--tx); font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; text-decoration: none">Spiele</a>
+    <a href="i13-rangliste.dc.html" style="height: 40px; border-radius: 10px; color: var(--mu); font-weight: 500; font-size: 15px; display: flex; align-items: center; justify-content: center; text-decoration: none">Rangliste</a>
+    <a href="i04-spieler.dc.html" style="height: 40px; border-radius: 10px; color: var(--mu); font-weight: 500; font-size: 15px; display: flex; align-items: center; justify-content: center; text-decoration: none">Spieler</a>
+  </nav>
+
+  <div style="flex: 1; min-height: 0; overflow: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px">
+    <a href="i08-teilnehmer-live.dc.html" style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px; background: var(--sf); border: 1.5px solid var(--pr); color: var(--tx); text-decoration: none">
+      <span style="display: flex; align-items: center; justify-content: space-between"><span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--pr); font-weight: 600"><span style="width: 8px; height: 8px; border-radius: 4px; background: var(--pr)"></span>Läuft, Runde 5</span><span style="font-size: 13px; color: var(--mu)">heute, 21:40</span></span>
+      <span style="font-size: 17px; font-weight: 600">6 Teilnehmer, Ben zählt</span>
+      <span style="font-size: 14px; color: var(--swim)">Dario schwimmt</span>
+    </a>
+
+    <h2 style="margin: 14px 4px 2px; font-size: 14px; font-weight: 600; color: var(--mu)">Oktober</h2>
+    <sc-for list="{{games}}" as="g" hint-placeholder-count="5">
+      <a href="i06-verlauf.dc.html" style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 12px 16px; border-radius: 14px; background: {{g.bg}}; border: 1.5px {{g.bs}} var(--ln); color: var(--tx); text-decoration: none">
+        <span style="font-size: 17px; font-weight: 600; color: {{g.titleColor}}">{{g.title}}</span>
+        <span style="font-size: 13px; color: var(--mu); text-align: right">{{g.date}}</span>
+        <span style="font-size: 14px; color: var(--mu)">{{g.meta}}<sc-if value="{{g.hasSwim}}"><span>, </span><span style="color: var(--swim)">{{g.swim}}</span></sc-if></span>
+        <span></span>
+      </a>
+    </sc-for>
+  </div>
+
+  <div style="padding: 12px 16px 20px; border-top: 1px solid var(--ln); flex-shrink: 0">
+    <a href="i05-start-spiel.dc.html" style="height: 56px; border-radius: 14px; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>Neues Spiel</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+class Component extends DCLogic {
+  renderVals() {
+    var raw = [
+      { t: 'Carla gewinnt', d: 'Do., 29. Okt.', m: '7 Teilnehmer', s: 'Schwimmer Ben' },
+      { t: 'Anna gewinnt', d: 'Do., 22. Okt.', m: '6 Teilnehmer', s: 'Schwimmer Anna' },
+      { t: 'Abgebrochen', d: 'Do., 15. Okt.', m: '5 Teilnehmer, zählt nicht', s: '', x: true },
+      { t: 'Hakan gewinnt', d: 'Do., 15. Okt.', m: '5 Teilnehmer', s: 'Schwimmer Ida' },
+      { t: 'Ben gewinnt', d: 'Do., 8. Okt.', m: '9 Teilnehmer', s: 'Schwimmer Greta' },
+      { t: 'Fiona gewinnt', d: 'Do., 1. Okt.', m: '4 Teilnehmer', s: '' }
+    ];
+    var games = raw.map(function (g) {
+      return { title: g.t, date: g.d, meta: g.m, swim: g.s, hasSwim: !!g.s,
+        bg: g.x ? 'transparent' : 'var(--sf)', bs: g.x ? 'dashed' : 'solid', titleColor: g.x ? 'var(--mu)' : 'var(--tx)' };
+    });
+    return { tc: this.props.theme === 'light' ? 'th-light' : 'th-dark', games: games };
+  }
+}
+</script>
+</body>
+</html>

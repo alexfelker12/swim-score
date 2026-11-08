@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Spiel starten</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+input::placeholder{color:var(--mu)}
+button{cursor:pointer}
+button:disabled{cursor:default}
+button:focus-visible,a:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.4; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; overflow: hidden">
+  <header style="display: grid; grid-template-columns: 52px minmax(0, 1fr) 52px; align-items: center; height: 56px; padding: 0 4px; flex-shrink: 0">
+    <a href="i05-gruppe-spiele.dc.html" aria-label="Zurück zur Gruppe" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx); justify-self: center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></a>
+    <div style="display: flex; flex-direction: column; align-items: center">
+      <div style="font-size: 20px; font-weight: 600; line-height: 1.2">Neues Spiel</div>
+      <div style="font-size: 13px; color: var(--mu)">Donnerstagsrunde</div>
+    </div>
+    <div></div>
+  </header>
+
+  <div style="flex: 1; min-height: 0; overflow: auto; padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 600">Am Tisch, im Uhrzeigersinn</h2>
+      <span aria-label="{{countLabel}}" style="font-size: 15px; color: {{countColor}}; font-weight: 600">{{countText}}</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <sc-for list="{{seated}}" as="p" hint-placeholder-count="6">
+        <div style="display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 4px 0 6px; border-radius: 14px; border: 1.5px solid var(--ln); background: var(--sf)">
+          <button type="button" aria-label="{{p.dragLabel}}" style="width: 36px; height: 44px; border: 0; background: transparent; color: var(--mu); display: flex; align-items: center; justify-content: center; cursor: grab"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: currentColor"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></svg></button>
+          <span style="width: 20px; font-size: 14px; color: var(--mu)">{{p.seat}}</span>
+          <span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px">
+            <span style="font-size: 18px; font-weight: 600">{{p.name}}</span>
+            <sc-if value="{{p.first}}"><span style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: var(--prbg); color: var(--pr); font-size: 12px; font-weight: 600"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"><rect x="3" y="6" width="12" height="16" rx="2"></rect><path d="M9 2h10a2 2 0 0 1 2 2v14"></path></svg>Dealer</span></sc-if>
+            <sc-if value="{{p.guest}}"><span style="font-size: 13px; color: var(--mu)">Gast</span></sc-if>
+          </span>
+          <button type="button" onClick="{{p.remove}}" aria-label="{{p.removeLabel}}" style="width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--mu); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+        </div>
+      </sc-for>
+    </div>
+
+    <h2 style="margin: 14px 0 0; padding: 0 4px; font-size: 17px; font-weight: 600">Nicht dabei</h2>
+    <div style="display: flex; gap: 8px">
+      <label for="new-guest" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Name des neuen Gastes</label>
+      <input id="new-guest" type="text" placeholder="Neuer Gast, z. B. Lukas" style="flex: 1; min-width: 0; height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+      <button type="button" aria-label="Gast anlegen und hinzufügen" style="width: 52px; height: 52px; border-radius: 12px; border: 0; background: var(--prbg); color: var(--pr); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <sc-for list="{{others}}" as="p" hint-placeholder-count="5">
+        <button type="button" onClick="{{p.add}}" aria-label="{{p.addLabel}}" style="display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 12px 0 16px; border-radius: 14px; border: 1.5px dashed var(--ln); background: transparent; color: var(--tx); text-align: left">
+          <span style="flex: 1; display: flex; align-items: center; gap: 8px"><span style="font-size: 17px; font-weight: 500">{{p.name}}</span><sc-if value="{{p.guest}}"><span style="font-size: 13px; color: var(--mu)">Gast</span></sc-if></span>
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--pr); stroke-width: 2; stroke-linecap: round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="padding: 12px 16px 20px; border-top: 1px solid var(--ln); display: flex; flex-direction: column; gap: 10px; flex-shrink: 0">
+    <sc-if value="{{hasError}}">
+      <div role="alert" style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--bo)"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>{{error}}</div>
+    </sc-if>
+    <a href="i05-runde-1.dc.html" aria-disabled="{{startDisabled}}" style="height: 56px; border-radius: 14px; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none; opacity: {{startOpacity}}; pointer-events: {{startPointer}}">Spiel starten</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"anzahl":{"editor":"enum","options":["6","1","10"],"default":"6"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+var ALL = [{ n: 'Anna' }, { n: 'Ben' }, { n: 'Carla' }, { n: 'Dario' }, { n: 'Emil', g: true }, { n: 'Fiona' }, { n: 'Greta' }, { n: 'Hakan', g: true }, { n: 'Ida' }, { n: 'Jonas' }, { n: 'Kim', g: true }];
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var start = parseInt(this.props.anzahl || '6', 10);
+    var init = []; for (var i0 = 0; i0 < start; i0++) init.push(i0);
+    var sel = (this.state && this.state.sel && this.state.src === start) ? this.state.sel : init;
+    var set = function (s) { self.setState({ sel: s, src: start }); };
+    var seated = sel.map(function (i, k) {
+      return { name: ALL[i].n, guest: !!ALL[i].g, seat: k + 1, first: k === 0, dragLabel: ALL[i].n + ' verschieben', removeLabel: ALL[i].n + ' entfernen',
+        remove: function () { set(sel.filter(function (x) { return x !== i; })); } };
+    });
+    var others = [];
+    ALL.forEach(function (p, i) {
+      if (sel.indexOf(i) < 0) others.push({ name: p.n, guest: !!p.g, addLabel: p.n + ' hinzufügen', add: function () { set(sel.concat([i])); } });
+    });
+    var c = sel.length, ok = c >= 2 && c <= 9;
+    var error = c > 9 ? 'Höchstens 9 Spieler. Nimm ' + (c - 9) + (c - 9 === 1 ? ' Person' : ' Personen') + ' raus.' : (c < 2 ? 'Mindestens 2 Spieler nötig.' : '');
+    return {
+      tc: this.props.theme === 'light' ? 'th-light' : 'th-dark',
+      seated: seated, others: others,
+      countText: c + '/9', countLabel: c + ' von höchstens 9 Spielern', countColor: ok ? 'var(--mu)' : 'var(--bo)',
+      hasError: !ok, error: error,
+      startDisabled: !ok, startOpacity: ok ? '1' : '.4', startPointer: ok ? 'auto' : 'none'
+    };
+  }
+}
+</script>
+</body>
+</html>

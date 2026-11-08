@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Spielverlauf</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+a:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.4; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; overflow: hidden">
+  <header style="display: grid; grid-template-columns: 52px minmax(0, 1fr) 52px; align-items: center; height: 56px; padding: 0 4px; flex-shrink: 0">
+    <a href="i05-spielende.dc.html" aria-label="Zurück zum Spiel" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx); justify-self: center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></a>
+    <div style="display: flex; flex-direction: column; align-items: center">
+      <div style="font-size: 17px; font-weight: 600">Spielverlauf</div>
+      <div style="font-size: 13px; color: var(--mu)">Do., 5. November, 21:40 bis 22:20</div>
+    </div>
+    <div></div>
+  </header>
+
+  <div style="margin: 4px 16px 12px; padding: 14px 16px; border-radius: 14px; background: var(--sf); border: 1.5px solid var(--ln); display: flex; align-items: center; justify-content: space-between; gap: 12px">
+    <div>
+      <div style="font-size: 20px; font-weight: 700">Anna gewinnt</div>
+      <div style="font-size: 14px; color: var(--mu)">10 Runden, 1 Extra-Runde, 6 Teilnehmer</div>
+    </div>
+    <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--pr); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 5h2a2 2 0 0 1 0 4h-2"></path><path d="M7 5H5a2 2 0 0 0 0 4h2"></path></svg>
+  </div>
+
+  <ol style="list-style: none; margin: 0; padding: 0 16px 20px; flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column">
+    <sc-for list="{{items}}" as="it" hint-placeholder-count="12">
+      <li style="display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--ln)">
+        <span style="font-size: 14px; color: var(--mu); padding-top: 2px">{{it.round}}</span>
+        <span style="display: flex; flex-direction: column; gap: 2px">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: {{it.weight}}; color: {{it.color}}">
+            <sc-if value="{{it.bomb}}"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--bomb); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0"><circle cx="11" cy="13" r="8"></circle><path d="m15.5 7.5 2.3-2.3a2 2 0 0 1 2.8 0l.3.3"></path><path d="M21 3l1-1"></path></svg></sc-if>
+            <sc-if value="{{it.swim}}"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--swim); stroke-width: 2; stroke-linecap: round; flex-shrink: 0"><path d="M2 9c.6.5 1.2 1 2.5 1C7 10 7 8 9.5 8c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path><path d="M2 15c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path></svg></sc-if>
+            {{it.text}}
+          </span>
+          <span style="font-size: 13px; color: var(--mu)">{{it.meta}}</span>
+        </span>
+      </li>
+    </sc-for>
+  </ol>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+class Component extends DCLogic {
+  renderVals() {
+    var rows = [
+      ['1', 'Ben verliert ein Leben', 'Dealer Anna', ''],
+      ['2', 'Dario verliert ein Leben', 'Dealer Ben', ''],
+      ['3', 'Anna wirft eine Bombe', 'Dealer Carla', 'bomb'],
+      ['', 'Carla übernimmt das Zählen', 'Ben war offline', 'info'],
+      ['4', 'Carla wirft eine Bombe, Dario schwimmt, Ben scheidet aus', 'Dealer Dario, Schwimmer per Wahl', 'bomb'],
+      ['5', 'Emil scheidet aus', 'Dealer Emil, es gab schon einen Schwimmer', ''],
+      ['6', 'Fiona scheidet aus', 'Dealer Fiona, Stechen mit Anna und Carla', ''],
+      ['7', 'Anna verliert ein Leben', 'Dealer Anna', ''],
+      ['8', 'Carla verliert ein Leben', 'Dealer Carla', ''],
+      ['9', 'Carla scheidet aus', 'Dealer Dario', ''],
+      ['10', 'Extra-Runde', 'Dealer Anna, Anna und Dario gleichauf', 'info'],
+      ['10', 'Dario scheidet aus, Anna gewinnt', 'Dealer bleibt Anna', 'end']
+    ];
+    var items = rows.map(function (r) {
+      return { round: r[0], text: r[1], meta: r[2], bomb: r[3] === 'bomb', swim: r[3] === 'swim',
+        weight: r[3] === 'end' ? 600 : 500, color: r[3] === 'info' ? 'var(--mu)' : 'var(--tx)' };
+    });
+    return { tc: this.props.theme === 'light' ? 'th-light' : 'th-dark', items: items };
+  }
+}
+</script>
+</body>
+</html>

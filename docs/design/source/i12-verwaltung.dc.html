@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Gruppe verwalten</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:default}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45; display: flex; flex-direction: column; position: relative; overflow: hidden">
+  <header style="display: grid; grid-template-columns: 52px minmax(0, 1fr) 52px; align-items: center; height: 56px; padding: 0 4px; flex-shrink: 0">
+    <a href="{{backHref}}" aria-label="Zurück zur Gruppe" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tx); justify-self: center"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m15 18-6-6 6-6"></path></svg></a>
+    <div style="text-align: center; font-size: 17px; font-weight: 600">{{title}}</div>
+    <div></div>
+  </header>
+
+  <sc-if value="{{isAdmin}}">
+    <div style="flex: 1; min-height: 0; overflow: auto; padding: 8px 16px 24px; display: flex; flex-direction: column; gap: 26px">
+      <section style="display: flex; flex-direction: column; gap: 6px">
+        <label for="v-name" style="font-size: 14px; font-weight: 500">Name</label>
+        <div style="display: flex; gap: 8px">
+          <input id="v-name" type="text" value="Donnerstagsrunde" style="flex: 1; min-width: 0; height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 16px">
+          <button type="button" style="height: 52px; padding: 0 16px; border-radius: 12px; border: 0; background: var(--prbg); color: var(--pr); font-weight: 600">Speichern</button>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-pl" style="display: flex; flex-direction: column">
+        <h2 id="h-pl" style="margin: 0 0 6px; font-size: 17px; font-weight: 600">Spieler</h2>
+        <sc-for list="{{players}}" as="p" hint-placeholder-count="8">
+          <div style="display: flex; align-items: center; gap: 4px; min-height: 56px; border-bottom: 1px solid var(--ln)">
+            <span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px"><span style="font-size: 16px; font-weight: 500">{{p.name}}</span><span style="font-size: 13px; color: var(--mu)">{{p.tag}}</span></span>
+            <sc-if value="{{p.link}}">
+              <button type="button" onClick="{{p.openLink}}" aria-label="{{p.linkLabel}}" style="width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--pr); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></button>
+            </sc-if>
+            <sc-if value="{{p.removable}}">
+              <button type="button" onClick="{{p.openRemove}}" aria-label="{{p.removeLabel}}" style="width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--bo); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 11h-6"></path></svg></button>
+            </sc-if>
+          </div>
+        </sc-for>
+        <span style="font-size: 13px; color: var(--mu); padding-top: 8px; text-wrap: pretty">Entfernte Spieler bleiben in alten Spielen sichtbar, tauchen aber nicht mehr in der Spielerauswahl und der Rangliste auf.</span>
+      </section>
+
+      <section aria-labelledby="h-admin" style="display: flex; flex-direction: column; gap: 8px">
+        <h2 id="h-admin" style="margin: 0; font-size: 17px; font-weight: 600">Verwalter</h2>
+        <div style="font-size: 15px; color: var(--mu)">Du verwaltest diese Gruppe.</div>
+        <button type="button" style="height: 52px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-weight: 500; text-align: left; padding: 0 16px; display: flex; align-items: center; justify-content: space-between">Verwalterrolle übergeben<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: var(--mu); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="m9 18 6-6-6-6"></path></svg></button>
+      </section>
+
+      <section aria-labelledby="h-former" style="display: flex; flex-direction: column">
+        <h2 id="h-former" style="margin: 0 0 6px; font-size: 17px; font-weight: 600">Ehemalige Spieler</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; min-height: 48px; border-bottom: 1px solid var(--ln); font-size: 15px"><span>Lena</span><span style="color: var(--mu); font-size: 14px">ausgetreten im September</span></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; min-height: 48px; border-bottom: 1px solid var(--ln); font-size: 15px"><span>Ehemaliger Spieler 1</span><span style="color: var(--mu); font-size: 14px">Konto gelöscht</span></div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 6px">
+        <button type="button" style="align-self: flex-start; height: 44px; padding: 0; border: 0; background: transparent; color: var(--bo); font-weight: 600">Gruppe verlassen</button>
+        <span style="font-size: 13px; color: var(--mu); text-wrap: pretty">Als Verwalter übergibst du die Rolle zuerst an einen Spieler mit Konto.</span>
+      </section>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isMember}}">
+    <div style="flex: 1; min-height: 0; overflow: auto; padding: 8px 16px 24px; display: flex; flex-direction: column; gap: 26px">
+      <section style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: var(--mu)">Name</span>
+        <span style="font-size: 20px; font-weight: 600">Donnerstagsrunde</span>
+      </section>
+      <section style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: var(--mu)">Verwalter</span>
+        <span style="font-size: 17px; font-weight: 500">Anna</span>
+        <span style="font-size: 13px; color: var(--mu); text-wrap: pretty">Anna lädt neue Spieler ein und bestätigt, wer welcher Gast ist. Gäste kann jeder anlegen, auch direkt beim Spielstart.</span>
+      </section>
+      <section aria-labelledby="h-former2" style="display: flex; flex-direction: column">
+        <h2 id="h-former2" style="margin: 0 0 6px; font-size: 17px; font-weight: 600">Ehemalige Spieler</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; min-height: 48px; border-bottom: 1px solid var(--ln); font-size: 15px"><span>Lena</span><span style="color: var(--mu); font-size: 14px">ausgetreten im September</span></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; min-height: 48px; border-bottom: 1px solid var(--ln); font-size: 15px"><span>Ehemaliger Spieler 1</span><span style="color: var(--mu); font-size: 14px">Konto gelöscht</span></div>
+      </section>
+      <section style="display: flex; flex-direction: column; gap: 6px">
+        <button type="button" style="align-self: flex-start; height: 44px; padding: 0; border: 0; background: transparent; color: var(--bo); font-weight: 600">Gruppe verlassen</button>
+        <span style="font-size: 13px; color: var(--mu); text-wrap: pretty">Deine bisherigen Spiele bleiben. In der Gruppe stehst du danach als ehemaliger Spieler. Zurück kommst du nur über eine neue Einladung.</span>
+      </section>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{hasSheet}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 10; background: var(--scrim); display: flex; flex-direction: column; justify-content: flex-end">
+      <div role="dialog" aria-modal="true" aria-label="{{sheetLabel}}" style="background: var(--sf); border-radius: 24px 24px 0 0; border-top: 1px solid var(--ln); padding: 10px 20px 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="width: 40px; height: 4px; border-radius: 2px; background: var(--ln); align-self: center"></div>
+
+        <sc-if value="{{shLink}}">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <h2 style="margin: 0; font-size: 22px; font-weight: 600">{{linkTitle}}</h2>
+            <p style="margin: 0; color: var(--mu); font-size: 15px; text-wrap: pretty">{{linkText}}</p>
+          </div>
+          <div role="radiogroup" aria-label="Spieler mit Konto" style="display: flex; flex-direction: column; gap: 8px">
+            <sc-for list="{{accounts}}" as="o" hint-placeholder-count="4">
+              <button type="button" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="min-height: 52px; padding: 6px 14px; border-radius: 12px; border: 1.5px solid {{o.bc}}; background: {{o.bg}}; color: var(--tx); display: flex; align-items: center; gap: 12px; text-align: left">
+                <span style="width: 20px; height: 20px; border-radius: 10px; box-sizing: border-box; border: 2px solid {{o.ring}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{o.dot}}"></span></span>
+                <span style="display: flex; flex-direction: column"><span style="font-size: 16px; font-weight: 600">{{o.name}}</span><span style="font-size: 13px; color: var(--mu)">{{o.sub}}</span></span>
+              </button>
+            </sc-for>
+          </div>
+          <div style="display: flex; gap: 10px">
+            <button type="button" onClick="{{closeSheet}}" style="flex: 1; height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Abbrechen</button>
+            <button type="button" disabled="{{linkDisabled}}" onClick="{{closeSheet}}" style="flex: 1; height: 52px; border-radius: 14px; border: 0; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600; opacity: {{linkOpacity}}">Zusammenführen</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{shRemove}}">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <h2 style="margin: 0; font-size: 22px; font-weight: 600">{{removeTitle}}</h2>
+            <p style="margin: 0; color: var(--mu); font-size: 15px; text-wrap: pretty">{{removeText}}</p>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <button type="button" onClick="{{closeSheet}}" style="height: 56px; border-radius: 14px; border: 0; background: var(--bo); color: #1B0B07; font-size: 16px; font-weight: 600">Entfernen</button>
+            <button type="button" onClick="{{closeSheet}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); background: transparent; color: var(--tx); font-size: 16px; font-weight: 500">Abbrechen</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"rolle":{"editor":"enum","options":["verwalter","spieler"],"default":"verwalter"},"dialog":{"editor":"enum","options":["keiner","verknuepfen","entfernen"],"default":"keiner"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+
+var PL = [
+  { name: 'Anna', tag: 'du, Verwalter' },
+  { name: 'Ben', tag: '', account: true },
+  { name: 'Carla', tag: '', account: true },
+  { name: 'Dario', tag: '', account: true },
+  { name: 'Emil K.', tag: 'seit heute dabei', account: true, sub: 'emil_k, 0 Spiele' },
+  { name: 'Emil', tag: 'Gast', guest: true, games: 37 },
+  { name: 'Hakan', tag: 'Gast', guest: true, games: 21 },
+  { name: 'Lukas', tag: 'Gast, von Ben angelegt', guest: true, games: 1 }
+];
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var srcKey = (this.props.dialog || 'keiner');
+    var st = (this.state && this.state.src === srcKey) ? this.state : null;
+    var sheet = st ? st.sheet : (srcKey === 'verknuepfen' ? 'link' : (srcKey === 'entfernen' ? 'remove' : null));
+    var target = st ? st.target : (srcKey === 'verknuepfen' ? 5 : (srcKey === 'entfernen' ? 1 : -1));
+    var pick = st ? st.pick : (srcKey === 'verknuepfen' ? 4 : -1);
+    var up = function (ch) { self.setState(Object.assign({ src: srcKey, sheet: sheet, target: target, pick: pick }, ch)); };
+    var players = PL.map(function (p, i) {
+      return { name: p.name, tag: p.tag, link: !!p.guest, removable: i > 0,
+        linkLabel: p.name + ' mit einem Konto verknüpfen', removeLabel: p.name + ' entfernen',
+        openLink: function () { up({ sheet: 'link', target: i, pick: -1 }); },
+        openRemove: function () { up({ sheet: 'remove', target: i }); } };
+    });
+    var t = target >= 0 ? PL[target] : null;
+    var accounts = [];
+    PL.forEach(function (p, i) {
+      if (!p.account) return;
+      var on = i === pick;
+      accounts.push({ name: p.name, sub: p.sub || 'Spieler mit Konto', on: on,
+        bc: on ? 'var(--pr)' : 'var(--ln)', bg: on ? 'var(--prbg)' : 'transparent', ring: on ? 'var(--pr)' : 'var(--off)', dot: on ? 'var(--pr)' : 'transparent',
+        pick: function () { up({ pick: i }); } });
+    });
+    var admin = (this.props.rolle || 'verwalter') !== 'spieler';
+    return {
+      tc: this.props.theme === 'light' ? 'th-light' : 'th-dark',
+      isAdmin: admin, isMember: !admin,
+      title: admin ? 'Gruppe verwalten' : 'Gruppe',
+      backHref: admin ? 'i04-spieler.dc.html' : 'i04-spieler-mitglied.dc.html',
+      players: players,
+      hasSheet: admin && !!sheet && !!t, shLink: sheet === 'link', shRemove: sheet === 'remove',
+      sheetLabel: sheet === 'link' ? 'Gast verknüpfen' : 'Spieler entfernen',
+      linkTitle: t ? t.name + ' mit Konto verknüpfen' : '',
+      linkText: t ? 'Wähle, wer ' + t.name + ' ist. Die ' + (t.games || 0) + ' Spiele von Gast ' + t.name + ' werden mit diesem Spieler zusammengeführt, der Gast verschwindet aus der Liste. Das lässt sich nicht rückgängig machen.' : '',
+      accounts: accounts, linkDisabled: pick < 0, linkOpacity: pick < 0 ? '.45' : '1',
+      removeTitle: t ? t.name + ' entfernen?' : '',
+      removeText: t ? t.name + ' wird ehemaliger Spieler. Alte Spiele bleiben unverändert, in Spielerauswahl und Rangliste taucht ' + t.name + ' nicht mehr auf.' : '',
+      closeSheet: function () { up({ sheet: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
