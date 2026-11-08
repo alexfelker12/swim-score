@@ -28,8 +28,12 @@ A unit a player loses when a Round goes against them; the Rule Set sets how many
 _Avoid_: Heart, Lifes
 
 **Swimmer** (Schwimmer):
-The player who would have lost their last Life but keeps playing on it; there is at most one Swimmer per Game.
+The player who would have lost their last Life but keeps playing on it; there is at most one Swimmer per Game, even after they are Out, so anyone losing their last Life after that is Out at once. When a Bomb would put several players Out and nobody has swum yet, the Scorekeeper chooses which of them becomes the Swimmer.
 _Avoid_: Swimming player
+
+**Out** (Ausgeschieden):
+A player who has lost their last Life (or lost again as the Swimmer); they keep their place in the Seating Order but are skipped as Dealer and take no further part in the Game.
+_Avoid_: Dead, Eliminated
 
 **Bomb** (Bombe):
 A Round outcome thrown by one player in which every other remaining player loses a Life.
