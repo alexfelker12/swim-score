@@ -16,7 +16,7 @@ Das Original liegt in einem privaten Design-Canvas auf claude.ai. Agents brauche
 
 | Ticket | Spec | Wichtigste Screens |
 |---|---|---|
-| #3 Fundament: Konto, Datenbank, Testumgebung | [03](issues/03-fundament.md) | `i03-anmelden`, `i03-registrieren`, `i03-profil` |
+| #3 Fundament: Konto, Datenbank, Testumgebung | [03](issues/03-fundament.md) | `i03-anmelden`, `i03-registrieren`, `i03-profil`, Nachtrag `i03-profilbild-*` |
 | #4 Gruppe anlegen und Gäste | [04](issues/04-gruppe-und-gaeste.md) | `i04-gruppe-anlegen`, `i04-spieler` |
 | #5 Spiel starten und zählen | [05](issues/05-spiel-starten-und-zaehlen.md) | `i05-start-spiel`, `i05-runde-1`, `i05-bombe-konflikt`, `i05-spielende`, `i05-gruppe-spiele` |
 | #6 Rückgängig, Abbrechen und Spielverlauf | [06](issues/06-rueckgaengig-abbrechen-verlauf.md) | `i06-menue`, `i06-abbrechen`, `i06-verlauf` |
@@ -34,6 +34,14 @@ Das Original liegt in einem privaten Design-Canvas auf claude.ai. Agents brauche
 #2 (Spiellogik) und #17 (Import) haben keine Oberfläche. Für #2 gilt die präzisierte Schwimmer-Regel in `decisions.md`.
 
 Der Dateiname nennt das Ticket: `i05-…` gehört zu #5, `hell-…` sind helle Referenzen, `Main` ist die Übersicht „Grundlagen“ (`screens/Main.png`).
+
+## Nachträge
+
+Anpassungen nach der Abnahme. Im Canvas stehen sie auf der Seite „Nachträgliche Anpassungen“, Board-Titel „Nachtrag #N · …“. Zusammengefasst sind sie in `decisions.md` › „Nachträgliche Anpassungen am Design“.
+
+| Datum | Ticket | Thema | Spec | Screens |
+|---|---|---|---|---|
+| 08.11.2026 | #3 | Profilbild zuschneiden, anpassen, entfernen | [03 › Nachtrag](issues/03-fundament.md#nachtrag-profilbild-zuschneiden-08112026) | `i03-profilbild-*` |
 
 ## Bausteine (überall gleich bauen)
 
@@ -62,6 +70,7 @@ Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild.
 - **Badges:** Pill, 12–13 px / 500–600. „Verwalter“ in `primary` auf `primary-muted`, „Gast“ in `muted-foreground` auf `muted`. „zählt“ ebenfalls gedämpft.
 - **Eingabe:** 52 px, Radius 12 px, Rand 1,5 px `border` (Fokus `primary`), Fläche `card`. Label 14 px / 500 darüber, Hinweis 13 px gedämpft darunter, Fehler in `destructive`. Passwortfelder mit `eye` / `eye-off`.
 - **Warn-Sheet und Fehlerseite:** Icon links neben der Überschrift, alles linksbündig. (`i09-uebernahme-warnung`, `i08-link-abgelaufen`)
+- **Vollbild-Dialog** (nur der Profilbild-Editor, `i03-profilbild-neu`): Kopf 56 px mit zentriertem Titel. Fußleiste mit Trennlinie oben, Innenabstand 12 / 16 / 24 px, zwei Buttons nebeneinander.
 - **Fokus:** `outline: 2px solid primary; outline-offset: 2px` auf Buttons, Links und Eingaben.
 
 ## Inhalt dieses Ordners

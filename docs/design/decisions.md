@@ -25,7 +25,7 @@ Alles, was beim Entwurf entschieden wurde, und was davon von der Spec (#1), den 
 - **App-Zeichen:** „Swim Score“ mit abgerundetem Quadrat in Primärfarbe und zwei Wellen. Das SVG steht in `source/Main.dc.html`.
 - **Icon + Überschrift** in Warn-Sheets und Fehlerseiten: Das Icon steht links neben der Überschrift, alles linksbündig. Ausnahme sind Gewinner-Sheet und Spielende: Pokal links neben dem Namen, beides zentriert.
 - **Tippflächen:** Spielerzeilen mindestens 52 px, Haupt-Buttons 52–56 px, Icon-Buttons 44 × 44 px.
-- **Entscheidungen** (Schwimmer wählen, Gewinner bestätigen, Stechen, Übernahme, Abbrechen, Kennzahl, Zeitraum) sind **Bottom Sheets**, keine Dialoge in der Bildmitte.
+- **Entscheidungen** (Schwimmer wählen, Gewinner bestätigen, Stechen, Übernahme, Abbrechen, Kennzahl, Zeitraum) sind **Bottom Sheets**, keine Dialoge in der Bildmitte. Ausnahme: Der Profilbild-Editor ist ein Vollbild-Dialog, weil der Ausschnitt Platz braucht (siehe „Nachträgliche Anpassungen am Design“).
 
 ## Spielansicht (#5–#10)
 
@@ -124,7 +124,25 @@ Alles, was beim Entwurf entschieden wurde, und was davon von der Spec (#1), den 
 
 - **Benutzername bei Registrierung über Google:** automatisch aus dem Teil der E-Mail vor dem `@` abgeleitet und normalisiert, bei Kollision mit angehängter Zahl. Danach fest wie jeder Benutzername. Der Anzeigename kommt aus dem Google-Profil und bleibt änderbar.
 - **Hell und Dunkel:** Einstellung im Profil (Tab „Details“, Abschnitt „Darstellung“) mit „System“, „Hell“ und „Dunkel“. Standard ist „Dunkel“.
-- **Profilbild:** wird im Browser auf 256 × 256 px verkleinert und in Postgres gespeichert (Route `/api/avatar/<id>`), kein externer Speicher.
+- **Profilbild:** wird im Browser auf 256 × 256 px verkleinert und in Postgres gespeichert (Route `/api/avatar/<id>`), kein externer Speicher. Den Ausschnitt wählt der Nutzer seit dem Nachtrag selbst (siehe unten).
+
+## Nachträgliche Anpassungen am Design
+
+Im Canvas auf der Seite „Nachträgliche Anpassungen“, die Boards heißen „Nachtrag #N · …“. Screens und Quellen haben die normalen Ticket-Präfixe.
+
+### Profilbild zuschneiden (#3, 08.11.2026)
+
+Spec: `issues/03-fundament.md` › „Nachtrag: Profilbild zuschneiden“.
+
+- **Ohne Bild:** „Bild ändern“ öffnet die Dateiauswahl. Danach kommt ein Editor, in dem ein Kreis den Ausschnitt zeigt.
+  - Der Kreis füllt die quadratische Fläche ganz aus. Die Fläche ist mittig zwischen Kopf und Aktionen.
+  - Verschieben per Ziehen oder Pfeiltasten, **zoomen mit zwei Fingern** (100–300 %), am Computer per Trackpad-Pinch, Mausrad oder `+`/`−`. Es gibt keinen Regler.
+  - „Übernehmen“ setzt das Bild, „Abbrechen“ ändert nichts. Bricht man die Dateiauswahl ab, passiert nichts.
+- **Mit Bild:** „Bild ändern“ öffnet direkt den Editor mit dem gespeicherten Bild und Ausschnitt. Dort gibt es drei Wege:
+  - denselben Ausschnitt anpassen,
+  - „Anderes Bild“ (Dateiauswahl, dann anpassen),
+  - „Entfernen“. Das ist erst mit „Speichern“ wirksam und lässt sich vorher mit „Bild doch behalten“ zurücknehmen.
+- **Speichern fürs Nachbearbeiten (entschieden):** Damit dasselbe Bild später neu zugeschnitten werden kann, speichert die App neben dem 256-px-Bild das verkleinerte Originalbild und den Ausschnitt. Pro Nutzer gibt es genau ein Originalbild, ohne Verlauf. Ein neues Bild ersetzt es.
 
 ## Nicht entschieden oder nicht entworfen
 - Weitere kosmetische Anpassungen will der Nutzer später nachreichen. Für die Entwicklung sind sie nicht nötig.

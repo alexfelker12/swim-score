@@ -28,7 +28,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   </header>
 
   <div style="display: flex; align-items: center; gap: 14px; padding: 4px 20px 14px; flex-shrink: 0">
-    <div aria-hidden="true" style="width: 56px; height: 56px; border-radius: 28px; background: var(--sf2); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; color: var(--pr)">A</div>
+    <sc-if value="{{hasBild}}"><span aria-hidden="true" style="position: relative; width: 56px; height: 56px; border-radius: 28px; overflow: hidden; flex-shrink: 0; background: #0B0C0D"><span style="position: absolute; left: -52.3px; top: -17.5px; width: 134.4px; height: 100.8px; background: {{bildBg}}"></span></span></sc-if>
+    <sc-if value="{{noBild}}"><div aria-hidden="true" style="width: 56px; height: 56px; border-radius: 28px; background: var(--sf2); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; color: var(--pr)">A</div></sc-if>
     <div style="display: flex; flex-direction: column">
       <span style="font-size: 22px; font-weight: 700; line-height: 1.2">Anna</span>
       <span style="font-size: 14px; color: var(--mu)">@anna</span>
@@ -47,7 +48,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
           <span style="font-size: 14px; font-weight: 500">Profilbild</span>
           <span style="font-size: 13px; color: var(--mu)">Sehen alle in deinen Gruppen</span>
         </div>
-        <button type="button" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); font-size: 15px; font-weight: 500">Bild ändern</button>
+        <a href="{{bildHref}}" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); box-sizing: border-box; color: var(--tx); font-size: 15px; font-weight: 500; display: flex; align-items: center; flex-shrink: 0; text-decoration: none">Bild ändern</a>
       </div>
       <div style="display: flex; flex-direction: column; gap: 6px">
         <label for="p-name" style="font-size: 14px; font-weight: 500">Anzeigename</label>
@@ -137,7 +138,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"zeitraumOffen":{"editor":"boolean","default":false},"tab":{"editor":"enum","options":["details","statistik"],"default":"details"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"bild":{"editor":"boolean","default":false},"zeitraumOffen":{"editor":"boolean","default":false},"tab":{"editor":"enum","options":["details","statistik"],"default":"details"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
 
 /* Zeitraum: Auswahl im Bottom Sheet. Jahre nur, in denen es Spiele gibt. */
 var PERIODS = [
@@ -173,11 +174,16 @@ class Component extends DCLogic {
     var src = this.props.tab || 'details';
     var tab = (this.state && this.state.src === src && this.state.tab) ? this.state.tab : src;
     var d = tab !== 'statistik';
+    var bild = this.props.bild === true || this.props.bild === 'true';
     var on = { bg: 'var(--sf)', fg: 'var(--tx)', fw: 600 }, off = { bg: 'transparent', fg: 'var(--mu)', fw: 500 };
     var a = d ? on : off, b = d ? off : on;
     var stats = [['82', 'Teilnahmen'], ['18', 'Siege'], ['22 %', 'Winrate'], ['0,41', 'Bomben pro Spiel'], ['29 %', 'Schwimmer-Quote'], ['3', 'Unbreakable'], ['2', 'Untouchable']];
     return Object.assign(periodVals(this), {
       tc: this.props.theme === 'light' ? 'th-light' : 'th-dark',
+      hasBild: bild, noBild: !bild,
+      bildBg: 'radial-gradient(circle at 66% 40%, #FFE6AD 0 6%, rgba(255,230,173,0) 6.5%), radial-gradient(ellipse 60% 30% at 22% 60%, #4A3F63 0 60%, rgba(74,63,99,0) 61%), radial-gradient(ellipse 70% 26% at 80% 62%, #3B3556 0 60%, rgba(59,53,86,0) 61%), linear-gradient(to bottom, #F7B267 0%, #F08A5D 30%, #B8607A 52%, #5B5A8A 60%, #2C4A63 61%, #1F3A4F 100%)',
+      /* Ohne Bild öffnet „Bild ändern“ in der App zuerst die Dateiauswahl, danach den Editor. */
+      bildHref: bild ? 'i03-profilbild-bearbeiten.dc.html' : 'i03-profilbild-neu.dc.html',
       isDetails: d, isStats: !d,
       dBg: a.bg, dFg: a.fg, dFw: a.fw, sBg: b.bg, sFg: b.fg, sFw: b.fw,
       showDetails: function () { self.setState({ tab: 'details', src: src }); },

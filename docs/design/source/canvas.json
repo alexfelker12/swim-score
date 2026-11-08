@@ -603,6 +603,69 @@
    "w": 390,
    "x": 470,
    "y": 0
+  },
+  "i03-profilbild-profil-ohne.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "nachtrag",
+   "title": "Nachtrag #3 · 1 Profil ohne Bild: „Bild ändern“",
+   "w": 390,
+   "x": 0,
+   "y": 0
+  },
+  "i03-profilbild-neu.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "nachtrag",
+   "title": "Nachtrag #3 · 2 Bild gewählt: Ausschnitt im Kreis",
+   "w": 390,
+   "x": 470,
+   "y": 0
+  },
+  "i03-profilbild-angepasst.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "nachtrag",
+   "title": "Nachtrag #3 · 3 Verschoben und vergrößert",
+   "w": 390,
+   "x": 940,
+   "y": 0
+  },
+  "i03-profilbild-profil-mit.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "nachtrag",
+   "title": "Nachtrag #3 · 4 Übernommen: Profil mit Bild",
+   "w": 390,
+   "x": 1410,
+   "y": 0
+  },
+  "i03-profilbild-bearbeiten.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "nachtrag",
+   "title": "Nachtrag #3 · 5 Vorhandenes Bild anpassen",
+   "w": 390,
+   "x": 0,
+   "y": 1300
+  },
+  "i03-profilbild-anderes.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "nachtrag",
+   "title": "Nachtrag #3 · 6 Anderes Bild gewählt",
+   "w": 390,
+   "x": 470,
+   "y": 1300
+  },
+  "i03-profilbild-entfernt.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "page": "nachtrag",
+   "title": "Nachtrag #3 · 7 Entfernt, noch nicht gespeichert",
+   "w": 390,
+   "x": 940,
+   "y": 1300
   }
  },
  "createdOnFiles": {
@@ -635,7 +698,11 @@
   "s-passwort",
   "t-mitglied",
   "s-mitglied",
-  "s-einladung"
+  "s-einladung",
+  "t-nachtrag",
+  "t-nachtrag-2",
+  "s-nachtrag",
+  "s-nachtrag-2"
  ],
  "notes": {
   "s-hell": {
@@ -826,6 +893,40 @@
    "x": 2350,
    "y": 1200,
    "text": "Wer den Link oder QR-Code öffnet:\n• nicht angemeldet: erst Anmelden oder Registrieren, dann zurück zur Einladung\n• schon Spieler der Gruppe: direkt zur Gruppenseite\n• Gruppe hat offene Gäste: „Wer bist du?“ mit „Ich bin neu hier“ und den Gästen\n• keine Gäste: nur „Beitreten“"
+  },
+  "t-nachtrag": {
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "nachtrag",
+   "text": "Nachtrag #3: Profilbild ohne Bild setzen",
+   "x": 0,
+   "y": -300
+  },
+  "t-nachtrag-2": {
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "nachtrag",
+   "text": "Nachtrag #3: vorhandenes Profilbild ändern",
+   "x": 0,
+   "y": 1000
+  },
+  "s-nachtrag": {
+   "fill": "orange",
+   "page": "nachtrag",
+   "size": 24,
+   "w": 400,
+   "x": 1880,
+   "y": 0,
+   "text": "Nachtrag 08.11.2026 zu #3 (Profil)\n\nOhne Bild: „Bild ändern“ öffnet die Dateiauswahl des Geräts (kein eigener Screen), danach den Editor (2). Im Kreis verschieben (ziehen, Pfeiltasten) und mit zwei Fingern zoomen (Trackpad-Pinch, Mausrad und Tasten +/− am Computer). „Übernehmen“ setzt das Bild, „Abbrechen“ ändert nichts.\n\nMit Bild: „Bild ändern“ öffnet direkt den Editor mit dem gespeicherten Bild und Ausschnitt (5). Dort: anpassen, „Anderes Bild“ (Dateiauswahl, dann 6) oder „Entfernen“ (7, erst „Speichern“ entfernt es wirklich)."
+  },
+  "s-nachtrag-2": {
+   "fill": "orange",
+   "page": "nachtrag",
+   "size": 24,
+   "w": 400,
+   "x": 1410,
+   "y": 1300,
+   "text": "Entschieden: Dafür speichert die App neben dem 256-px-Bild das verkleinerte Originalbild und den Ausschnitt (Position, Zoom). Pro Nutzer gibt es genau ein Originalbild, ohne Verlauf. Nur so lässt sich dasselbe Bild später neu zuschneiden.\n\nIm Prototyp tauscht „Anderes Bild“ das Platzhalter-Foto direkt aus."
   }
  },
  "order": [
@@ -895,7 +996,14 @@
   "hell-runde.dc.html",
   "hell-spielende.dc.html",
   "hell-start.dc.html",
-  "hell-rangliste.dc.html"
+  "hell-rangliste.dc.html",
+  "i03-profilbild-profil-ohne.dc.html",
+  "i03-profilbild-neu.dc.html",
+  "i03-profilbild-angepasst.dc.html",
+  "i03-profilbild-profil-mit.dc.html",
+  "i03-profilbild-bearbeiten.dc.html",
+  "i03-profilbild-anderes.dc.html",
+  "i03-profilbild-entfernt.dc.html"
  ],
  "pages": [
   {
@@ -925,6 +1033,10 @@
   {
    "id": "hell",
    "name": "Helle Variante"
+  },
+  {
+   "id": "nachtrag",
+   "name": "Nachträgliche Anpassungen"
   }
  ],
  "title": "Swim Score – Mobile-Design"
