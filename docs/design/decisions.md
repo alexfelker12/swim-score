@@ -14,7 +14,7 @@ Alles, was beim Entwurf entschieden wurde, und was davon von der Spec (#1), den 
 
 ## Darstellung
 
-- **Look:** ruhig und klar, mobile only (Design bei 390 px, max. 500 px Breite). **Dunkel ist Standard**, Hell ist die Alternative. Wie zwischen den Modi umgeschaltet wird (System oder Einstellung), ist nicht entworfen.
+- **Look:** ruhig und klar, mobile only (Design bei 390 px, max. 500 px Breite). **Dunkel ist Standard**, Hell ist die Alternative. Umgeschaltet wird per Einstellung im Profil (siehe „Nachträglich entschieden“).
 - **Farben:** Dunkel nutzt den Grund „Graphit“ mit Primär „Türkis“ (#5CC2D6), Hell den Grund „Kühl“ mit Primär „Petrol“ (#147A93). Alle Werte stehen in `tokens.css`.
   - Schwimmer: Blau (#5B8FF2 / #2456C9), dunkler als Primär.
   - Bombe: Gelb (#F3BA4E / #9A5B00).
@@ -120,8 +120,11 @@ Alles, was beim Entwurf entschieden wurde, und was davon von der Spec (#1), den 
   - Darunter „Nach Gruppe“, bei Mitspielern „In euren gemeinsamen Gruppen“ mit Hinweis.
   - **Ein Tipp auf eine Gruppen-Karte öffnet die Rangliste dieser Gruppe.**
 
-## Nicht entschieden oder nicht entworfen
+## Nachträglich entschieden (08.11.2026, Kommentar an #3)
 
-- Benutzername bei Registrierung über Google: ob und wie er vergeben wird.
-- Umschalten zwischen Hell und Dunkel (System oder Einstellung).
+- **Benutzername bei Registrierung über Google:** automatisch aus dem Teil der E-Mail vor dem `@` abgeleitet und normalisiert, bei Kollision mit angehängter Zahl. Danach fest wie jeder Benutzername. Der Anzeigename kommt aus dem Google-Profil und bleibt änderbar.
+- **Hell und Dunkel:** Einstellung im Profil (Tab „Details“, Abschnitt „Darstellung“) mit „System“, „Hell“ und „Dunkel“. Standard ist „Dunkel“.
+- **Profilbild:** wird im Browser auf 256 × 256 px verkleinert und in Postgres gespeichert (Route `/api/avatar/<id>`), kein externer Speicher.
+
+## Nicht entschieden oder nicht entworfen
 - Weitere kosmetische Anpassungen will der Nutzer später nachreichen. Für die Entwicklung sind sie nicht nötig.
