@@ -70,7 +70,7 @@ A person who belongs to a Group, either linked to an account or a Guest.
 _Avoid_: Member, User
 
 **Guest** (Gast):
-A Player without an account; can later be linked to an account, which then owns the Guest's history.
+A Player without an account, added by name by any Player with an account, who is recorded as having added them; can later be linked to an account, which then owns the Guest's history. A new Guest may not take the name of a Player already in the Group.
 
 **Participant** (Teilnehmer):
 A Player taking part in a specific Game.
@@ -87,7 +87,7 @@ The freely changeable name of an account, shown in Games and Leaderboards; it st
 _Avoid_: Nickname
 
 **Group Admin** (Verwalter):
-The Player with an account who manages a Group: removes Players, links Guests to accounts, renames the Group. Starts as the Group's creator and can be handed over.
+The Player with an account who manages a Group: invites people, removes Players, links Guests to accounts, renames the Group. Starts as the Group's creator and can be handed over. Adding Guests is not reserved to the Group Admin.
 _Avoid_: Owner, Creator
 
 **Invite** (Einladung):
