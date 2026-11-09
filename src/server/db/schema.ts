@@ -7,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core"
 
 export const THEMES = ["system", "light", "dark"] as const
@@ -122,6 +123,44 @@ export const avatar = pgTable("avatar", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
 
+/** A fixed circle of people who play together; see CONTEXT.md › Group. */
+export const group = pgTable("group", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  /** The Group Admin: an account that is a Player of this Group. */
+  adminId: text("admin_id")
+    .notNull()
+    .references(() => user.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+/**
+ * A Player of a Group: linked to an account, or a Guest (no account, own
+ * name). An account is at most one Player per Group.
+ */
+export const player = pgTable(
+  "player",
+  {
+    id: text("id").primaryKey(),
+    groupId: text("group_id")
+      .notNull()
+      .references(() => group.id, { onDelete: "cascade" }),
+    /** Null for a Guest. */
+    userId: text("user_id").references(() => user.id),
+    /** The Guest's name; Players with an account show their Display Name. */
+    name: text("name"),
+    /** The account that added this Guest; null for Players with an account. */
+    createdById: text("created_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("player_group_id_idx").on(table.groupId),
+    uniqueIndex("player_group_user_idx").on(table.groupId, table.userId),
+  ]
+)
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -133,4 +172,17 @@ export const sessionRelations = relations(session, ({ one }) => ({
 
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
+}))
+
+export const groupRelations = relations(group, ({ many }) => ({
+  players: many(player),
+}))
+
+export const playerRelations = relations(player, ({ one }) => ({
+  group: one(group, { fields: [player.groupId], references: [group.id] }),
+  user: one(user, { fields: [player.userId], references: [user.id] }),
+  createdBy: one(user, {
+    fields: [player.createdById],
+    references: [user.id],
+  }),
 }))

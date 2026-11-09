@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
 import { getRequestHeaders } from "@tanstack/react-start/server"
 import { CommandError } from "./errors"
+import { addGuest, createGroup, getGroup, listMyGroups } from "./groups"
 import { getApp } from "./instance"
 import {
   getAvatarSource,
@@ -19,13 +20,13 @@ function headers(): Headers {
   return new Headers(getRequestHeaders())
 }
 
-export type Outcome = { ok: true } | { ok: false; code: string }
+export type Outcome<T = undefined> =
+  { ok: true; value: T } | { ok: false; code: string }
 
 /** Runs a command and hands a refusal to the client as a value, not a thrown error. */
-async function outcome(run: () => Promise<void>): Promise<Outcome> {
+async function outcome<T>(run: () => Promise<T>): Promise<Outcome<T>> {
   try {
-    await run()
-    return { ok: true }
+    return { ok: true, value: await run() }
   } catch (error) {
     if (error instanceof CommandError) return { ok: false, code: error.code }
     throw error
@@ -104,4 +105,24 @@ export const getAvatarSourceFn = createServerFn({ method: "GET" }).handler(
 
 export const removeAvatarFn = createServerFn({ method: "POST" }).handler(() =>
   outcome(() => removeAvatar(getApp(), headers()))
+)
+
+export const createGroupFn = createServerFn({ method: "POST" })
+  .validator((input: { name: string }) => input)
+  .handler(({ data }) => outcome(() => createGroup(getApp(), headers(), data)))
+
+/** The Group, or null when it does not exist or the viewer is not its Player. */
+export const getGroupFn = createServerFn({ method: "GET" })
+  .validator((input: { groupId: string }) => input)
+  .handler(async ({ data }) => {
+    const result = await outcome(() => getGroup(getApp(), headers(), data))
+    return result.ok ? result.value : null
+  })
+
+export const addGuestFn = createServerFn({ method: "POST" })
+  .validator((input: { groupId: string; name: string }) => input)
+  .handler(({ data }) => outcome(() => addGuest(getApp(), headers(), data)))
+
+export const listMyGroupsFn = createServerFn({ method: "GET" }).handler(() =>
+  listMyGroups(getApp(), headers())
 )
