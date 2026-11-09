@@ -24,7 +24,8 @@ Viele Dateien sind nur Wrapper: Sie importieren einen Basis-Screen mit anderen P
 | `SpielScreen` | alle `i05-*` außer `i05-start-*` und `i05-gruppe-spiele`; `i06-menue`, `i06-abbrechen`, `i06-ausgeblendet`, `i07-*`, `i08-teilnehmer-live`, `i08-zuschauer*`, `i09-*`, `i10-*`, `hell-runde`, `hell-spielende` (Prop `scenario`; `leben` für die Lebensdarstellung) |
 | `i05-start-spiel` | `i05-start-zu-wenig`, `i05-start-zu-viele` (`anzahl`) |
 | `i03-anmelden` | `i03-registrieren`, `i16-passwort-vergessen`, `i16-neues-passwort` (`ansicht`) |
-| `i03-profil` | `i03-profil-statistik` (`tab`) |
+| `i03-profil` | `i03-profil-statistik` (`tab`), `i03-profilbild-profil-ohne`, `i03-profilbild-profil-mit` (`bild`) |
+| `i03-profilbild` | `i03-profilbild-neu`, `-angepasst`, `-bearbeiten`, `-anderes`, `-entfernt` (`zustand`) |
 | `i15-start` | `i15-start-*`, `hell-start` (`zustand`) |
 | `i04-spieler` | `i04-spieler-mitglied` (`rolle`), `i11-anfrage-bestaetigen` (`anfrage`) |
 | `i12-verwaltung` | `i12-gast-verknuepfen` (`dialog`), `i12-gruppe-mitglied` (`rolle`) |

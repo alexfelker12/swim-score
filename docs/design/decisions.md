@@ -14,7 +14,7 @@ Alles, was beim Entwurf entschieden wurde, und was davon von der Spec (#1), den 
 
 ## Darstellung
 
-- **Look:** ruhig und klar, mobile only (Design bei 390 px, max. 500 px Breite). **Dunkel ist Standard**, Hell ist die Alternative. Wie zwischen den Modi umgeschaltet wird (System oder Einstellung), ist nicht entworfen.
+- **Look:** ruhig und klar, mobile only (Design bei 390 px, max. 500 px Breite). **Dunkel ist Standard**, Hell ist die Alternative. Umgeschaltet wird per Einstellung im Profil (siehe „Nachträglich entschieden“).
 - **Farben:** Dunkel nutzt den Grund „Graphit“ mit Primär „Türkis“ (#5CC2D6), Hell den Grund „Kühl“ mit Primär „Petrol“ (#147A93). Alle Werte stehen in `tokens.css`.
   - Schwimmer: Blau (#5B8FF2 / #2456C9), dunkler als Primär.
   - Bombe: Gelb (#F3BA4E / #9A5B00).
@@ -25,7 +25,7 @@ Alles, was beim Entwurf entschieden wurde, und was davon von der Spec (#1), den 
 - **App-Zeichen:** „Swim Score“ mit abgerundetem Quadrat in Primärfarbe und zwei Wellen. Das SVG steht in `source/Main.dc.html`.
 - **Icon + Überschrift** in Warn-Sheets und Fehlerseiten: Das Icon steht links neben der Überschrift, alles linksbündig. Ausnahme sind Gewinner-Sheet und Spielende: Pokal links neben dem Namen, beides zentriert.
 - **Tippflächen:** Spielerzeilen mindestens 52 px, Haupt-Buttons 52–56 px, Icon-Buttons 44 × 44 px.
-- **Entscheidungen** (Schwimmer wählen, Gewinner bestätigen, Stechen, Übernahme, Abbrechen, Kennzahl, Zeitraum) sind **Bottom Sheets**, keine Dialoge in der Bildmitte.
+- **Entscheidungen** (Schwimmer wählen, Gewinner bestätigen, Stechen, Übernahme, Abbrechen, Kennzahl, Zeitraum) sind **Bottom Sheets**, keine Dialoge in der Bildmitte. Ausnahme: Der Profilbild-Editor ist ein Vollbild-Dialog, weil der Ausschnitt Platz braucht (siehe „Nachträgliche Anpassungen am Design“).
 
 ## Spielansicht (#5–#10)
 
@@ -120,8 +120,29 @@ Alles, was beim Entwurf entschieden wurde, und was davon von der Spec (#1), den 
   - Darunter „Nach Gruppe“, bei Mitspielern „In euren gemeinsamen Gruppen“ mit Hinweis.
   - **Ein Tipp auf eine Gruppen-Karte öffnet die Rangliste dieser Gruppe.**
 
-## Nicht entschieden oder nicht entworfen
+## Nachträglich entschieden (08.11.2026, Kommentar an #3)
 
-- Benutzername bei Registrierung über Google: ob und wie er vergeben wird.
-- Umschalten zwischen Hell und Dunkel (System oder Einstellung).
+- **Benutzername bei Registrierung über Google:** automatisch aus dem Teil der E-Mail vor dem `@` abgeleitet und normalisiert, bei Kollision mit angehängter Zahl. Danach fest wie jeder Benutzername. Der Anzeigename kommt aus dem Google-Profil und bleibt änderbar.
+- **Hell und Dunkel:** Einstellung im Profil (Tab „Details“, Abschnitt „Darstellung“) mit „System“, „Hell“ und „Dunkel“. Standard ist „Dunkel“.
+- **Profilbild:** wird im Browser auf 256 × 256 px verkleinert und in Postgres gespeichert (Route `/api/avatar/<id>`), kein externer Speicher. Den Ausschnitt wählt der Nutzer seit dem Nachtrag selbst (siehe unten).
+
+## Nachträgliche Anpassungen am Design
+
+Im Canvas auf der Seite „Nachträgliche Anpassungen“, die Boards heißen „Nachtrag #N · …“. Screens und Quellen haben die normalen Ticket-Präfixe.
+
+### Profilbild zuschneiden (#3, 08.11.2026)
+
+Spec: `issues/03-fundament.md` › „Nachtrag: Profilbild zuschneiden“.
+
+- **Ohne Bild:** „Bild ändern“ öffnet die Dateiauswahl. Danach kommt ein Editor, in dem ein Kreis den Ausschnitt zeigt.
+  - Der Kreis füllt die quadratische Fläche ganz aus. Die Fläche ist mittig zwischen Kopf und Aktionen.
+  - Verschieben per Ziehen oder Pfeiltasten, **zoomen mit zwei Fingern** (100–300 %), am Computer per Trackpad-Pinch, Mausrad oder `+`/`−`. Es gibt keinen Regler.
+  - „Übernehmen“ setzt das Bild, „Abbrechen“ ändert nichts. Bricht man die Dateiauswahl ab, passiert nichts.
+- **Mit Bild:** „Bild ändern“ öffnet direkt den Editor mit dem gespeicherten Bild und Ausschnitt. Dort gibt es drei Wege:
+  - denselben Ausschnitt anpassen,
+  - „Anderes Bild“ (Dateiauswahl, dann anpassen),
+  - „Entfernen“. Das ist erst mit „Speichern“ wirksam und lässt sich vorher mit „Bild doch behalten“ zurücknehmen.
+- **Speichern fürs Nachbearbeiten (entschieden):** Damit dasselbe Bild später neu zugeschnitten werden kann, speichert die App neben dem 256-px-Bild das verkleinerte Originalbild und den Ausschnitt. Pro Nutzer gibt es genau ein Originalbild, ohne Verlauf. Ein neues Bild ersetzt es.
+
+## Nicht entschieden oder nicht entworfen
 - Weitere kosmetische Anpassungen will der Nutzer später nachreichen. Für die Entwicklung sind sie nicht nötig.

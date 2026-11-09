@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Profilbild bearbeiten</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#131517;--sf:#1B1E21;--sf2:#24282C;--ln:#30353A;--off:#4A5157;--tx:#ECEEF0;--mu:#A1A8AE;--pr:#5CC2D6;--onpr:#062A31;--prbg:rgba(92,194,214,.14);--swim:#5B8FF2;--swimbg:rgba(91,143,242,.15);--bomb:#F3BA4E;--bombbg:rgba(243,186,78,.13);--bo:#F07A66;--bobg:rgba(240,122,102,.13);--scrim:rgba(4,6,8,.66)}
+.th-light{--bg:#F3F7F7;--sf:#FFFFFF;--sf2:#E7EFF0;--ln:#D0DDE0;--off:#B4C6CA;--tx:#10212A;--mu:#536970;--pr:#147A93;--onpr:#FFFFFF;--prbg:rgba(20,122,147,.10);--swim:#2456C9;--swimbg:rgba(36,86,201,.10);--bomb:#9A5B00;--bombbg:rgba(214,140,20,.14);--bo:#C23A28;--bobg:rgba(194,58,40,.09);--scrim:rgba(16,33,42,.45)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{tc}}" role="dialog" aria-modal="true" aria-labelledby="pb-title" style="width: 390px; height: 844px; box-sizing: border-box; background: var(--bg); color: var(--tx); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45; display: flex; flex-direction: column; overflow: hidden">
+  <header style="display: flex; align-items: center; justify-content: center; height: 56px; padding: 0 16px; flex-shrink: 0">
+    <h1 id="pb-title" style="margin: 0; font-size: 17px; font-weight: 600">Profilbild</h1>
+  </header>
+
+  <div style="flex: 1; min-height: 0; padding: 4px 24px 16px; display: flex; flex-direction: column; gap: 14px">
+    <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 14px">
+    <sc-if value="{{hasImage}}">
+      <div tabindex="0" role="group" aria-label="Bildausschnitt. Ziehen oder Pfeiltasten zum Verschieben, mit zwei Fingern oder Plus und Minus zoomen." onPointerDown="{{down}}" onPointerMove="{{move}}" onPointerUp="{{up}}" onPointerCancel="{{up}}" onWheel="{{wheel}}" onKeyDown="{{key}}" style="position: relative; width: 342px; height: 342px; flex-shrink: 0; border-radius: 20px; overflow: hidden; background: #0B0C0D; touch-action: none; cursor: {{cursor}}">
+        <div aria-hidden="true" style="position: absolute; left: {{img.left}}px; top: {{img.top}}px; width: {{img.w}}px; height: {{img.h}}px; background: {{img.bg}}"></div>
+        <div aria-hidden="true" style="position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 400px rgba(0,0,0,.58), inset 0 0 0 2px rgba(255,255,255,.9); pointer-events: none"></div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--mu)">
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M12 2v20"></path><path d="M2 12h20"></path><path d="m15 19-3 3-3-3"></path><path d="m19 9 3 3-3 3"></path><path d="m5 9-3 3 3 3"></path><path d="m9 5 3-3 3 3"></path></svg>
+        Ziehen zum Verschieben, mit zwei Fingern zoomen
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 2px 4px">
+        <span aria-hidden="true" style="position: relative; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #0B0C0D"><span style="position: absolute; left: {{p56.left}}px; top: {{p56.top}}px; width: {{p56.w}}px; height: {{p56.h}}px; background: {{img.bg}}"></span></span>
+        <span aria-hidden="true" style="position: relative; width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #0B0C0D"><span style="position: absolute; left: {{p36.left}}px; top: {{p36.top}}px; width: {{p36.w}}px; height: {{p36.h}}px; background: {{img.bg}}"></span></span>
+        <span style="font-size: 13px; color: var(--mu); text-wrap: pretty">So sehen dich die anderen in Listen und Spielen.</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{removed}}">
+      <div style="width: 342px; height: 342px; flex-shrink: 0; border-radius: 20px; background: var(--sf); border: 1.5px dashed var(--ln); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px">
+        <span aria-hidden="true" style="width: 160px; height: 160px; border-radius: 50%; background: var(--sf2); color: var(--pr); display: flex; align-items: center; justify-content: center; font-size: 64px; font-weight: 600">A</span>
+        <span style="font-size: 15px; color: var(--mu); text-align: center; max-width: 260px; text-wrap: pretty">Ohne Bild sehen alle in deinen Gruppen deine Initiale.</span>
+      </div>
+      <button type="button" onClick="{{undoRemove}}" style="align-self: center; height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: transparent; color: var(--pr); font-size: 15px; font-weight: 600">Bild doch behalten</button>
+    </sc-if>
+    </div>
+
+    <div style="display: flex; gap: 10px">
+      <button type="button" onClick="{{pickOther}}" style="flex: 1; height: 48px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); color: var(--tx); font-size: 15px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path><path d="m16 5 3-3 3 3"></path><path d="M19 2v7"></path><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"></path></svg>
+        {{otherLabel}}
+      </button>
+      <sc-if value="{{canRemove}}">
+        <button type="button" onClick="{{remove}}" style="flex: 1; height: 48px; border-radius: 12px; border: 1.5px solid var(--ln); background: var(--sf); color: var(--bo); font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          Entfernen
+        </button>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 10px; padding: 12px 16px 24px; border-top: 1px solid var(--ln); flex-shrink: 0">
+    <a href="{{cancelHref}}" style="flex: 1; height: 52px; border-radius: 14px; border: 1.5px solid var(--ln); box-sizing: border-box; color: var(--tx); font-size: 16px; font-weight: 500; display: flex; align-items: center; justify-content: center; text-decoration: none">Abbrechen</a>
+    <a href="{{confirmHref}}" style="flex: 1; height: 52px; border-radius: 14px; background: var(--pr); color: var(--onpr); font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">{{confirmLabel}}</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"zustand":{"editor":"enum","options":["neu","angepasst","vorhanden","anderes","entfernt"],"default":"neu"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+/* Zwei Platzhalter-Fotos aus Verläufen (keine echten Bilder), mit ihrer natürlichen Größe. */
+var PICS = {
+  see: { w: 600, h: 450, bg: 'radial-gradient(circle at 66% 40%, #FFE6AD 0 6%, rgba(255,230,173,0) 6.5%), radial-gradient(ellipse 60% 30% at 22% 60%, #4A3F63 0 60%, rgba(74,63,99,0) 61%), radial-gradient(ellipse 70% 26% at 80% 62%, #3B3556 0 60%, rgba(59,53,86,0) 61%), linear-gradient(to bottom, #F7B267 0%, #F08A5D 30%, #B8607A 52%, #5B5A8A 60%, #2C4A63 61%, #1F3A4F 100%)' },
+  berg: { w: 480, h: 640, bg: 'linear-gradient(155deg, rgba(0,0,0,0) 58%, #2F5D4E 58.3%), linear-gradient(205deg, rgba(0,0,0,0) 52%, #3E7462 52.3%), radial-gradient(circle at 30% 22%, #FFFFFF 0 5%, rgba(255,255,255,0) 5.5%), linear-gradient(to bottom, #7DBFDF 0%, #CDEBF4 55%, #9FD0B7 100%)' }
+};
+var START = {
+  neu:       { pic: 'see',  zoom: 1,   dx: 0,   dy: 0,  saved: false, removed: false },
+  angepasst: { pic: 'see',  zoom: 1.8, dx: -80, dy: 30, saved: false, removed: false },
+  vorhanden: { pic: 'see',  zoom: 1.8, dx: -80, dy: 30, saved: true,  removed: false },
+  anderes:   { pic: 'berg', zoom: 1,   dx: 0,   dy: 0,  saved: true,  removed: false },
+  entfernt:  { pic: 'see',  zoom: 1.8, dx: -80, dy: 30, saved: true,  removed: true }
+};
+var AREA = 342, CIRCLE = 342;
+function clampPos(pic, zoom, dx, dy) {
+  var scale = CIRCLE / Math.min(pic.w, pic.h) * zoom;
+  var w = pic.w * scale, h = pic.h * scale;
+  var mx = (w - CIRCLE) / 2, my = (h - CIRCLE) / 2;
+  return { w: w, h: h, dx: Math.max(-mx, Math.min(mx, dx)), dy: Math.max(-my, Math.min(my, dy)) };
+}
+function gestureStart(ptrs, zoom, dx, dy) {
+  var p = Object.keys(ptrs).map(function (k) { return ptrs[k]; });
+  if (!p.length) return null;
+  var cx = p.reduce(function (s, q) { return s + q.x; }, 0) / p.length;
+  var cy = p.reduce(function (s, q) { return s + q.y; }, 0) / p.length;
+  var dist = p.length > 1 ? Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) : 0;
+  return { cx: cx, cy: cy, dist: dist, zoom: zoom, dx: dx, dy: dy };
+}
+function preview(g, size) {
+  var f = size / CIRCLE;
+  return { left: (g.left - (AREA - CIRCLE) / 2) * f, top: (g.top - (AREA - CIRCLE) / 2) * f, w: g.w * f, h: g.h * f };
+}
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var key = this.props.zustand || 'neu';
+    var st = (this.state && this.state.src === key) ? this.state : Object.assign({ src: key, drag: false }, START[key]);
+    var set = function (p) { self.setState(Object.assign({}, st, p, { src: key })); };
+    var pic = PICS[st.pic];
+    var c = clampPos(pic, st.zoom, st.dx, st.dy);
+    var g = { left: AREA / 2 - c.w / 2 + c.dx, top: AREA / 2 - c.h / 2 + c.dy, w: c.w, h: c.h, bg: pic.bg };
+    var zoomTo = function (z) { z = Math.max(1, Math.min(3, z)); var n = clampPos(pic, z, st.dx, st.dy); set({ zoom: z, dx: n.dx, dy: n.dy }); };
+    var ptrs = self.ptrs || (self.ptrs = {});
+    var moveBy = function (x, y) { var n = clampPos(pic, st.zoom, c.dx + x, c.dy + y); set({ dx: n.dx, dy: n.dy }); };
+    return {
+      tc: this.props.theme === 'light' ? 'th-light' : 'th-dark',
+      hasImage: !st.removed, removed: st.removed,
+      img: g, p56: preview(g, 56), p36: preview(g, 36),
+      cursor: st.drag ? 'grabbing' : 'grab',
+      /* Ein Finger verschiebt, zwei Finger zoomen (und verschieben über ihre Mitte). */
+      down: function (e) {
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+        ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+        self.gesture = gestureStart(ptrs, st.zoom, c.dx, c.dy);
+        set({ drag: true });
+      },
+      move: function (e) {
+        if (!ptrs[e.pointerId] || !self.gesture) return;
+        ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+        var g0 = self.gesture, now = gestureStart(ptrs, 0, 0, 0);
+        var z = g0.dist && now.dist ? Math.max(1, Math.min(3, g0.zoom * now.dist / g0.dist)) : st.zoom;
+        var n = clampPos(pic, z, g0.dx + now.cx - g0.cx, g0.dy + now.cy - g0.cy);
+        set({ zoom: z, dx: n.dx, dy: n.dy });
+      },
+      up: function (e) {
+        delete ptrs[e.pointerId];
+        self.gesture = Object.keys(ptrs).length ? gestureStart(ptrs, st.zoom, c.dx, c.dy) : null;
+        if (!self.gesture) set({ drag: false });
+      },
+      /* Trackpad-Pinch kommt als Wheel mit ctrlKey; Mausrad zoomt ebenfalls. */
+      wheel: function (e) { zoomTo(st.zoom * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.002))); },
+      key: function (e) {
+        var k = e.key, step = e.shiftKey ? 40 : 10;
+        if (k === 'ArrowLeft') moveBy(step, 0); else if (k === 'ArrowRight') moveBy(-step, 0);
+        else if (k === 'ArrowUp') moveBy(0, step); else if (k === 'ArrowDown') moveBy(0, -step);
+        else if (k === '+' || k === '=') zoomTo(st.zoom + 0.1); else if (k === '-') zoomTo(st.zoom - 0.1);
+        else return;
+        e.preventDefault();
+      },
+      /* Im Prototyp ersetzt „Anderes Bild“ das Foto direkt; in der App öffnet es die Dateiauswahl. */
+      otherLabel: st.removed ? 'Bild auswählen' : 'Anderes Bild',
+      pickOther: function () { set({ pic: st.pic === 'see' ? 'berg' : 'see', zoom: 1, dx: 0, dy: 0, removed: false }); },
+      canRemove: st.saved && !st.removed,
+      remove: function () { set({ removed: true }); },
+      undoRemove: function () { set({ removed: false }); },
+      cancelHref: st.saved ? 'i03-profilbild-profil-mit.dc.html' : 'i03-profilbild-profil-ohne.dc.html',
+      confirmHref: st.removed ? 'i03-profilbild-profil-ohne.dc.html' : 'i03-profilbild-profil-mit.dc.html',
+      confirmLabel: st.removed ? 'Speichern' : 'Übernehmen'
+    };
+  }
+}
+</script>
+</body>
+</html>

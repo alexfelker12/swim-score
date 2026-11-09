@@ -2,10 +2,27 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/ibm-plex-sans";
+@import "@fontsource/roboto/500.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-primary-muted: var(--primary-muted);
+    --color-swimmer: var(--swimmer);
+    --color-swimmer-muted: var(--swimmer-muted);
+    --color-bomb: var(--bomb);
+    --color-bomb-muted: var(--bomb-muted);
+    --color-destructive-muted: var(--destructive-muted);
+    --color-life-off: var(--life-off);
+    --color-scrim: var(--scrim);
+    --color-avatar-backdrop: var(--avatar-backdrop);
+    --color-avatar-shade: var(--avatar-shade);
+    --color-avatar-ring: var(--avatar-ring);
+    --color-google-fill: var(--google-fill);
+    --color-google-stroke: var(--google-stroke);
+    --color-google-text: var(--google-text);
+    --font-google: "Google Sans", "Roboto", system-ui, sans-serif;
     --font-heading: var(--font-sans);
     --font-sans: 'IBM Plex Sans Variable', sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
@@ -49,30 +66,54 @@
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.148 0.004 228.8);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.148 0.004 228.8);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.148 0.004 228.8);
-    --primary: oklch(0.52 0.105 223.128);
-    --primary-foreground: oklch(0.984 0.019 200.873);
-    --secondary: oklch(0.967 0.001 286.375);
-    --secondary-foreground: oklch(0.21 0.006 285.885);
-    --muted: oklch(0.963 0.002 197.1);
-    --muted-foreground: oklch(0.56 0.021 213.5);
-    --accent: oklch(0.963 0.002 197.1);
-    --accent-foreground: oklch(0.218 0.008 223.9);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.925 0.005 214.3);
-    --input: oklch(0.925 0.005 214.3);
-    --ring: oklch(0.723 0.014 214.4);
+    /* Hell: Grund „Kühl“, Primär „Petrol“ */
+    --background: #f3f7f7;
+    --foreground: #10212a;
+    --card: #ffffff;
+    --card-foreground: #10212a;
+    --popover: #ffffff;
+    --popover-foreground: #10212a;
+    --primary: #147a93;
+    --primary-foreground: #ffffff;
+    --secondary: #e7eff0;
+    --secondary-foreground: #10212a;
+    --muted: #e7eff0;
+    --muted-foreground: #536970;
+    --accent: #e7eff0;
+    --accent-foreground: #10212a;
+    --destructive: #c23a28;
+    --destructive-foreground: #ffffff; /* im Design-Canvas noch #1B0B07, das hat nur ca. 3:1 Kontrast: Weiß verwenden */
+    --border: #d0dde0;
+    --input: #d0dde0;
+    --ring: #147a93;
+    --radius: 0.625rem; /* 10 px */
+
+    /* App-spezifisch */
+    --primary-muted: rgba(20, 122, 147, 0.1);
+    --swimmer: #2456c9;
+    --swimmer-muted: rgba(36, 86, 201, 0.1);
+    --bomb: #9a5b00;
+    --bomb-muted: rgba(214, 140, 20, 0.14);
+    --destructive-muted: rgba(194, 58, 40, 0.09);
+    --life-off: #b4c6ca; /* Umriss verlorener Leben, ausgeschiedene Ränder */
+    --scrim: rgba(16, 33, 42, 0.45); /* Hintergrund hinter Bottom Sheets */
+
+    /* Profilbild-Editor (03-fundament.md › Nachtrag), in beiden Modi gleich */
+    --avatar-backdrop: #0b0c0d; /* Grund der Ausschnittsfläche */
+    --avatar-shade: rgba(0, 0, 0, 0.58); /* Ecken außerhalb des Kreises */
+    --avatar-ring: rgba(255, 255, 255, 0.9); /* Linie um den Kreis */
+
+    /* Google-Button nach den Sign-in-with-Google-Richtlinien (decisions.md › Konto) */
+    --google-fill: #ffffff;
+    --google-stroke: #747775;
+    --google-text: #1f1f1f;
+
+    /* Nicht entworfen, aus dem shadcn-Template */
     --chart-1: oklch(0.872 0.007 219.6);
     --chart-2: oklch(0.56 0.021 213.5);
     --chart-3: oklch(0.45 0.017 213.2);
     --chart-4: oklch(0.378 0.015 216);
     --chart-5: oklch(0.275 0.011 216.9);
-    --radius: 0.625rem;
     --sidebar: oklch(0.987 0.002 197.1);
     --sidebar-foreground: oklch(0.148 0.004 228.8);
     --sidebar-primary: oklch(0.609 0.126 221.723);
@@ -84,24 +125,41 @@
 }
 
 .dark {
-    --background: oklch(0.148 0.004 228.8);
-    --foreground: oklch(0.987 0.002 197.1);
-    --card: oklch(0.218 0.008 223.9);
-    --card-foreground: oklch(0.987 0.002 197.1);
-    --popover: oklch(0.218 0.008 223.9);
-    --popover-foreground: oklch(0.987 0.002 197.1);
-    --primary: oklch(0.45 0.085 224.283);
-    --primary-foreground: oklch(0.984 0.019 200.873);
-    --secondary: oklch(0.274 0.006 286.033);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.275 0.011 216.9);
-    --muted-foreground: oklch(0.723 0.014 214.4);
-    --accent: oklch(0.275 0.011 216.9);
-    --accent-foreground: oklch(0.987 0.002 197.1);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.56 0.021 213.5);
+    /* Dunkel: Grund „Graphit“, Primär „Türkis“ */
+    --background: #131517;
+    --foreground: #eceef0;
+    --card: #1b1e21;
+    --card-foreground: #eceef0;
+    --popover: #1b1e21;
+    --popover-foreground: #eceef0;
+    --primary: #5cc2d6;
+    --primary-foreground: #062a31;
+    --secondary: #24282c;
+    --secondary-foreground: #eceef0;
+    --muted: #24282c;
+    --muted-foreground: #a1a8ae;
+    --accent: #24282c;
+    --accent-foreground: #eceef0;
+    --destructive: #f07a66;
+    --destructive-foreground: #1b0b07;
+    --border: #30353a;
+    --input: #30353a;
+    --ring: #5cc2d6;
+
+    --primary-muted: rgba(92, 194, 214, 0.14);
+    --swimmer: #5b8ff2;
+    --swimmer-muted: rgba(91, 143, 242, 0.15);
+    --bomb: #f3ba4e;
+    --bomb-muted: rgba(243, 186, 78, 0.13);
+    --destructive-muted: rgba(240, 122, 102, 0.13);
+    --life-off: #4a5157;
+    --scrim: rgba(4, 6, 8, 0.66);
+
+    --google-fill: #131314;
+    --google-stroke: #8e918f;
+    --google-text: #e3e3e3;
+
+    /* Nicht entworfen, aus dem shadcn-Template */
     --chart-1: oklch(0.872 0.007 219.6);
     --chart-2: oklch(0.56 0.021 213.5);
     --chart-3: oklch(0.45 0.017 213.2);
@@ -123,6 +181,11 @@
     }
   body {
     @apply bg-background text-foreground;
+    font-variant-numeric: tabular-nums;
+    }
+  :where(button, a, input, [role="tab"]):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
     }
   html {
     @apply font-sans;
