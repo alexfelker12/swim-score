@@ -3,6 +3,7 @@ import {
   boolean,
   customType,
   index,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -96,13 +97,28 @@ const bytea = customType<{ data: Uint8Array; driverData: Uint8Array }>({
   dataType: () => "bytea",
 })
 
-/** An uploaded profile picture, already resized by the browser. */
+/**
+ * The square part of the source image shown in the avatar, independent of
+ * its pixel size: `x` is a fraction of its width, `y` of its height, and
+ * `size` (the square's side) of its shorter side.
+ */
+export type AvatarCrop = { x: number; y: number; size: number }
+
+/**
+ * An uploaded profile picture: the 256 px avatar everyone sees, plus the
+ * (downscaled) source image and crop so its owner can adjust it later. One
+ * per account; a new picture replaces all three.
+ */
 export const avatar = pgTable("avatar", {
   userId: text("user_id")
     .primaryKey()
     .references(() => user.id, { onDelete: "cascade" }),
   contentType: text("content_type").notNull(),
   data: bytea("data").notNull(),
+  /** Missing for pictures stored before cropping existed. */
+  sourceContentType: text("source_content_type"),
+  source: bytea("source"),
+  crop: jsonb("crop").$type<AvatarCrop>(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
 

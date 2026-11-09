@@ -1,5 +1,10 @@
 import { useEffect } from "react"
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
+import {
+  HeadContent,
+  ScriptOnce,
+  Scripts,
+  createRootRoute,
+} from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
 import { getViewer } from "@/server/functions"
@@ -7,7 +12,8 @@ import { getViewer } from "@/server/functions"
 import appCss from "../styles.css?url"
 
 // For the "System" theme the class can only be decided in the browser,
-// before the first paint.
+// before the first paint. Runs once in the server-rendered page; switching
+// themes later is handled by useSystemTheme.
 const systemThemeScript = `if(matchMedia("(prefers-color-scheme: dark)").matches)document.documentElement.classList.add("dark")`
 
 export const Route = createRootRoute({
@@ -51,7 +57,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
         {theme === "system" ? (
-          <script dangerouslySetInnerHTML={{ __html: systemThemeScript }} />
+          <ScriptOnce>{systemThemeScript}</ScriptOnce>
         ) : null}
       </head>
       <body>

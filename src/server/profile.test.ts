@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest"
 import {
   getAvatar,
+  getAvatarSource,
   getProfile,
+  removeAvatar,
   setAvatar,
   setTheme,
   updateProfile,
 } from "./profile"
+import { avatar as avatarTable } from "./db/schema"
 import { createTestApp, signInWithGoogle, signUp } from "./testing/test-app"
 
 const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1])
@@ -113,12 +116,15 @@ describe("the profile", () => {
 })
 
 describe("the profile picture", () => {
+  const crop = { x: 0.1, y: 0.2, size: 0.5 }
+  const picture = { avatar: png, source: webp, crop }
+
   it("is stored in the database and served to signed-in players", async () => {
     const app = await createTestApp()
     const anna = await signUp(app.auth, { username: "anna" })
     const ben = await signUp(app.auth, { username: "ben" })
 
-    await setAvatar(app, anna.headers, { data: png })
+    await setAvatar(app, anna.headers, picture)
 
     const image = (await getProfile(app, anna.headers)).image
     expect(image).toMatch(new RegExp(`^/api/avatar/${anna.user.id}\\?v=\\d+$`))
@@ -128,61 +134,155 @@ describe("the profile picture", () => {
     })
   })
 
-  it("replaces an earlier picture, including one from Google", async () => {
+  it("keeps the source image and the crop so its owner can adjust it later", async () => {
     const app = await createTestApp()
-    const { user, headers } = await signInWithGoogle(app.auth, {
+    const { headers } = await signUp(app.auth, { username: "anna" })
+
+    await setAvatar(app, headers, picture)
+
+    expect(await getAvatarSource(app, headers)).toEqual({
+      source: { contentType: "image/webp", data: webp },
+      crop,
+    })
+  })
+
+  it("replaces picture, source and crop together, so there is only ever one", async () => {
+    const app = await createTestApp()
+    const { user, headers } = await signUp(app.auth, { username: "anna" })
+    await setAvatar(app, headers, picture)
+
+    const newCrop = { x: 0, y: 0, size: 1 }
+    await setAvatar(app, headers, { avatar: webp, source: png, crop: newCrop })
+
+    expect(await getAvatar(app, headers, user.id)).toMatchObject({
+      contentType: "image/webp",
+    })
+    expect(await getAvatarSource(app, headers)).toEqual({
+      source: { contentType: "image/png", data: png },
+      crop: newCrop,
+    })
+  })
+
+  it("starts from the Google picture, uncropped, for an account that only has that", async () => {
+    const app = await createTestApp()
+    const { headers } = await signInWithGoogle(app.auth, {
       sub: "g-1",
       email: "ben@gmail.com",
       name: "Ben",
       picture: "https://lh3.googleusercontent.com/ben",
     })
-    expect((await getProfile(app, headers)).image).toBe(
-      "https://lh3.googleusercontent.com/ben"
-    )
 
-    await setAvatar(app, headers, { data: png })
-    await setAvatar(app, headers, { data: webp })
-
-    expect(await getAvatar(app, headers, user.id)).toEqual({
-      contentType: "image/webp",
-      data: webp,
+    expect(await getAvatarSource(app, headers)).toEqual({
+      source: { url: "https://lh3.googleusercontent.com/ben" },
+      crop: { x: 0, y: 0, size: 1 },
     })
   })
 
-  it("is nothing for someone who never uploaded one", async () => {
+  it("is nothing for someone who never set one", async () => {
     const app = await createTestApp()
     const { user, headers } = await signUp(app.auth, { username: "anna" })
 
     expect(await getAvatar(app, headers, user.id)).toBeNull()
+    expect(await getAvatarSource(app, headers)).toBeNull()
+  })
+
+  it("can be removed, after which the profile shows the initial again", async () => {
+    const app = await createTestApp()
+    const { user, headers } = await signUp(app.auth, { username: "anna" })
+    await setAvatar(app, headers, picture)
+
+    await removeAvatar(app, headers)
+
+    expect((await getProfile(app, headers)).image).toBeNull()
+    expect(await getAvatar(app, headers, user.id)).toBeNull()
+    expect(await getAvatarSource(app, headers)).toBeNull()
+  })
+
+  it("can be removed when it came from Google", async () => {
+    const app = await createTestApp()
+    const { headers } = await signInWithGoogle(app.auth, {
+      sub: "g-1",
+      email: "ben@gmail.com",
+      name: "Ben",
+      picture: "https://lh3.googleusercontent.com/ben",
+    })
+
+    await removeAvatar(app, headers)
+
+    expect((await getProfile(app, headers)).image).toBeNull()
   })
 
   it("takes its type from the file's content", async () => {
     const app = await createTestApp()
     const { user, headers } = await signUp(app.auth, { username: "anna" })
 
-    await setAvatar(app, headers, { data: png })
+    await setAvatar(app, headers, { ...picture, avatar: png })
 
     expect(await getAvatar(app, headers, user.id)).toMatchObject({
       contentType: "image/png",
     })
   })
 
+  const html = new TextEncoder().encode("<script>alert(1)</script>")
   it.each([
+    { case: "a picture that is not an image", avatar: html },
     {
-      case: "not an image",
-      data: new TextEncoder().encode("<script>alert(1)</script>"),
+      case: "a picture larger than 256 KB",
+      avatar: new Uint8Array([...png, ...new Uint8Array(256 * 1024)]),
     },
+    { case: "a source that is not an image", source: html },
     {
-      case: "larger than 256 KB",
-      data: new Uint8Array([...png, ...new Uint8Array(256 * 1024)]),
+      case: "a source larger than 1 MB",
+      source: new Uint8Array([...png, ...new Uint8Array(1024 * 1024)]),
     },
-  ])("refuses a file that is $case", async ({ data }) => {
+  ])("refuses $case", async (files) => {
     const app = await createTestApp()
     const { headers } = await signUp(app.auth, { username: "anna" })
 
-    await expect(setAvatar(app, headers, { data })).rejects.toMatchObject({
-      code: "invalidImage",
+    await expect(
+      setAvatar(app, headers, { ...picture, ...files })
+    ).rejects.toMatchObject({ code: "invalidImage" })
+  })
+
+  it("refuses crop data that is not a crop at all", async () => {
+    const app = await createTestApp()
+    const { headers } = await signUp(app.auth, { username: "anna" })
+
+    await expect(
+      setAvatar(app, headers, {
+        ...picture,
+        crop: null as unknown as typeof crop,
+      })
+    ).rejects.toMatchObject({ code: "invalidCrop" })
+  })
+
+  it("starts from the avatar itself, uncropped, for a picture stored before cropping existed", async () => {
+    const app = await createTestApp()
+    const { user, headers } = await signUp(app.auth, { username: "anna" })
+    // Such rows only exist from before the source column; there is no
+    // command that creates them any more.
+    await app.db
+      .insert(avatarTable)
+      .values({ userId: user.id, contentType: "image/png", data: png })
+
+    expect(await getAvatarSource(app, headers)).toEqual({
+      source: { contentType: "image/png", data: png },
+      crop: { x: 0, y: 0, size: 1 },
     })
+  })
+
+  it.each([
+    { case: "outside the image", crop: { x: 1, y: 0, size: 0.5 } },
+    { case: "larger than the image", crop: { x: 0, y: 0, size: 1.5 } },
+    { case: "of no size", crop: { x: 0, y: 0, size: 0 } },
+    { case: "negative", crop: { x: -0.1, y: 0, size: 0.5 } },
+  ])("refuses a crop that is $case", async ({ crop: badCrop }) => {
+    const app = await createTestApp()
+    const { headers } = await signUp(app.auth, { username: "anna" })
+
+    await expect(
+      setAvatar(app, headers, { ...picture, crop: badCrop })
+    ).rejects.toMatchObject({ code: "invalidCrop" })
   })
 })
 
@@ -199,8 +299,15 @@ describe("every profile command", () => {
     },
     {
       command: "setAvatar",
-      run: (app, headers) => setAvatar(app, headers, { data: png }),
+      run: (app, headers) =>
+        setAvatar(app, headers, {
+          avatar: png,
+          source: png,
+          crop: { x: 0, y: 0, size: 1 },
+        }),
     },
+    { command: "getAvatarSource", run: getAvatarSource },
+    { command: "removeAvatar", run: removeAvatar },
     {
       command: "getAvatar",
       run: (app, headers) => getAvatar(app, headers, "u"),

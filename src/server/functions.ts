@@ -2,8 +2,15 @@ import { createServerFn } from "@tanstack/react-start"
 import { getRequestHeaders } from "@tanstack/react-start/server"
 import { CommandError } from "./errors"
 import { getApp } from "./instance"
-import { getProfile, setAvatar, setTheme, updateProfile } from "./profile"
-import type { Theme } from "./profile"
+import {
+  getAvatarSource,
+  getProfile,
+  removeAvatar,
+  setAvatar,
+  setTheme,
+  updateProfile,
+} from "./profile"
+import type { AvatarCrop, Theme } from "./profile"
 
 // Thin adapters from TanStack Start server functions to the server commands.
 // Each command checks the session itself.
@@ -47,16 +54,54 @@ export const setThemeFn = createServerFn({ method: "POST" })
   .validator((input: { theme: Theme }) => input)
   .handler(({ data }) => outcome(() => setTheme(getApp(), headers(), data)))
 
+/** FormData: `avatar` and `source` as files, `crop` as JSON. */
 export const setAvatarFn = createServerFn({ method: "POST" })
   .validator((input: FormData) => {
-    const file = input.get("image")
-    if (!(file instanceof File)) throw new Error("image is missing")
-    return file
+    const avatar = input.get("avatar")
+    const source = input.get("source")
+    const crop = input.get("crop")
+    if (
+      !(avatar instanceof File) ||
+      !(source instanceof File) ||
+      typeof crop !== "string"
+    ) {
+      throw new Error("avatar, source and crop are required")
+    }
+    // The command checks the crop's shape; malformed JSON becomes no crop.
+    return { avatar, source, crop: parseJson(crop) as AvatarCrop }
   })
   .handler(({ data }) =>
     outcome(async () =>
       setAvatar(getApp(), headers(), {
-        data: new Uint8Array(await data.arrayBuffer()),
+        avatar: new Uint8Array(await data.avatar.arrayBuffer()),
+        source: new Uint8Array(await data.source.arrayBuffer()),
+        crop: data.crop,
       })
     )
   )
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+/** Where the picture editor starts: an image URL (data URL or Google's) and the crop. */
+export const getAvatarSourceFn = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const result = await getAvatarSource(getApp(), headers())
+    if (!result) return null
+    const { source, crop } = result
+    const src =
+      "url" in source
+        ? source.url
+        : `data:${source.contentType};base64,${Buffer.from(source.data).toString("base64")}`
+    return { src, crop }
+  }
+)
+
+export const removeAvatarFn = createServerFn({ method: "POST" }).handler(() =>
+  outcome(() => removeAvatar(getApp(), headers()))
+)

@@ -3,17 +3,12 @@ import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
 import { ChevronLeft } from "lucide-react"
 import { PrimaryButton, SecondaryButton } from "@/components/buttons"
 import { Field, ReadOnlyValue, TextInput } from "@/components/form-field"
+import { AvatarEditor } from "@/components/avatar-editor"
 import { SegmentedTabs } from "@/components/segmented-tabs"
+import type { AvatarEditorStart } from "@/components/avatar-editor"
 import { UserAvatar } from "@/components/user-avatar"
 import { authClient } from "@/lib/auth-client"
-import { resizeForAvatar } from "@/lib/resize-image"
-import { cn } from "@/lib/utils"
-import {
-  getProfileFn,
-  setAvatarFn,
-  setThemeFn,
-  updateProfileFn,
-} from "@/server/functions"
+import { getProfileFn, setThemeFn, updateProfileFn } from "@/server/functions"
 import type { Profile, Theme } from "@/server/profile"
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -91,8 +86,9 @@ function Details({ profile }: { profile: Profile }) {
   const [name, setName] = useState(profile.name)
   const [email, setEmail] = useState(profile.email)
   const [errors, setErrors] = useState<
-    Partial<Record<"name" | "email" | "image", string>>
+    Partial<Record<"name" | "email", string>>
   >({})
+  const [editor, setEditor] = useState<AvatarEditorStart | null>(null)
   const [saved, setSaved] = useState(false)
   const [pending, setPending] = useState(false)
   const changed = name !== profile.name || email !== profile.email
@@ -116,17 +112,10 @@ function Details({ profile }: { profile: Profile }) {
     await router.invalidate()
   }
 
-  async function changeImage(file: File) {
-    setErrors({})
-    try {
-      const form = new FormData()
-      form.set("image", await resizeForAvatar(file), "avatar")
-      const result = await setAvatarFn({ data: form })
-      if (!result.ok) throw new Error(result.code)
-      await router.invalidate()
-    } catch {
-      setErrors({ image: "Dieses Bild ließ sich nicht verwenden." })
-    }
+  /** With a picture the editor opens on it; without one, the file picker comes first. */
+  function changePicture() {
+    if (profile.image) setEditor({ kind: "saved" })
+    else fileInput.current?.click()
   }
 
   async function chooseTheme(theme: Theme) {
@@ -145,19 +134,11 @@ function Details({ profile }: { profile: Profile }) {
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col">
           <span className="text-sm font-medium">Profilbild</span>
-          <span
-            className={cn(
-              "text-[13px]",
-              errors.image ? "text-destructive" : "text-muted-foreground"
-            )}
-          >
-            {errors.image ?? "Sehen alle in deinen Gruppen"}
+          <span className="text-[13px] text-muted-foreground">
+            Sehen alle in deinen Gruppen
           </span>
         </div>
-        <SecondaryButton
-          type="button"
-          onClick={() => fileInput.current?.click()}
-        >
+        <SecondaryButton type="button" onClick={changePicture}>
           Bild ändern
         </SecondaryButton>
         <input
@@ -168,9 +149,21 @@ function Details({ profile }: { profile: Profile }) {
           onChange={(e) => {
             const file = e.target.files?.[0]
             e.target.value = ""
-            if (file) void changeImage(file)
+            if (file) setEditor({ kind: "file", file })
           }}
         />
+        {editor ? (
+          <AvatarEditor
+            start={editor}
+            hasSavedPicture={profile.image !== null}
+            name={profile.name}
+            onClose={() => setEditor(null)}
+            onSaved={async () => {
+              await router.invalidate()
+              setEditor(null)
+            }}
+          />
+        ) : null}
       </div>
 
       <form onSubmit={save} className="flex flex-col gap-4.5" noValidate>

@@ -3,9 +3,9 @@ import { THEMES, avatar, user } from "./db/schema"
 import { CommandError } from "./errors"
 import { requireUser } from "./session"
 import type { App } from "./app"
-import type { Theme } from "./db/schema"
+import type { AvatarCrop, Theme } from "./db/schema"
 
-export type { Theme }
+export type { AvatarCrop, Theme }
 
 export type Profile = {
   id: string
@@ -20,6 +20,7 @@ export type Profile = {
 
 const MAX_NAME_LENGTH = 30
 const MAX_AVATAR_BYTES = 256 * 1024
+const MAX_SOURCE_BYTES = 1024 * 1024
 
 export async function getProfile(app: App, headers: Headers): Promise<Profile> {
   const { id } = await requireUser(app, headers)
@@ -97,36 +98,113 @@ export async function setTheme(
   await app.db.update(user).set({ theme: input.theme }).where(eq(user.id, id))
 }
 
-/** Stores a profile picture the browser has already resized. */
+/**
+ * Stores a profile picture the browser has already cropped and resized,
+ * together with the downscaled source image and the crop, replacing any
+ * earlier picture.
+ */
 export async function setAvatar(
   app: App,
   headers: Headers,
-  input: { data: Uint8Array }
+  input: { avatar: Uint8Array; source: Uint8Array; crop: AvatarCrop }
 ): Promise<void> {
   const { id } = await requireUser(app, headers)
-  const contentType = imageType(input.data)
-  if (!contentType || input.data.byteLength > MAX_AVATAR_BYTES) {
+  const contentType = imageType(input.avatar)
+  const sourceContentType = imageType(input.source)
+  if (
+    !contentType ||
+    input.avatar.byteLength > MAX_AVATAR_BYTES ||
+    !sourceContentType ||
+    input.source.byteLength > MAX_SOURCE_BYTES
+  ) {
     throw new CommandError("invalidImage")
   }
-  const updatedAt = new Date()
+  if (!isValidCrop(input.crop)) throw new CommandError("invalidCrop")
+  const { x, y, size } = input.crop
+  const values = {
+    contentType,
+    data: input.avatar,
+    sourceContentType,
+    source: input.source,
+    crop: { x, y, size },
+    updatedAt: new Date(),
+  }
   await app.db.transaction(async (tx) => {
     await tx
       .insert(avatar)
-      .values({
-        userId: id,
-        contentType,
-        data: input.data,
-        updatedAt,
-      })
-      .onConflictDoUpdate({
-        target: avatar.userId,
-        set: { contentType, data: input.data, updatedAt },
-      })
+      .values({ userId: id, ...values })
+      .onConflictDoUpdate({ target: avatar.userId, set: values })
     await tx
       .update(user)
-      .set({ image: `/api/avatar/${id}?v=${updatedAt.getTime()}` })
+      .set({ image: `/api/avatar/${id}?v=${values.updatedAt.getTime()}` })
       .where(eq(user.id, id))
   })
+}
+
+/**
+ * What the picture editor starts from: the stored source image and crop, the
+ * avatar itself for pictures from before cropping existed, or the Google
+ * picture. Null when there is no picture.
+ */
+export async function getAvatarSource(
+  app: App,
+  headers: Headers
+): Promise<{
+  source: { contentType: string; data: Uint8Array } | { url: string }
+  crop: AvatarCrop
+} | null> {
+  const { id } = await requireUser(app, headers)
+  const row = await app.db.query.avatar.findFirst({
+    where: eq(avatar.userId, id),
+  })
+  if (row?.source && row.sourceContentType && row.crop) {
+    return {
+      source: { contentType: row.sourceContentType, data: row.source },
+      crop: row.crop,
+    }
+  }
+  if (row) {
+    return {
+      source: { contentType: row.contentType, data: row.data },
+      crop: FULL_CROP,
+    }
+  }
+  const account = await app.db.query.user.findFirst({
+    where: eq(user.id, id),
+    columns: { image: true },
+  })
+  return account?.image
+    ? { source: { url: account.image }, crop: FULL_CROP }
+    : null
+}
+
+/** Deletes the picture with its source; the profile shows the initial again. */
+export async function removeAvatar(app: App, headers: Headers): Promise<void> {
+  const { id } = await requireUser(app, headers)
+  await app.db.transaction(async (tx) => {
+    await tx.delete(avatar).where(eq(avatar.userId, id))
+    await tx.update(user).set({ image: null }).where(eq(user.id, id))
+  })
+}
+
+const FULL_CROP: AvatarCrop = { x: 0, y: 0, size: 1 }
+
+/** Whether the crop is a well-formed crop; data from the browser is not trusted. */
+function isValidCrop(crop: unknown): crop is AvatarCrop {
+  if (typeof crop !== "object" || crop === null) return false
+  const { x, y, size } = crop as Record<string, unknown>
+  return (
+    typeof x === "number" &&
+    typeof y === "number" &&
+    typeof size === "number" &&
+    [x, y, size].every(Number.isFinite) &&
+    x >= 0 &&
+    x < 1 &&
+    y >= 0 &&
+    y < 1 &&
+    size > 0 &&
+    size <= 1
+  )
 }
 
 /** The image type by its first bytes; the type the browser claims is not trusted. */

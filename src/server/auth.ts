@@ -19,7 +19,7 @@ export function createAuth({ db, baseURL, secret, google }: AuthConfig) {
   return betterAuth({
     trustedOrigins: [
       "http://192.168.*.*:*/**",
-      ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : [])
+      ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
     ],
     baseURL,
     secret,

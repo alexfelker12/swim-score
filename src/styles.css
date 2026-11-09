@@ -16,6 +16,9 @@
     --color-destructive-muted: var(--destructive-muted);
     --color-life-off: var(--life-off);
     --color-scrim: var(--scrim);
+    --color-avatar-backdrop: var(--avatar-backdrop);
+    --color-avatar-shade: var(--avatar-shade);
+    --color-avatar-ring: var(--avatar-ring);
     --color-google-fill: var(--google-fill);
     --color-google-stroke: var(--google-stroke);
     --color-google-text: var(--google-text);
@@ -94,6 +97,11 @@
     --destructive-muted: rgba(194, 58, 40, 0.09);
     --life-off: #b4c6ca; /* Umriss verlorener Leben, ausgeschiedene Ränder */
     --scrim: rgba(16, 33, 42, 0.45); /* Hintergrund hinter Bottom Sheets */
+
+    /* Profilbild-Editor (03-fundament.md › Nachtrag), in beiden Modi gleich */
+    --avatar-backdrop: #0b0c0d; /* Grund der Ausschnittsfläche */
+    --avatar-shade: rgba(0, 0, 0, 0.58); /* Ecken außerhalb des Kreises */
+    --avatar-ring: rgba(255, 255, 255, 0.9); /* Linie um den Kreis */
 
     /* Google-Button nach den Sign-in-with-Google-Richtlinien (decisions.md › Konto) */
     --google-fill: #ffffff;

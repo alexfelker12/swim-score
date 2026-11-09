@@ -22,6 +22,7 @@ export default [
       ".vercel/**",
       ".output/**",
       "src/routeTree.gen.ts",
+      "docs/**",
     ],
   },
 ]
