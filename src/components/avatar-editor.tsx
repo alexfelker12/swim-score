@@ -12,6 +12,7 @@ import {
   zoomAround,
 } from "@/lib/avatar-crop"
 import { cn } from "@/lib/utils"
+import { useModal } from "@/lib/use-modal"
 import {
   getAvatarSourceFn,
   removeAvatarFn,
@@ -122,36 +123,9 @@ export function AvatarEditor({
     }
   }, [])
 
-  // Modal: the page behind can't be scrolled, focused or clicked, and focus
-  // returns to where it was when the editor closes.
-  useEffect(() => {
-    const opener =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null
-    const behind = [...document.body.children].filter(
-      (element): element is HTMLElement =>
-        element instanceof HTMLElement &&
-        element !== dialog.current &&
-        !element.inert
-    )
-    behind.forEach((element) => (element.inert = true))
-    const overflow = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    dialog.current?.focus()
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !latest.current.saving) {
-        latest.current.onClose()
-      }
-    }
-    document.addEventListener("keydown", onKey)
-    return () => {
-      document.removeEventListener("keydown", onKey)
-      document.body.style.overflow = overflow
-      behind.forEach((element) => (element.inert = false))
-      opener?.focus()
-    }
-  }, [])
+  useModal(dialog, () => {
+    if (!latest.current.saving) latest.current.onClose()
+  })
 
   async function save() {
     setSaving(true)

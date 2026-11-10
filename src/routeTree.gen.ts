@@ -14,6 +14,8 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedGamesGameIdRouteImport } from './routes/_authenticated/games/$gameId'
+import { Route as AuthenticatedGamesNewRouteImport } from './routes/_authenticated/games/new'
 import { Route as AuthenticatedGroupsGroupIdRouteImport } from './routes/_authenticated/groups/$groupId'
 import { Route as AuthenticatedGroupsNewRouteImport } from './routes/_authenticated/groups/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -43,6 +45,17 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedGamesGameIdRoute =
+  AuthenticatedGamesGameIdRouteImport.update({
+    id: '/games/$gameId',
+    path: '/games/$gameId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedGamesNewRoute = AuthenticatedGamesNewRouteImport.update({
+  id: '/games/new',
+  path: '/games/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedGroupsGroupIdRoute =
   AuthenticatedGroupsGroupIdRouteImport.update({
     id: '/groups/$groupId',
@@ -70,6 +83,8 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/games/$gameId': typeof AuthenticatedGamesGameIdRoute
+  '/games/new': typeof AuthenticatedGamesNewRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/groups/new': typeof AuthenticatedGroupsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -80,6 +95,8 @@ export interface FileRoutesByTo {
   '/sign-up': typeof SignUpRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/': typeof AuthenticatedIndexRoute
+  '/games/$gameId': typeof AuthenticatedGamesGameIdRoute
+  '/games/new': typeof AuthenticatedGamesNewRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/groups/new': typeof AuthenticatedGroupsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -92,6 +109,8 @@ export interface FileRoutesById {
   '/sign-up': typeof SignUpRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/games/$gameId': typeof AuthenticatedGamesGameIdRoute
+  '/_authenticated/games/new': typeof AuthenticatedGamesNewRoute
   '/_authenticated/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/_authenticated/groups/new': typeof AuthenticatedGroupsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -104,6 +123,8 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/profile'
+    | '/games/$gameId'
+    | '/games/new'
     | '/groups/$groupId'
     | '/groups/new'
     | '/api/auth/$'
@@ -114,6 +135,8 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/profile'
     | '/'
+    | '/games/$gameId'
+    | '/games/new'
     | '/groups/$groupId'
     | '/groups/new'
     | '/api/auth/$'
@@ -125,6 +148,8 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/_authenticated/profile'
     | '/_authenticated/'
+    | '/_authenticated/games/$gameId'
+    | '/_authenticated/games/new'
     | '/_authenticated/groups/$groupId'
     | '/_authenticated/groups/new'
     | '/api/auth/$'
@@ -176,6 +201,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/games/$gameId': {
+      id: '/_authenticated/games/$gameId'
+      path: '/games/$gameId'
+      fullPath: '/games/$gameId'
+      preLoaderRoute: typeof AuthenticatedGamesGameIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/games/new': {
+      id: '/_authenticated/games/new'
+      path: '/games/new'
+      fullPath: '/games/new'
+      preLoaderRoute: typeof AuthenticatedGamesNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/groups/$groupId': {
       id: '/_authenticated/groups/$groupId'
       path: '/groups/$groupId'
@@ -210,6 +249,8 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedGamesGameIdRoute: typeof AuthenticatedGamesGameIdRoute
+  AuthenticatedGamesNewRoute: typeof AuthenticatedGamesNewRoute
   AuthenticatedGroupsGroupIdRoute: typeof AuthenticatedGroupsGroupIdRoute
   AuthenticatedGroupsNewRoute: typeof AuthenticatedGroupsNewRoute
 }
@@ -217,6 +258,8 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedGamesGameIdRoute: AuthenticatedGamesGameIdRoute,
+  AuthenticatedGamesNewRoute: AuthenticatedGamesNewRoute,
   AuthenticatedGroupsGroupIdRoute: AuthenticatedGroupsGroupIdRoute,
   AuthenticatedGroupsNewRoute: AuthenticatedGroupsNewRoute,
 }
