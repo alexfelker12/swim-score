@@ -134,8 +134,22 @@ export const group = pgTable("group", {
   adminId: text("admin_id")
     .notNull()
     .references(() => user.id),
+  /**
+   * The secret in the Group's Invite link and QR code. Renewing the Invite
+   * replaces it, which makes the old link and code invalid.
+   */
+  inviteToken: text("invite_token")
+    .notNull()
+    .unique()
+    .$defaultFn(newInviteToken),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
+
+/** 128 random bits, URL-safe: knowing it is all it takes to join the Group. */
+export function newInviteToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  return Buffer.from(bytes).toString("base64url")
+}
 
 /**
  * A Player of a Group: linked to an account, or a Guest (no account, own
@@ -162,6 +176,32 @@ export const player = pgTable(
     index("player_group_id_idx").on(table.groupId),
     uniqueIndex("player_group_user_idx").on(table.groupId, table.userId),
   ]
+)
+
+/**
+ * A Claim: a Player with an account says they are a Guest of the Group and
+ * waits for the Group Admin to confirm it. A Player has at most one open
+ * Claim; it goes away with either of its Players.
+ */
+export const claim = pgTable(
+  "claim",
+  {
+    id: text("id").primaryKey(),
+    groupId: text("group_id")
+      .notNull()
+      .references(() => group.id, { onDelete: "cascade" }),
+    /** The claiming account's own Player. */
+    playerId: text("player_id")
+      .notNull()
+      .unique()
+      .references(() => player.id, { onDelete: "cascade" }),
+    /** The Guest they say they are. */
+    guestId: text("guest_id")
+      .notNull()
+      .references(() => player.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("claim_group_id_idx").on(table.groupId)]
 )
 
 export const GAME_STATUSES = ["running", "finished", "cancelled"] as const
@@ -256,8 +296,10 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
 }))
 
-export const groupRelations = relations(group, ({ many }) => ({
+export const groupRelations = relations(group, ({ one, many }) => ({
+  admin: one(user, { fields: [group.adminId], references: [user.id] }),
   players: many(player),
+  claims: many(claim),
   games: many(game),
 }))
 
@@ -281,6 +323,18 @@ export const participantRelations = relations(participant, ({ one }) => ({
 
 export const gameEventRelations = relations(gameEvent, ({ one }) => ({
   game: one(game, { fields: [gameEvent.gameId], references: [game.id] }),
+}))
+
+export const claimRelations = relations(claim, ({ one }) => ({
+  group: one(group, { fields: [claim.groupId], references: [group.id] }),
+  player: one(player, {
+    fields: [claim.playerId],
+    references: [player.id],
+  }),
+  guest: one(player, {
+    fields: [claim.guestId],
+    references: [player.id],
+  }),
 }))
 
 export const playerRelations = relations(player, ({ one }) => ({

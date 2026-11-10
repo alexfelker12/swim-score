@@ -36,3 +36,12 @@
   - Sheet „Emil mit Konto verknüpfen“: „Wähle, wer Emil ist. Die 37 Spiele von Gast Emil werden mit diesem Spieler zusammengeführt, der Gast verschwindet aus der Liste. Das lässt sich nicht rückgängig machen.“
   - Liste der Spieler mit Konto, frisch Beigetretene mit „emil_k, 0 Spiele“. Buttons „Abbrechen“ und „Zusammenführen“.
 - **Ungültige Einladung:** Icon links neben „Diese Einladung gilt nicht mehr“, Text „Der Verwalter der Gruppe hat den Einladungslink erneuert. Bitte ihn um den aktuellen Link oder QR-Code.“, Button „Zur Startseite“.
+
+## Abweichungen in der Umsetzung
+
+- **Adresse der Einladung:** `/invite/<token>` statt `/e/<token>`, weil URLs im Projekt englisch sind. Der Token hat 22 Zeichen (128 Bit), nicht 10 wie im Bild. Gruppen von vor diesem Ticket bekommen bei der Migration einen Token aus 32 Hex-Zeichen, bis der Verwalter den Link erneuert.
+- **Gast direkt verknüpfen:** „Gruppe verwalten“ gibt es erst mit #12. Bis dahin sitzt das `link`-Icon in der Gastzeile des Tabs „Spieler“ (nur beim Verwalter) und öffnet dasselbe Sheet. #12 zieht es in die Verwaltung um.
+- **Gast ohne Spiele:** Anfrage-Karte und Sheet nennen dann keine „0 Spiele“, sondern sagen, dass der Gast noch kein Spiel hat.
+- **Gemeinsames Spiel:** Haben Gast und Konto schon im selben Spiel gesessen, lehnt die App das Zusammenführen mit einer Meldung ab (nicht entworfen).
+- **Ein Spiel:** Anfrage-Karte und Sheet schreiben bei genau einem Spiel „das eine Spiel“ statt „die 1 Spiele“.
+- **Verwalter verknüpft nicht mit sich selbst:** Das Sheet „mit Konto verknüpfen“ listet nur andere Spieler mit Konto, der Server lehnt den Verwalter als Ziel ab. Gibt es außer dem Verwalter noch kein Konto in der Gruppe, zeigt das Sheet stattdessen den Hinweis „Noch ist außer dir niemand mit Konto in der Gruppe. Sobald Emil über die Einladung beigetreten ist, kannst du hier verknüpfen.“

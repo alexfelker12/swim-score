@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { getGame, getNewGame, listGames, recordEvent, startGame } from "./games"
 import { addGuest, createGroup, getGroup } from "./groups"
-import { joinGroup } from "./testing/groups"
+import { joinViaInvite } from "./testing/groups"
 import { createTestApp, signUp } from "./testing/test-app"
 import type { App } from "./app"
 
@@ -13,7 +13,7 @@ async function table() {
   const { id: groupId } = await createGroup(app, anna.headers, {
     name: "Donnerstagsrunde",
   })
-  await joinGroup(app, groupId, ben.user.id)
+  await joinViaInvite(app, groupId, ben.headers)
   await addGuest(app, anna.headers, { groupId, name: "Carla" })
   await addGuest(app, anna.headers, { groupId, name: "Dario" })
   const players = await playerIds(app, anna.headers, groupId)

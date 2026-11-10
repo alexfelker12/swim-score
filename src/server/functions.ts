@@ -5,6 +5,16 @@ import { addGuest, createGroup, getGroup, listMyGroups } from "./groups"
 import { getGame, getNewGame, listGames, recordEvent, startGame } from "./games"
 import { getApp } from "./instance"
 import {
+  confirmClaim,
+  getGroupManagement,
+  getInvite,
+  getInviteLink,
+  joinGroup,
+  linkGuest,
+  rejectClaim,
+  renewInvite,
+} from "./invites"
+import {
   getAvatarSource,
   getProfile,
   removeAvatar,
@@ -163,3 +173,51 @@ export const listGamesFn = createServerFn({ method: "GET" })
     const result = await outcome(() => listGames(getApp(), headers(), data))
     return result.ok ? result.value : []
   })
+
+/** The Group's Invite token, or null for anyone but its Group Admin. */
+export const getInviteLinkFn = createServerFn({ method: "GET" })
+  .validator((input: { groupId: string }) => input)
+  .handler(async ({ data }) => {
+    const result = await outcome(() => getInviteLink(getApp(), headers(), data))
+    return result.ok ? result.value : null
+  })
+
+export const renewInviteFn = createServerFn({ method: "POST" })
+  .validator((input: { groupId: string }) => input)
+  .handler(({ data }) => outcome(() => renewInvite(getApp(), headers(), data)))
+
+/** The Group behind an Invite, or null when the Invite is no longer valid. */
+export const getInviteFn = createServerFn({ method: "GET" })
+  .validator((input: { token: string }) => input)
+  .handler(async ({ data }) => {
+    const result = await outcome(() => getInvite(getApp(), headers(), data))
+    return result.ok ? result.value : null
+  })
+
+export const joinGroupFn = createServerFn({ method: "POST" })
+  .validator((input: { token: string; guestId?: string }) => input)
+  .handler(({ data }) => outcome(() => joinGroup(getApp(), headers(), data)))
+
+/** Open Claims and link candidates, or null for anyone but the Group Admin. */
+export const getGroupManagementFn = createServerFn({ method: "GET" })
+  .validator((input: { groupId: string }) => input)
+  .handler(async ({ data }) => {
+    const result = await outcome(() =>
+      getGroupManagement(getApp(), headers(), data)
+    )
+    return result.ok ? result.value : null
+  })
+
+export const confirmClaimFn = createServerFn({ method: "POST" })
+  .validator((input: { claimId: string }) => input)
+  .handler(({ data }) => outcome(() => confirmClaim(getApp(), headers(), data)))
+
+export const rejectClaimFn = createServerFn({ method: "POST" })
+  .validator((input: { claimId: string }) => input)
+  .handler(({ data }) => outcome(() => rejectClaim(getApp(), headers(), data)))
+
+export const linkGuestFn = createServerFn({ method: "POST" })
+  .validator(
+    (input: { groupId: string; guestId: string; playerId: string }) => input
+  )
+  .handler(({ data }) => outcome(() => linkGuest(getApp(), headers(), data)))

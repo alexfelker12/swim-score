@@ -91,7 +91,11 @@ The Player with an account who manages a Group: invites people, removes Players,
 _Avoid_: Owner, Creator
 
 **Invite** (Einladung):
-A link or QR code that lets a person join a Group, or claim an existing Guest in it. The only way into a Group.
+A link or QR code that lets a person join a Group, or claim an existing Guest in it. The only way into a Group. Each Group has one, valid until the Group Admin renews it, which makes the old link and code invalid.
+
+**Claim** (Anfrage):
+A joining account's statement "I am this Guest". The account is a Player at once; when the Group Admin confirms the Claim, the Guest is merged into that Player, who then owns the Guest's Games. A rejected Claim leaves both as they were. The Group Admin can also merge a Guest into a Player with an account without a Claim. Two Players who sat in the same Game cannot be merged.
+_Avoid_: Request, Link request
 
 **Spectator** (Zuschauer):
 Anyone watching a running Game read-only via its link, with or without an account.
