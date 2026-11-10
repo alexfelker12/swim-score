@@ -140,17 +140,25 @@ export async function listMyGroups(
     .orderBy(desc(mine.createdAt))
 }
 
-/** Refuses anyone who is not a Player of the Group as if it did not exist. */
-async function requirePlayer(app: App, groupId: string, userId: string) {
+/**
+ * Refuses anyone who is not a Player of the Group as if it (or the Game
+ * asked for, with `code` "gameNotFound") did not exist.
+ */
+export async function requirePlayer(
+  app: App,
+  groupId: string,
+  userId: string,
+  code = "groupNotFound"
+) {
   const row = await app.db.query.player.findFirst({
     where: and(eq(player.groupId, groupId), eq(player.userId, userId)),
     columns: { id: true },
   })
-  if (!row) throw new CommandError("groupNotFound")
+  if (!row) throw new CommandError(code)
 }
 
 /** Display Name for a Player with an account, the given name for a Guest. */
-function playerName(p: {
+export function playerName(p: {
   name: string | null
   user: { name: string } | null
 }): string {

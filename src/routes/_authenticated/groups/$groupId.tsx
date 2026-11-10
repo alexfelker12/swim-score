@@ -10,7 +10,8 @@ import { Badge } from "@/components/badge"
 import { TextInput } from "@/components/form-field"
 import { SegmentedTabs } from "@/components/segmented-tabs"
 import { UserAvatar } from "@/components/user-avatar"
-import { addGuestFn, getGroupFn } from "@/server/functions"
+import { addGuestFn, getGroupFn, listGamesFn } from "@/server/functions"
+import { GamesTab } from "./-games-tab"
 import type { GroupPlayer, GroupView } from "@/server/groups"
 
 const TABS = ["games", "leaderboard", "players"] as const
@@ -22,13 +23,14 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   loader: async ({ params }) => {
     const group = await getGroupFn({ data: { groupId: params.groupId } })
     if (!group) throw notFound()
-    return group
+    const games = await listGamesFn({ data: { groupId: params.groupId } })
+    return { group, games }
   },
   component: GroupPage,
 })
 
 function GroupPage() {
-  const group = Route.useLoaderData()
+  const { group, games } = Route.useLoaderData()
   const { tab = "games" } = Route.useSearch()
   const navigate = Route.useNavigate()
   return (
@@ -63,15 +65,13 @@ function GroupPage() {
         className="mx-4 mt-1 mb-3"
       />
 
-      {tab === "players" ? (
-        <Players group={group} />
-      ) : (
+      {tab === "players" ? <Players group={group} /> : null}
+      {tab === "games" ? <GamesTab groupId={group.id} games={games} /> : null}
+      {tab === "leaderboard" ? (
         <div role="tabpanel" className="px-5 py-6 text-muted-foreground">
-          {tab === "games"
-            ? "Noch keine Spiele in dieser Gruppe."
-            : "Die Rangliste erscheint, sobald ihr ein Spiel beendet habt."}
+          Die Rangliste erscheint, sobald ihr ein Spiel beendet habt.
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

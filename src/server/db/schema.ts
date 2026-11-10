@@ -3,12 +3,15 @@ import {
   boolean,
   customType,
   index,
+  integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core"
+import type { GameEvent, RuleSet } from "@/rules-engine"
 
 export const THEMES = ["system", "light", "dark"] as const
 export type Theme = (typeof THEMES)[number]
@@ -161,6 +164,85 @@ export const player = pgTable(
   ]
 )
 
+export const GAME_STATUSES = ["running", "finished", "cancelled"] as const
+export type GameStatus = (typeof GAME_STATUSES)[number]
+
+/**
+ * A Game within a Group. Its state is not stored: it follows from its Events
+ * (ADR 0001). `version` counts the recorded Events, so a device can only
+ * record on top of the state it has seen (ADR 0002).
+ */
+export const game = pgTable(
+  "game",
+  {
+    id: text("id").primaryKey(),
+    groupId: text("group_id")
+      .notNull()
+      .references(() => group.id, { onDelete: "cascade" }),
+    ruleSet: jsonb("rule_set").$type<RuleSet>().notNull(),
+    status: text("status", { enum: GAME_STATUSES })
+      .default("running")
+      .notNull(),
+    /** The Scorekeeper: the only account that may record Events. */
+    scorekeeperId: text("scorekeeper_id")
+      .notNull()
+      .references(() => user.id),
+    version: integer("version").default(0).notNull(),
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    finishedAt: timestamp("finished_at"),
+  },
+  (table) => [index("game_group_id_idx").on(table.groupId)]
+)
+
+/**
+ * A Player taking part in a Game, at a seat of the Seating Order (0 deals
+ * first). Events refer to Participants, not Players, so linking a Guest to an
+ * account later moves their Games with them. The summary columns are written
+ * when the Game finishes.
+ */
+export const participant = pgTable(
+  "participant",
+  {
+    id: text("id").primaryKey(),
+    gameId: text("game_id")
+      .notNull()
+      .references(() => game.id, { onDelete: "cascade" }),
+    playerId: text("player_id")
+      .notNull()
+      .references(() => player.id),
+    seat: integer("seat").notNull(),
+    won: boolean("won"),
+    /** Was the Game's Swimmer. */
+    swam: boolean("swam"),
+    bombs: integer("bombs"),
+    /** Rounds that went against them, becoming the Swimmer included. */
+    livesLost: integer("lives_lost"),
+    /** 1 for the first to go Out; those Out in the same Round share it. Null for the Winner. */
+    outPosition: integer("out_position"),
+  },
+  (table) => [
+    uniqueIndex("participant_game_seat_idx").on(table.gameId, table.seat),
+    uniqueIndex("participant_game_player_idx").on(table.gameId, table.playerId),
+  ]
+)
+
+/** One recorded Event; `version` is its position in the Game, from 1. */
+export const gameEvent = pgTable(
+  "game_event",
+  {
+    gameId: text("game_id")
+      .notNull()
+      .references(() => game.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    event: jsonb("event").$type<GameEvent>().notNull(),
+    recordedById: text("recorded_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.gameId, table.version] })]
+)
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -176,6 +258,29 @@ export const accountRelations = relations(account, ({ one }) => ({
 
 export const groupRelations = relations(group, ({ many }) => ({
   players: many(player),
+  games: many(game),
+}))
+
+export const gameRelations = relations(game, ({ one, many }) => ({
+  group: one(group, { fields: [game.groupId], references: [group.id] }),
+  scorekeeper: one(user, {
+    fields: [game.scorekeeperId],
+    references: [user.id],
+  }),
+  participants: many(participant),
+  events: many(gameEvent),
+}))
+
+export const participantRelations = relations(participant, ({ one }) => ({
+  game: one(game, { fields: [participant.gameId], references: [game.id] }),
+  player: one(player, {
+    fields: [participant.playerId],
+    references: [player.id],
+  }),
+}))
+
+export const gameEventRelations = relations(gameEvent, ({ one }) => ({
+  game: one(game, { fields: [gameEvent.gameId], references: [game.id] }),
 }))
 
 export const playerRelations = relations(player, ({ one }) => ({

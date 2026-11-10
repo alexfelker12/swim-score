@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start"
 import { getRequestHeaders } from "@tanstack/react-start/server"
 import { CommandError } from "./errors"
 import { addGuest, createGroup, getGroup, listMyGroups } from "./groups"
+import { getGame, getNewGame, listGames, recordEvent, startGame } from "./games"
 import { getApp } from "./instance"
 import {
   getAvatarSource,
@@ -11,6 +12,7 @@ import {
   setTheme,
   updateProfile,
 } from "./profile"
+import type { GameEvent } from "@/rules-engine"
 import type { AvatarCrop, Theme } from "./profile"
 
 // Thin adapters from TanStack Start server functions to the server commands.
@@ -126,3 +128,38 @@ export const addGuestFn = createServerFn({ method: "POST" })
 export const listMyGroupsFn = createServerFn({ method: "GET" }).handler(() =>
   listMyGroups(getApp(), headers())
 )
+
+/** "Spiel starten": the Group's Players and the last Seating Order, or null. */
+export const getNewGameFn = createServerFn({ method: "GET" })
+  .validator((input: { groupId: string }) => input)
+  .handler(async ({ data }) => {
+    const result = await outcome(() => getNewGame(getApp(), headers(), data))
+    return result.ok ? result.value : null
+  })
+
+export const startGameFn = createServerFn({ method: "POST" })
+  .validator((input: { groupId: string; playerIds: Array<string> }) => input)
+  .handler(({ data }) => outcome(() => startGame(getApp(), headers(), data)))
+
+/** The Game, or null when it does not exist or the viewer is not in its Group. */
+export const getGameFn = createServerFn({ method: "GET" })
+  .validator((input: { gameId: string }) => input)
+  .handler(async ({ data }) => {
+    const result = await outcome(() => getGame(getApp(), headers(), data))
+    return result.ok ? result.value : null
+  })
+
+export const recordEventFn = createServerFn({ method: "POST" })
+  .validator(
+    (input: { gameId: string; expectedVersion: number; event: GameEvent }) =>
+      input
+  )
+  .handler(({ data }) => outcome(() => recordEvent(getApp(), headers(), data)))
+
+/** The Group's Games, or none when the viewer is not its Player. */
+export const listGamesFn = createServerFn({ method: "GET" })
+  .validator((input: { groupId: string }) => input)
+  .handler(async ({ data }) => {
+    const result = await outcome(() => listGames(getApp(), headers(), data))
+    return result.ok ? result.value : []
+  })

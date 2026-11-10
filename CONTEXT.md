@@ -45,7 +45,7 @@ How a Round with several lowest-scoring players is decided when more than two pl
 **Extra Round** (Extra-Runde):
 A re-deal by the same Dealer when exactly two players remain and tie; repeated until one of them loses.
 
-**Dealer** (Geber):
+**Dealer** (Dealer):
 The player who deals the current Round; the role passes to the next remaining player after each Round.
 
 **Winner** (Gewinner):

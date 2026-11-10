@@ -3,11 +3,12 @@ import {
   HeadContent,
   ScriptOnce,
   Scripts,
-  createRootRoute,
+  createRootRouteWithContext,
 } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
 import { getViewer } from "@/server/functions"
+import type { RouterContext } from "@/router"
 
 import appCss from "../styles.css?url"
 
@@ -16,7 +17,7 @@ import appCss from "../styles.css?url"
 // themes later is handled by useSystemTheme.
 const systemThemeScript = `if(matchMedia("(prefers-color-scheme: dark)").matches)document.documentElement.classList.add("dark")`
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async () => ({ viewer: await getViewer() }),
   head: () => ({
     meta: [
