@@ -137,8 +137,16 @@ function GameTable({ game }: { game: GameView }) {
                 aria-hidden="true"
               />
               <span>
-                Du schaust zu,{" "}
-                <span className="font-semibold">{game.scorekeeper}</span> zählt
+                {game.scorekeeper ? (
+                  <>
+                    Du schaust zu,{" "}
+                    <span className="font-semibold">{game.scorekeeper}</span>{" "}
+                    zählt
+                  </>
+                ) : (
+                  // The Scorekeeper's account was deleted; taking over comes with #9.
+                  "Du schaust zu, niemand zählt"
+                )}
               </span>
             </>
           )}

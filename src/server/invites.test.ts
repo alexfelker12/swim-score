@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { getGame, listGames, recordEvent, startGame } from "./games"
+import { getGame, listGames, startGame } from "./games"
 import { addGuest, createGroup, getGroup, listMyGroups } from "./groups"
 import {
   confirmClaim,
@@ -11,6 +11,7 @@ import {
   rejectClaim,
   renewInvite,
 } from "./invites"
+import { playGame } from "./testing/games"
 import { createTestApp, signUp } from "./testing/test-app"
 import type { App } from "./app"
 
@@ -32,29 +33,6 @@ async function table() {
 async function playerIds(app: App, headers: Headers, groupId: string) {
   const group = await getGroup(app, headers, { groupId })
   return Object.fromEntries(group.players.map((p) => [p.name, p.id]))
-}
-
-/** Plays a Game of two to the end: `winner` beats `loser`, who swims before going Out. */
-async function playGame(
-  app: App,
-  headers: Headers,
-  groupId: string,
-  [winner, loser]: [string, string]
-) {
-  const { id: gameId } = await startGame(app, headers, {
-    groupId,
-    playerIds: [winner, loser],
-  })
-  const { participants } = await getGame(app, headers, { gameId })
-  // Three Lives, then once more as the Swimmer.
-  for (let version = 0; version < 4; version++) {
-    await recordEvent(app, headers, {
-      gameId,
-      expectedVersion: version,
-      event: { type: "lost", loser: participants[1].id },
-    })
-  }
-  return gameId
 }
 
 describe("the Invite of a Group", () => {

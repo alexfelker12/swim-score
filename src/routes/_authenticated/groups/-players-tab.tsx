@@ -1,19 +1,12 @@
 import { useState } from "react"
-import { useRouter } from "@tanstack/react-router"
-import { Link as LinkIcon, Plus } from "lucide-react"
+import { Link, useRouter } from "@tanstack/react-router"
+import { Plus } from "lucide-react"
 import { Badge } from "@/components/badge"
-import { BottomSheet } from "@/components/bottom-sheet"
 import { PrimaryButton, SecondaryButton } from "@/components/buttons"
-import { ChoiceCard } from "@/components/choice-card"
 import { TextInput } from "@/components/form-field"
 import { UserAvatar } from "@/components/user-avatar"
-import { gameCount } from "@/lib/plural"
-import {
-  addGuestFn,
-  confirmClaimFn,
-  linkGuestFn,
-  rejectClaimFn,
-} from "@/server/functions"
+import { addGuestFn, confirmClaimFn, rejectClaimFn } from "@/server/functions"
+import { mergeErrors } from "./-link-guest-sheet"
 import type { GroupPlayer, GroupView } from "@/server/groups"
 import type { GroupManagement } from "@/server/invites"
 
@@ -24,7 +17,7 @@ const guestErrors: Partial<Record<string, string>> = {
 
 /**
  * Tab "Spieler": add a Guest, the Player list and, for the Group Admin
- * (`management`), open Claims and linking a Guest to an account.
+ * (`management`), open Claims. Linking a Guest is in "Gruppe verwalten".
  */
 export function PlayersTab({
   group,
@@ -37,7 +30,6 @@ export function PlayersTab({
   const [name, setName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
-  const [linking, setLinking] = useState<GroupPlayer | null>(null)
 
   async function add(event: React.FormEvent) {
     event.preventDefault()
@@ -107,21 +99,21 @@ export function PlayersTab({
       <ul className="flex flex-col">
         {group.players.map((p) => (
           <li key={p.id} className="border-b border-border">
-            <PlayerRow
-              player={p}
-              onLink={management && p.guest ? () => setLinking(p) : undefined}
-            />
+            <PlayerRow player={p} />
           </li>
         ))}
       </ul>
 
-      {linking && management ? (
-        <LinkGuestSheet
-          group={group}
-          management={management}
-          guest={linking}
-          onClose={() => setLinking(null)}
-        />
+      {group.formerPlayers.length > 0 ? (
+        <Link
+          to="/groups/$groupId/settings"
+          params={{ groupId: group.id }}
+          className="self-start py-1 text-[15px] text-muted-foreground"
+        >
+          {group.formerPlayers.length === 1
+            ? "1 ehemaliger Spieler"
+            : `${group.formerPlayers.length} ehemalige Spieler`}
+        </Link>
       ) : null}
     </div>
   )
@@ -135,26 +127,6 @@ function claimEffect(guest: string, games: number): string {
   return games === 1
     ? `Wenn du bestätigst, gehört das eine Spiel von Gast ${guest} ab jetzt diesem Konto.`
     : `Wenn du bestätigst, gehören die ${games} Spiele von Gast ${guest} ab jetzt diesem Konto.`
-}
-
-/** What linking a Guest directly does with the Guest's Games. */
-function linkEffect(guest: string, games: number): string {
-  if (games === 0) {
-    return `Gast ${guest} hat noch kein Spiel und verschwindet aus der Liste.`
-  }
-  const moved =
-    games === 1
-      ? `Das eine Spiel von Gast ${guest} wird`
-      : `Die ${games} Spiele von Gast ${guest} werden`
-  return `${moved} mit diesem Spieler zusammengeführt, der Gast verschwindet aus der Liste.`
-}
-
-const mergeErrors: Partial<Record<string, string>> = {
-  playedTogether:
-    "Die beiden haben schon im selben Spiel gesessen, es sind also zwei Personen.",
-  claimNotFound: "Diese Anfrage gibt es nicht mehr.",
-  guestNotFound: "Diesen Gast gibt es nicht mehr.",
-  playerNotFound: "Diesen Spieler gibt es nicht mehr.",
 }
 
 /** An open Claim, for the Group Admin to confirm or reject. */
@@ -231,116 +203,8 @@ function ClaimCard({
   )
 }
 
-/** "Emil mit Konto verknüpfen": the Group Admin picks the Player with an account the Guest is. */
-function LinkGuestSheet({
-  group,
-  management,
-  guest,
-  onClose,
-}: {
-  group: GroupView
-  management: GroupManagement
-  guest: GroupPlayer
-  onClose: () => void
-}) {
-  const router = useRouter()
-  const [choice, setChoice] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const details = (id: string) => management.players.find((p) => p.id === id)
-  // The Group Admin links and is never the one linked.
-  const accounts = group.players.filter((p) => !p.guest && !p.admin)
-
-  async function merge(event: React.FormEvent) {
-    event.preventDefault()
-    if (!choice) return
-    setPending(true)
-    setError(null)
-    const result = await linkGuestFn({
-      data: { groupId: group.id, guestId: guest.id, playerId: choice },
-    })
-    if (!result.ok) {
-      setPending(false)
-      setError(mergeErrors[result.code] ?? "Das hat nicht geklappt.")
-      return
-    }
-    await router.invalidate()
-    onClose()
-  }
-
-  return (
-    <BottomSheet
-      title={`${guest.name} mit Konto verknüpfen`}
-      description={`Wähle, wer ${guest.name} ist. ${linkEffect(guest.name, details(guest.id)?.games ?? 0)} Das lässt sich nicht rückgängig machen.`}
-      onDismiss={onClose}
-    >
-      <form onSubmit={merge} className="flex min-h-0 flex-col gap-4">
-        {accounts.length === 0 ? (
-          <p className="rounded-xl bg-muted p-4 text-sm text-pretty text-muted-foreground">
-            Noch ist außer dir niemand mit Konto in der Gruppe. Sobald{" "}
-            {guest.name} über die Einladung beigetreten ist, kannst du hier
-            verknüpfen.
-          </p>
-        ) : (
-          <fieldset className="flex max-h-[40svh] flex-col gap-2 overflow-auto">
-            <legend className="sr-only">Spieler mit Konto</legend>
-            {accounts.map((p) => {
-              const info = details(p.id)
-              // Someone who just joined is told apart by their Username.
-              const fresh = info?.username && info.games === 0
-              return (
-                <ChoiceCard
-                  key={p.id}
-                  name="account"
-                  value={p.id}
-                  selected={choice}
-                  onSelect={setChoice}
-                  label={p.name}
-                  note={
-                    fresh
-                      ? `${info.username}, ${gameCount(0)}`
-                      : "Spieler mit Konto"
-                  }
-                />
-              )
-            })}
-          </fieldset>
-        )}
-        {error ? (
-          <p role="alert" className="text-sm text-pretty text-destructive">
-            {error}
-          </p>
-        ) : null}
-        <div className="flex gap-2.5">
-          <SecondaryButton
-            type="button"
-            onClick={onClose}
-            className="h-13 flex-1 rounded-[14px] bg-transparent text-base"
-          >
-            Abbrechen
-          </SecondaryButton>
-          <PrimaryButton
-            type="submit"
-            disabled={pending || !choice}
-            className="h-13 flex-1"
-          >
-            Zusammenführen
-          </PrimaryButton>
-        </div>
-      </form>
-    </BottomSheet>
-  )
-}
-
 /** Rows with an account will open the Player Profile once it exists (#14). */
-function PlayerRow({
-  player,
-  onLink,
-}: {
-  player: GroupPlayer
-  /** Set for Guests when the Group Admin looks at the list. */
-  onLink?: () => void
-}) {
+function PlayerRow({ player }: { player: GroupPlayer }) {
   return (
     <div className="flex min-h-14 items-center gap-3">
       {player.guest ? (
@@ -366,16 +230,6 @@ function PlayerRow({
       </span>
       {player.admin ? <Badge tone="primary">Verwalter</Badge> : null}
       {player.guest ? <Badge tone="muted">Gast</Badge> : null}
-      {onLink ? (
-        <button
-          type="button"
-          onClick={onLink}
-          aria-label={`${player.name} mit Konto verknüpfen`}
-          className="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground"
-        >
-          <LinkIcon className="size-5" aria-hidden="true" />
-        </button>
-      ) : null}
     </div>
   )
 }

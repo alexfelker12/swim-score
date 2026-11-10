@@ -1,4 +1,4 @@
-import { and, count, eq, inArray } from "drizzle-orm"
+import { and, count, eq, inArray, isNotNull } from "drizzle-orm"
 import {
   claim,
   game,
@@ -8,6 +8,8 @@ import {
   player,
 } from "./db/schema"
 import { CommandError } from "./errors"
+import { isCurrentPlayer, isGuest, requireAdmin } from "./groups"
+import type { Tx } from "./groups"
 import { requireUser } from "./session"
 import type { App } from "./app"
 
@@ -43,7 +45,7 @@ export async function getInviteLink(
   input: { groupId: string }
 ): Promise<{ token: string }> {
   const me = await requireUser(app, headers)
-  const row = await requireAdmin(app, input.groupId, me.id)
+  const row = await requireAdmin(app.db, input.groupId, me.id)
   return { token: row.inviteToken }
 }
 
@@ -54,7 +56,7 @@ export async function renewInvite(
   input: { groupId: string }
 ): Promise<{ token: string }> {
   const me = await requireUser(app, headers)
-  await requireAdmin(app, input.groupId, me.id)
+  await requireAdmin(app.db, input.groupId, me.id)
   const token = newInviteToken()
   await app.db
     .update(group)
@@ -71,10 +73,14 @@ export async function getInvite(
 ): Promise<InviteView> {
   const me = await requireUser(app, headers)
   const row = await app.db.query.group.findFirst({
-    where: eq(group.inviteToken, input.token),
+    // A Group nobody manages any more takes nobody in.
+    where: and(eq(group.inviteToken, input.token), isNotNull(group.adminId)),
     with: {
       admin: { columns: { name: true } },
-      players: { columns: { id: true, userId: true, name: true } },
+      players: {
+        where: isCurrentPlayer,
+        columns: { id: true, userId: true, name: true, formerNumber: true },
+      },
     },
   })
   if (!row) throw new CommandError("inviteInvalid")
@@ -82,7 +88,7 @@ export async function getInvite(
   return {
     groupId: row.id,
     groupName: row.name,
-    invitedBy: row.admin.name,
+    invitedBy: row.admin?.name ?? "",
     playerCount: row.players.length,
     gameCount: await app.db.$count(
       game,
@@ -90,7 +96,7 @@ export async function getInvite(
     ),
     alreadyPlayer: row.players.some((p) => p.userId === me.id),
     guests: row.players
-      .filter((p) => p.userId === null)
+      .filter(isGuest)
       .map((p) => ({
         id: p.id,
         name: p.name ?? "",
@@ -105,7 +111,9 @@ export async function getInvite(
  * account also claims that Guest: it is a Player at once, and the Guest's
  * Games become its own once the Group Admin confirms the Claim.
  *
- * An account that already plays in the Group stays the Player it is.
+ * An account that already plays in the Group stays the Player it is. A
+ * Former Player who left or was removed comes back as the Player they were,
+ * with their Games.
  */
 export async function joinGroup(
   app: App,
@@ -114,7 +122,8 @@ export async function joinGroup(
 ): Promise<{ groupId: string }> {
   const me = await requireUser(app, headers)
   const row = await app.db.query.group.findFirst({
-    where: eq(group.inviteToken, input.token),
+    // A Group nobody manages any more takes nobody in.
+    where: and(eq(group.inviteToken, input.token), isNotNull(group.adminId)),
     columns: { id: true },
   })
   if (!row) throw new CommandError("inviteInvalid")
@@ -122,21 +131,17 @@ export async function joinGroup(
   await app.db.transaction(async (tx) => {
     if (input.guestId !== undefined) {
       const guest = await tx.query.player.findFirst({
-        where: and(eq(player.id, input.guestId), eq(player.groupId, groupId)),
-        columns: { userId: true },
+        where: and(
+          eq(player.id, input.guestId),
+          eq(player.groupId, groupId),
+          isCurrentPlayer
+        ),
+        columns: { userId: true, formerNumber: true },
       })
-      if (!guest || guest.userId !== null) {
-        throw new CommandError("guestNotFound")
-      }
+      if (!guest || !isGuest(guest)) throw new CommandError("guestNotFound")
     }
-    const playerId = crypto.randomUUID()
-    // The unique index on (group, account) keeps an account to one Player.
-    const joined = await tx
-      .insert(player)
-      .values({ id: playerId, groupId, userId: me.id })
-      .onConflictDoNothing()
-      .returning({ id: player.id })
-    if (joined.length === 0 || input.guestId === undefined) return
+    const playerId = await joinAsPlayer(tx, groupId, me.id)
+    if (playerId === null || input.guestId === undefined) return
     await tx.insert(claim).values({
       id: crypto.randomUUID(),
       groupId,
@@ -147,6 +152,28 @@ export async function joinGroup(
   return { groupId }
 }
 
+/**
+ * The account's Player in the Group after joining: a new one, or its Former
+ * Player made current again. Null when it already plays there.
+ */
+async function joinAsPlayer(
+  tx: Tx,
+  groupId: string,
+  userId: string
+): Promise<string | null> {
+  // The unique index on (group, account) keeps an account to one Player.
+  const joined = await tx
+    .insert(player)
+    .values({ id: crypto.randomUUID(), groupId, userId })
+    .onConflictDoUpdate({
+      target: [player.groupId, player.userId],
+      set: { leftAt: null, leftReason: null },
+      setWhere: isNotNull(player.leftAt),
+    })
+    .returning({ id: player.id })
+  return joined.length > 0 ? joined[0].id : null
+}
+
 /** Open Claims and what linking a Guest needs to show; Group Admin only. */
 export async function getGroupManagement(
   app: App,
@@ -154,9 +181,9 @@ export async function getGroupManagement(
   input: { groupId: string }
 ): Promise<GroupManagement> {
   const me = await requireUser(app, headers)
-  await requireAdmin(app, input.groupId, me.id)
+  await requireAdmin(app.db, input.groupId, me.id)
   const players = await app.db.query.player.findMany({
-    where: eq(player.groupId, input.groupId),
+    where: and(eq(player.groupId, input.groupId), isCurrentPlayer),
     columns: { id: true },
     with: { user: { columns: { username: true, displayUsername: true } } },
   })
@@ -205,7 +232,7 @@ export async function linkGuest(
   input: { groupId: string; guestId: string; playerId: string }
 ): Promise<void> {
   const me = await requireUser(app, headers)
-  await requireAdmin(app, input.groupId, me.id)
+  await requireAdmin(app.db, input.groupId, me.id)
   await mergeGuest(app, input.groupId, input.guestId, input.playerId)
 }
 
@@ -227,12 +254,17 @@ async function mergeGuest(
   await app.db.transaction(async (tx) => {
     // Locking the rows makes concurrent merges and decisions take turns.
     const both = await tx
-      .select({ id: player.id, userId: player.userId })
+      .select({
+        id: player.id,
+        userId: player.userId,
+        formerNumber: player.formerNumber,
+      })
       .from(player)
       .where(
         and(
           eq(player.groupId, groupId),
-          inArray(player.id, [guestId, playerId])
+          inArray(player.id, [guestId, playerId]),
+          isCurrentPlayer
         )
       )
       .for("update")
@@ -246,7 +278,7 @@ async function mergeGuest(
     }
     const guest = both.find((p) => p.id === guestId)
     const target = both.find((p) => p.id === playerId)
-    if (!guest || guest.userId !== null) throw new CommandError("guestNotFound")
+    if (!guest || !isGuest(guest)) throw new CommandError("guestNotFound")
     // Only the Group Admin merges, and does not link a Guest to themselves.
     const admin = await tx.query.group.findFirst({
       where: eq(group.id, groupId),
@@ -287,23 +319,6 @@ async function finishedGames(
   return new Map(rows.map((row) => [row.playerId, row.games]))
 }
 
-/**
- * The Group, for its Group Admin only. Other Players are told they are not
- * the Group Admin; to anyone else the Group does not exist.
- */
-async function requireAdmin(app: App, groupId: string, userId: string) {
-  const row = await app.db.query.group.findFirst({
-    where: eq(group.id, groupId),
-    columns: { adminId: true, inviteToken: true },
-    with: {
-      players: { where: eq(player.userId, userId), columns: { id: true } },
-    },
-  })
-  if (!row || row.players.length === 0) throw new CommandError("groupNotFound")
-  if (row.adminId !== userId) throw new CommandError("notAdmin")
-  return row
-}
-
 /** A Claim, for the Group Admin of its Group only. */
 async function requireClaim(app: App, claimId: string, userId: string) {
   const found = await app.db.query.claim.findFirst({
@@ -311,7 +326,7 @@ async function requireClaim(app: App, claimId: string, userId: string) {
   })
   if (!found) throw new CommandError("claimNotFound")
   try {
-    await requireAdmin(app, found.groupId, userId)
+    await requireAdmin(app.db, found.groupId, userId)
   } catch (error) {
     // Outsiders learn nothing about a Claim, not even its Group.
     if (error instanceof CommandError && error.code === "groupNotFound") {

@@ -83,7 +83,8 @@ function RunningCard({ game }: { game: GameListEntry }) {
         </span>
       </span>
       <span className="text-[17px] font-semibold">
-        {game.participantCount} Teilnehmer, {game.scorekeeper} zählt
+        {game.participantCount} Teilnehmer
+        {game.scorekeeper ? `, ${game.scorekeeper} zählt` : null}
       </span>
       {game.swimmer ? (
         <span className="text-[15px] text-swimmer">

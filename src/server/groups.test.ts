@@ -26,8 +26,10 @@ describe("creating a group", () => {
           admin: true,
           me: true,
           addedBy: null,
+          joinedAt: expect.any(Date),
         },
       ],
+      formerPlayers: [],
     })
   })
 
@@ -65,6 +67,7 @@ describe("adding a Guest", () => {
       admin: false,
       me: false,
       addedBy: "Ben",
+      joinedAt: expect.any(Date),
     })
   })
 })

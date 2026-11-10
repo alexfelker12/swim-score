@@ -2,13 +2,19 @@ import { useRef, useState } from "react"
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
 import { ChevronLeft } from "lucide-react"
 import { PrimaryButton, SecondaryButton } from "@/components/buttons"
+import { ConfirmSheet } from "@/components/confirm-sheet"
 import { Field, ReadOnlyValue, TextInput } from "@/components/form-field"
 import { AvatarEditor } from "@/components/avatar-editor"
 import { SegmentedTabs } from "@/components/segmented-tabs"
 import type { AvatarEditorStart } from "@/components/avatar-editor"
 import { UserAvatar } from "@/components/user-avatar"
 import { authClient } from "@/lib/auth-client"
-import { getProfileFn, setThemeFn, updateProfileFn } from "@/server/functions"
+import {
+  deleteAccountFn,
+  getProfileFn,
+  setThemeFn,
+  updateProfileFn,
+} from "@/server/functions"
 import type { Profile, Theme } from "@/server/profile"
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -129,6 +135,8 @@ function Details({ profile }: { profile: Profile }) {
     await router.navigate({ to: "/sign-in" })
   }
 
+  const [deleting, setDeleting] = useState(false)
+
   return (
     <div role="tabpanel" className="flex flex-col gap-4.5 px-5 pt-1 pb-6">
       <div className="flex items-center justify-between gap-3">
@@ -243,8 +251,8 @@ function Details({ profile }: { profile: Profile }) {
         <div className="flex flex-col gap-2 pt-4">
           <button
             type="button"
-            disabled
-            className="h-11 self-start font-semibold text-destructive disabled:opacity-40"
+            onClick={() => setDeleting(true)}
+            className="h-11 self-start font-semibold text-destructive"
           >
             Konto löschen
           </button>
@@ -255,6 +263,37 @@ function Details({ profile }: { profile: Profile }) {
           </span>
         </div>
       </div>
+      {deleting ? (
+        <DeleteAccountSheet onClose={() => setDeleting(false)} />
+      ) : null}
     </div>
+  )
+}
+
+/** "Konto löschen?": the last step before the account is gone. */
+function DeleteAccountSheet({ onClose }: { onClose: () => void }) {
+  const router = useRouter()
+
+  async function remove() {
+    const result = await deleteAccountFn()
+    if (!result.ok) {
+      return result.code === "stillAdmin"
+        ? "Du verwaltest noch eine Gruppe, in der andere ein Konto haben. Übergib dort zuerst die Verwalterrolle."
+        : "Das hat nicht geklappt."
+    }
+    // The session is gone with the account; this clears its cookie.
+    await authClient.signOut().catch(() => undefined)
+    await router.invalidate()
+    await router.navigate({ to: "/sign-in" })
+  }
+
+  return (
+    <ConfirmSheet
+      title="Konto löschen?"
+      description="Name, Bild, E-Mail und Zugangsdaten werden gelöscht. In deinen Gruppen stehst du danach als „Ehemaliger Spieler“ in den alten Spielen. Gruppen, in denen nie jemand anderes ein Konto hatte, werden mit ihren Spielen gelöscht. Das lässt sich nicht rückgängig machen."
+      confirmLabel="Konto löschen"
+      onConfirm={remove}
+      onClose={onClose}
+    />
   )
 }

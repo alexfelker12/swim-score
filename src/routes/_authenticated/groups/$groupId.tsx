@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
-import { ChevronLeft, UserPlus } from "lucide-react"
+import { ChevronLeft, Settings, UserPlus } from "lucide-react"
 import { SegmentedTabs } from "@/components/segmented-tabs"
 import {
   getGroupFn,
@@ -36,7 +36,7 @@ function GroupPage() {
   const navigate = Route.useNavigate()
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="grid h-15 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
+      <header className="grid h-15 shrink-0 grid-cols-[52px_minmax(0,1fr)_auto] items-center px-1">
         <Link
           to="/"
           aria-label="Zur Startseite"
@@ -52,16 +52,26 @@ function GroupPage() {
             {group.players.length} Spieler
           </span>
         </div>
-        {group.isAdmin ? (
+        <div className="flex">
+          {group.isAdmin ? (
+            <Link
+              to="/groups/$groupId/invite"
+              params={{ groupId: group.id }}
+              aria-label="In die Gruppe einladen"
+              className="flex size-11 items-center justify-center rounded-xl"
+            >
+              <UserPlus className="size-6" aria-hidden="true" />
+            </Link>
+          ) : null}
           <Link
-            to="/groups/$groupId/invite"
+            to="/groups/$groupId/settings"
             params={{ groupId: group.id }}
-            aria-label="In die Gruppe einladen"
-            className="flex size-11 items-center justify-center justify-self-center rounded-xl"
+            aria-label={group.isAdmin ? "Gruppe verwalten" : "Gruppe"}
+            className="flex size-11 items-center justify-center rounded-xl"
           >
-            <UserPlus className="size-6" aria-hidden="true" />
+            <Settings className="size-6" aria-hidden="true" />
           </Link>
-        ) : null}
+        </div>
       </header>
 
       <SegmentedTabs
