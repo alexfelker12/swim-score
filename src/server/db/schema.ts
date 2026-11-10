@@ -130,10 +130,14 @@ export const avatar = pgTable("avatar", {
 export const group = pgTable("group", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  /** The Group Admin: an account that is a Player of this Group. */
-  adminId: text("admin_id")
-    .notNull()
-    .references(() => user.id),
+  /**
+   * The Group Admin: an account that is a Player of this Group. Null once
+   * their account is deleted and only Former Players have accounts here; the
+   * Group is then kept for their past Games, but nobody can see or join it.
+   */
+  adminId: text("admin_id").references(() => user.id, {
+    onDelete: "set null",
+  }),
   /**
    * The secret in the Group's Invite link and QR code. Renewing the Invite
    * replaces it, which makes the old link and code invalid.
@@ -150,6 +154,13 @@ export function newInviteToken(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16))
   return Buffer.from(bytes).toString("base64url")
 }
+
+/**
+ * Why a Player became a Former Player: the Group Admin removed them, they
+ * left, or their account was deleted (which also anonymises them).
+ */
+export const LEAVE_REASONS = ["removed", "left", "deleted"] as const
+export type LeaveReason = (typeof LEAVE_REASONS)[number]
 
 /**
  * A Player of a Group: linked to an account, or a Guest (no account, own
@@ -171,6 +182,17 @@ export const player = pgTable(
       onDelete: "set null",
     }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    /**
+     * Set once the Player is a Former Player: still shown in past Games, but
+     * no longer in the Group. Null while they play in it.
+     */
+    leftAt: timestamp("left_at"),
+    leftReason: text("left_reason", { enum: LEAVE_REASONS }),
+    /**
+     * For a deleted account: the N in "Former Player N", counted per Group
+     * in the order accounts were deleted.
+     */
+    formerNumber: integer("former_number"),
   },
   (table) => [
     index("player_group_id_idx").on(table.groupId),
@@ -223,10 +245,13 @@ export const game = pgTable(
     status: text("status", { enum: GAME_STATUSES })
       .default("running")
       .notNull(),
-    /** The Scorekeeper: the only account that may record Events. */
-    scorekeeperId: text("scorekeeper_id")
-      .notNull()
-      .references(() => user.id),
+    /**
+     * The Scorekeeper: the only account that may record Events. Null once
+     * that account was deleted.
+     */
+    scorekeeperId: text("scorekeeper_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
     version: integer("version").default(0).notNull(),
     startedAt: timestamp("started_at").defaultNow().notNull(),
     finishedAt: timestamp("finished_at"),

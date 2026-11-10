@@ -5,6 +5,10 @@ import type { ComponentProps } from "react"
 export const primaryButtonClass =
   "flex h-14 shrink-0 items-center justify-center gap-2 rounded-[14px] bg-primary px-4 text-base font-semibold text-primary-foreground disabled:opacity-40"
 
+/** A main action that removes or deletes something: coral fill. */
+export const destructiveButtonClass =
+  "flex h-14 shrink-0 items-center justify-center gap-2 rounded-[14px] bg-destructive px-4 text-base font-semibold text-destructive-foreground disabled:opacity-40"
+
 /** Secondary action at full size (56 px), e.g. "Zur Gruppe". */
 export const largeSecondaryButtonClass =
   "flex h-14 shrink-0 items-center justify-center rounded-[14px] border-[1.5px] border-border px-4 text-base font-medium disabled:opacity-40"

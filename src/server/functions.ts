@@ -1,7 +1,16 @@
 import { createServerFn } from "@tanstack/react-start"
 import { getRequestHeaders } from "@tanstack/react-start/server"
 import { CommandError } from "./errors"
-import { addGuest, createGroup, getGroup, listMyGroups } from "./groups"
+import {
+  addGuest,
+  createGroup,
+  getGroup,
+  handOverAdmin,
+  leaveGroup,
+  listMyGroups,
+  removePlayer,
+  renameGroup,
+} from "./groups"
 import { getGame, getNewGame, listGames, recordEvent, startGame } from "./games"
 import { getApp } from "./instance"
 import {
@@ -15,6 +24,7 @@ import {
   renewInvite,
 } from "./invites"
 import {
+  deleteAccount,
   getAvatarSource,
   getProfile,
   removeAvatar,
@@ -221,3 +231,25 @@ export const linkGuestFn = createServerFn({ method: "POST" })
     (input: { groupId: string; guestId: string; playerId: string }) => input
   )
   .handler(({ data }) => outcome(() => linkGuest(getApp(), headers(), data)))
+
+export const renameGroupFn = createServerFn({ method: "POST" })
+  .validator((input: { groupId: string; name: string }) => input)
+  .handler(({ data }) => outcome(() => renameGroup(getApp(), headers(), data)))
+
+export const removePlayerFn = createServerFn({ method: "POST" })
+  .validator((input: { groupId: string; playerId: string }) => input)
+  .handler(({ data }) => outcome(() => removePlayer(getApp(), headers(), data)))
+
+export const leaveGroupFn = createServerFn({ method: "POST" })
+  .validator((input: { groupId: string }) => input)
+  .handler(({ data }) => outcome(() => leaveGroup(getApp(), headers(), data)))
+
+export const handOverAdminFn = createServerFn({ method: "POST" })
+  .validator((input: { groupId: string; playerId: string }) => input)
+  .handler(({ data }) =>
+    outcome(() => handOverAdmin(getApp(), headers(), data))
+  )
+
+export const deleteAccountFn = createServerFn({ method: "POST" }).handler(() =>
+  outcome(() => deleteAccount(getApp(), headers()))
+)

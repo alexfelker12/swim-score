@@ -56,3 +56,8 @@ export function formatMonth(date: Date, now = new Date()): string {
 export function monthKey(date: Date): string {
   return dayKey.format(date).slice(0, 7)
 }
+
+/** Same calendar day in German time. */
+export function isToday(date: Date, now = new Date()): boolean {
+  return dayKey.format(date) === dayKey.format(now)
+}

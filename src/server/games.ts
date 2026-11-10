@@ -7,7 +7,13 @@ import {
 } from "@/rules-engine"
 import { game, gameEvent, participant, player } from "./db/schema"
 import { CommandError } from "./errors"
-import { getGroup, playerName, requirePlayer } from "./groups"
+import {
+  isCurrentPlayer,
+  getGroup,
+  isGuest,
+  playerName,
+  requirePlayer,
+} from "./groups"
 import { requireUser } from "./session"
 import type { GameEvent, GameState, RuleSet } from "@/rules-engine"
 import type { App } from "./app"
@@ -41,8 +47,8 @@ export type GameView = {
   ruleSet: RuleSet
   /** Number of recorded Events; record the next one on top of this. */
   version: number
-  /** Display Name of the Scorekeeper. */
-  scorekeeper: string
+  /** Display Name of the Scorekeeper; null once their account is deleted. */
+  scorekeeper: string | null
   isScorekeeper: boolean
   /** In Seating Order. */
   participants: Array<GameParticipant>
@@ -54,7 +60,7 @@ export type GameView = {
 
 export type NewGame = {
   groupName: string
-  /** Every Player of the Group, sorted by name. */
+  /** Every current Player of the Group, sorted by name. */
   players: Array<{ id: string; name: string; guest: boolean }>
   /** Player ids of the Group's last Game, in its Seating Order. */
   preselected: Array<string>
@@ -75,13 +81,13 @@ export async function getNewGame(
       participants: { orderBy: participant.seat, columns: { playerId: true } },
     },
   })
-  const current = new Set(group.players.map((p) => p.id))
+  const present = new Set(group.players.map((p) => p.id))
   return {
     groupName: group.name,
     players: group.players.map(({ id, name, guest }) => ({ id, name, guest })),
     preselected: (last?.participants ?? [])
       .map((p) => p.playerId)
-      .filter((id) => current.has(id)),
+      .filter((id) => present.has(id)),
   }
 }
 
@@ -100,9 +106,11 @@ export async function startGame(
   const seating = validateSeatingOrder(ruleSet, input.playerIds)
   if (!seating.ok) throw new CommandError(seating.reason.code)
   const known = await app.db.query.player.findMany({
+    // Former Players can no longer be seated.
     where: and(
       eq(player.groupId, input.groupId),
-      inArray(player.id, input.playerIds)
+      inArray(player.id, input.playerIds),
+      isCurrentPlayer
     ),
     columns: { id: true },
   })
@@ -145,7 +153,7 @@ export async function getGame(
         orderBy: participant.seat,
         with: {
           player: {
-            columns: { name: true, userId: true },
+            columns: { name: true, userId: true, formerNumber: true },
             with: { user: { columns: { name: true } } },
           },
         },
@@ -159,7 +167,7 @@ export async function getGame(
     id: p.id,
     playerId: p.playerId,
     name: playerName(p.player),
-    guest: p.player.userId === null,
+    guest: isGuest(p.player),
     summary:
       p.won === null
         ? null
@@ -179,7 +187,7 @@ export async function getGame(
     status: row.status,
     ruleSet: row.ruleSet,
     version: row.version,
-    scorekeeper: row.scorekeeper.name,
+    scorekeeper: row.scorekeeper?.name ?? null,
     isScorekeeper: row.scorekeeperId === me.id,
     participants,
     events,
@@ -266,7 +274,8 @@ export type GameListEntry = {
   participantCount: number
   /** The current Round, or the last one of a finished Game. */
   round: number
-  scorekeeper: string
+  /** Null once the Scorekeeper's account is deleted. */
+  scorekeeper: string | null
   winner: string | null
   /** The Swimmer so far, or of the finished Game. */
   swimmer: string | null
@@ -290,7 +299,7 @@ export async function listGames(
         columns: { id: true },
         with: {
           player: {
-            columns: { name: true },
+            columns: { name: true, formerNumber: true },
             with: { user: { columns: { name: true } } },
           },
         },
@@ -310,7 +319,7 @@ export async function listGames(
       startedAt: row.startedAt,
       participantCount: row.participants.length,
       round: state.round,
-      scorekeeper: row.scorekeeper.name,
+      scorekeeper: row.scorekeeper?.name ?? null,
       winner: nameOf(state.winner),
       swimmer: nameOf(state.swimmer),
     }

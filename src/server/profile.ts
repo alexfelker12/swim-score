@@ -1,6 +1,7 @@
-import { and, eq, ne } from "drizzle-orm"
-import { THEMES, avatar, user } from "./db/schema"
+import { and, eq, inArray, isNotNull, max, ne } from "drizzle-orm"
+import { THEMES, avatar, game, group, player, user } from "./db/schema"
 import { CommandError } from "./errors"
+import { lockGroup, makeFormer } from "./groups"
 import { requireUser } from "./session"
 import type { App } from "./app"
 import type { AvatarCrop, Theme } from "./db/schema"
@@ -47,12 +48,12 @@ export async function updateProfile(
   if (name.length === 0 || name.length > MAX_NAME_LENGTH) {
     throw new CommandError("invalidName")
   }
-  const current = await app.db.query.user.findFirst({
+  const before = await app.db.query.user.findFirst({
     where: eq(user.id, id),
     columns: { email: true },
   })
   const email = input.email?.trim().toLowerCase()
-  const emailChanged = email !== undefined && email !== current?.email
+  const emailChanged = email !== undefined && email !== before?.email
   if (emailChanged) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new CommandError("invalidEmail")
@@ -230,4 +231,68 @@ export async function getAvatar(
     where: eq(avatar.userId, userId),
   })
   return row ? { contentType: row.contentType, data: row.data } : null
+}
+
+/**
+ * Deletes the account: name, picture, e-mail and sign-in are gone. In every
+ * Group it stays as an anonymous Former Player ("Ehemaliger Spieler N"), so
+ * past Games and everyone else's results are unchanged.
+ *
+ * Refused while the account is Group Admin of a Group with other current
+ * Players with an account: it hands over the role first. A Group it manages
+ * in which no other account ever played goes with it, since nobody could
+ * see it any more. One where only Former Players have accounts stays,
+ * without a Group Admin, for their past Games.
+ */
+export async function deleteAccount(app: App, headers: Headers): Promise<void> {
+  const { id } = await requireUser(app, headers)
+  await app.db.transaction(async (tx) => {
+    // Every Group the account plays or played in is locked first, so joins,
+    // hand-overs and other deletions there wait until this one is done.
+    const mine = await tx.query.player.findMany({
+      where: eq(player.userId, id),
+      columns: { id: true, groupId: true, leftAt: true },
+    })
+    const rows = await Promise.all(
+      mine.map((own) => lockGroup(tx, own.groupId))
+    )
+    const administered = mine
+      .filter((_, i) => rows[i]?.adminId === id)
+      .map((own) => own.groupId)
+    const others = await tx.query.player.findMany({
+      where: and(
+        inArray(player.groupId, administered),
+        isNotNull(player.userId),
+        ne(player.userId, id)
+      ),
+      columns: { groupId: true, leftAt: true },
+    })
+    if (others.some((p) => p.leftAt === null)) {
+      throw new CommandError("stillAdmin")
+    }
+    const alone = administered.filter(
+      (groupId) => !others.some((p) => p.groupId === groupId)
+    )
+    if (alone.length > 0) {
+      // Games first: their Participants still point at the Players.
+      await tx.delete(game).where(inArray(game.groupId, alone))
+      await tx.delete(group).where(inArray(group.id, alone))
+    }
+    for (const own of mine.filter((p) => !alone.includes(p.groupId))) {
+      const [numbered] = await tx
+        .select({ last: max(player.formerNumber) })
+        .from(player)
+        .where(eq(player.groupId, own.groupId))
+      await makeFormer(tx, own.id, "deleted", {
+        userId: null,
+        name: null,
+        formerNumber: (numbered.last ?? 0) + 1,
+        // Someone who had already left keeps the date they left.
+        ...(own.leftAt ? { leftAt: own.leftAt } : {}),
+      })
+    }
+    // Sessions, sign-in methods and the picture go with the account; the
+    // Group Admin role of a Group that stays becomes empty.
+    await tx.delete(user).where(eq(user.id, id))
+  })
 }

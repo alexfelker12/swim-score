@@ -76,7 +76,7 @@ A Player without an account, added by name by any Player with an account, who is
 A Player taking part in a specific Game.
 
 **Former Player** (Ehemaliger Spieler):
-A Player who was removed from or left a Group; still shown in past Games, but no longer on the Group Leaderboard or selectable for new Games. A deleted account becomes an anonymous Former Player.
+A Player who was removed from or left a Group; still shown in past Games, but no longer on the Group Leaderboard or selectable for new Games, and no longer able to see the Group. Joining again via the Invite makes them the same Player again. A deleted account becomes an anonymous Former Player, "Ehemaliger Spieler N", numbered per Group.
 
 **Username** (Benutzername):
 The name an account signs in with; unique regardless of case and fixed once set. Accounts created with Google get one derived from their e-mail address.
@@ -87,7 +87,7 @@ The freely changeable name of an account, shown in Games and Leaderboards; it st
 _Avoid_: Nickname
 
 **Group Admin** (Verwalter):
-The Player with an account who manages a Group: invites people, removes Players, links Guests to accounts, renames the Group. Starts as the Group's creator and can be handed over. Adding Guests is not reserved to the Group Admin.
+The Player with an account who manages a Group: invites people, removes Players, links Guests to accounts, renames the Group. Starts as the Group's creator and can be handed over to another Player with an account. Adding Guests is not reserved to the Group Admin. The Group Admin cannot leave the Group; they hand over the role first. Nor can they delete their account while other Players with an account are in the Group. When they do delete it, a Group in which no other account ever played is deleted with it; one where only Former Players have accounts stays without a Group Admin, for their past Games, and nobody can see or join it.
 _Avoid_: Owner, Creator
 
 **Invite** (Einladung):
