@@ -18,8 +18,10 @@ import { Route as AuthenticatedGamesGameIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedGamesNewRouteImport } from './routes/_authenticated/games/new'
 import { Route as AuthenticatedGroupsGroupIdRouteImport } from './routes/_authenticated/groups/$groupId'
 import { Route as AuthenticatedGroupsNewRouteImport } from './routes/_authenticated/groups/new'
+import { Route as AuthenticatedInviteTokenRouteImport } from './routes/_authenticated/invite/$token'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAvatarUserIdRouteImport } from './routes/api/avatar/$userId'
+import { Route as AuthenticatedGroupsGroupIdInviteRouteImport } from './routes/_authenticated/groups/$groupId_.invite'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -67,6 +69,12 @@ const AuthenticatedGroupsNewRoute = AuthenticatedGroupsNewRouteImport.update({
   path: '/groups/new',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedInviteTokenRoute =
+  AuthenticatedInviteTokenRouteImport.update({
+    id: '/invite/$token',
+    path: '/invite/$token',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -77,6 +85,12 @@ const ApiAvatarUserIdRoute = ApiAvatarUserIdRouteImport.update({
   path: '/api/avatar/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedGroupsGroupIdInviteRoute =
+  AuthenticatedGroupsGroupIdInviteRouteImport.update({
+    id: '/groups/$groupId_/invite',
+    path: '/groups/$groupId/invite',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -87,8 +101,10 @@ export interface FileRoutesByFullPath {
   '/games/new': typeof AuthenticatedGamesNewRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/groups/new': typeof AuthenticatedGroupsNewRoute
+  '/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/avatar/$userId': typeof ApiAvatarUserIdRoute
+  '/groups/$groupId/invite': typeof AuthenticatedGroupsGroupIdInviteRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
@@ -99,8 +115,10 @@ export interface FileRoutesByTo {
   '/games/new': typeof AuthenticatedGamesNewRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/groups/new': typeof AuthenticatedGroupsNewRoute
+  '/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/avatar/$userId': typeof ApiAvatarUserIdRoute
+  '/groups/$groupId/invite': typeof AuthenticatedGroupsGroupIdInviteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,8 +131,10 @@ export interface FileRoutesById {
   '/_authenticated/games/new': typeof AuthenticatedGamesNewRoute
   '/_authenticated/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/_authenticated/groups/new': typeof AuthenticatedGroupsNewRoute
+  '/_authenticated/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/avatar/$userId': typeof ApiAvatarUserIdRoute
+  '/_authenticated/groups/$groupId_/invite': typeof AuthenticatedGroupsGroupIdInviteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,8 +147,10 @@ export interface FileRouteTypes {
     | '/games/new'
     | '/groups/$groupId'
     | '/groups/new'
+    | '/invite/$token'
     | '/api/auth/$'
     | '/api/avatar/$userId'
+    | '/groups/$groupId/invite'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
@@ -139,8 +161,10 @@ export interface FileRouteTypes {
     | '/games/new'
     | '/groups/$groupId'
     | '/groups/new'
+    | '/invite/$token'
     | '/api/auth/$'
     | '/api/avatar/$userId'
+    | '/groups/$groupId/invite'
   id:
     | '__root__'
     | '/_authenticated'
@@ -152,8 +176,10 @@ export interface FileRouteTypes {
     | '/_authenticated/games/new'
     | '/_authenticated/groups/$groupId'
     | '/_authenticated/groups/new'
+    | '/_authenticated/invite/$token'
     | '/api/auth/$'
     | '/api/avatar/$userId'
+    | '/_authenticated/groups/$groupId_/invite'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -229,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGroupsNewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/invite/$token': {
+      id: '/_authenticated/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof AuthenticatedInviteTokenRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -243,6 +276,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAvatarUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/groups/$groupId_/invite': {
+      id: '/_authenticated/groups/$groupId_/invite'
+      path: '/groups/$groupId/invite'
+      fullPath: '/groups/$groupId/invite'
+      preLoaderRoute: typeof AuthenticatedGroupsGroupIdInviteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -253,6 +293,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedGamesNewRoute: typeof AuthenticatedGamesNewRoute
   AuthenticatedGroupsGroupIdRoute: typeof AuthenticatedGroupsGroupIdRoute
   AuthenticatedGroupsNewRoute: typeof AuthenticatedGroupsNewRoute
+  AuthenticatedInviteTokenRoute: typeof AuthenticatedInviteTokenRoute
+  AuthenticatedGroupsGroupIdInviteRoute: typeof AuthenticatedGroupsGroupIdInviteRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -262,6 +304,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedGamesNewRoute: AuthenticatedGamesNewRoute,
   AuthenticatedGroupsGroupIdRoute: AuthenticatedGroupsGroupIdRoute,
   AuthenticatedGroupsNewRoute: AuthenticatedGroupsNewRoute,
+  AuthenticatedInviteTokenRoute: AuthenticatedInviteTokenRoute,
+  AuthenticatedGroupsGroupIdInviteRoute: AuthenticatedGroupsGroupIdInviteRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

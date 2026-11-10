@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { addGuest, createGroup, getGroup, listMyGroups } from "./groups"
-import { joinGroup } from "./testing/groups"
+import { joinViaInvite } from "./testing/groups"
 import { createTestApp, signUp } from "./testing/test-app"
 import type { App } from "./app"
 
@@ -52,7 +52,7 @@ describe("adding a Guest", () => {
     const { id: groupId } = await createGroup(app, anna.headers, {
       name: "Donnerstagsrunde",
     })
-    await joinGroup(app, groupId, ben.user.id)
+    await joinViaInvite(app, groupId, ben.headers)
 
     await addGuest(app, ben.headers, { groupId, name: "  Emil " })
 
@@ -190,7 +190,7 @@ describe("my Groups", () => {
     await addGuest(app, anna.headers, { groupId: bauwagen.id, name: "Emil" })
     const montag = await createGroup(app, ben.headers, { name: "Montag" })
     await createGroup(app, ben.headers, { name: "Nur Ben" })
-    await joinGroup(app, montag.id, anna.user.id)
+    await joinViaInvite(app, montag.id, anna.headers)
 
     expect(await listMyGroups(app, anna.headers)).toEqual([
       { id: montag.id, name: "Montag", playerCount: 2 },

@@ -29,6 +29,13 @@
       "when": 1794264436632,
       "tag": "0003_games",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794336538863,
+      "tag": "0004_invites",
+      "breakpoints": true
     }
   ]
 }
