@@ -21,6 +21,7 @@ import { Route as AuthenticatedGroupsNewRouteImport } from './routes/_authentica
 import { Route as AuthenticatedInviteTokenRouteImport } from './routes/_authenticated/invite/$token'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAvatarUserIdRouteImport } from './routes/api/avatar/$userId'
+import { Route as AuthenticatedGamesGameIdHistoryRouteImport } from './routes/_authenticated/games/$gameId_.history'
 import { Route as AuthenticatedGroupsGroupIdInviteRouteImport } from './routes/_authenticated/groups/$groupId_.invite'
 import { Route as AuthenticatedGroupsGroupIdSettingsRouteImport } from './routes/_authenticated/groups/$groupId_.settings'
 
@@ -86,6 +87,12 @@ const ApiAvatarUserIdRoute = ApiAvatarUserIdRouteImport.update({
   path: '/api/avatar/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedGamesGameIdHistoryRoute =
+  AuthenticatedGamesGameIdHistoryRouteImport.update({
+    id: '/games/$gameId_/history',
+    path: '/games/$gameId/history',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedGroupsGroupIdInviteRoute =
   AuthenticatedGroupsGroupIdInviteRouteImport.update({
     id: '/groups/$groupId_/invite',
@@ -111,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/avatar/$userId': typeof ApiAvatarUserIdRoute
+  '/games/$gameId/history': typeof AuthenticatedGamesGameIdHistoryRoute
   '/groups/$groupId/invite': typeof AuthenticatedGroupsGroupIdInviteRoute
   '/groups/$groupId/settings': typeof AuthenticatedGroupsGroupIdSettingsRoute
 }
@@ -126,6 +134,7 @@ export interface FileRoutesByTo {
   '/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/avatar/$userId': typeof ApiAvatarUserIdRoute
+  '/games/$gameId/history': typeof AuthenticatedGamesGameIdHistoryRoute
   '/groups/$groupId/invite': typeof AuthenticatedGroupsGroupIdInviteRoute
   '/groups/$groupId/settings': typeof AuthenticatedGroupsGroupIdSettingsRoute
 }
@@ -143,6 +152,7 @@ export interface FileRoutesById {
   '/_authenticated/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/avatar/$userId': typeof ApiAvatarUserIdRoute
+  '/_authenticated/games/$gameId_/history': typeof AuthenticatedGamesGameIdHistoryRoute
   '/_authenticated/groups/$groupId_/invite': typeof AuthenticatedGroupsGroupIdInviteRoute
   '/_authenticated/groups/$groupId_/settings': typeof AuthenticatedGroupsGroupIdSettingsRoute
 }
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/api/auth/$'
     | '/api/avatar/$userId'
+    | '/games/$gameId/history'
     | '/groups/$groupId/invite'
     | '/groups/$groupId/settings'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/api/auth/$'
     | '/api/avatar/$userId'
+    | '/games/$gameId/history'
     | '/groups/$groupId/invite'
     | '/groups/$groupId/settings'
   id:
@@ -191,6 +203,7 @@ export interface FileRouteTypes {
     | '/_authenticated/invite/$token'
     | '/api/auth/$'
     | '/api/avatar/$userId'
+    | '/_authenticated/games/$gameId_/history'
     | '/_authenticated/groups/$groupId_/invite'
     | '/_authenticated/groups/$groupId_/settings'
   fileRoutesById: FileRoutesById
@@ -289,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAvatarUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/games/$gameId_/history': {
+      id: '/_authenticated/games/$gameId_/history'
+      path: '/games/$gameId/history'
+      fullPath: '/games/$gameId/history'
+      preLoaderRoute: typeof AuthenticatedGamesGameIdHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/groups/$groupId_/invite': {
       id: '/_authenticated/groups/$groupId_/invite'
       path: '/groups/$groupId/invite'
@@ -314,6 +334,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedGroupsGroupIdRoute: typeof AuthenticatedGroupsGroupIdRoute
   AuthenticatedGroupsNewRoute: typeof AuthenticatedGroupsNewRoute
   AuthenticatedInviteTokenRoute: typeof AuthenticatedInviteTokenRoute
+  AuthenticatedGamesGameIdHistoryRoute: typeof AuthenticatedGamesGameIdHistoryRoute
   AuthenticatedGroupsGroupIdInviteRoute: typeof AuthenticatedGroupsGroupIdInviteRoute
   AuthenticatedGroupsGroupIdSettingsRoute: typeof AuthenticatedGroupsGroupIdSettingsRoute
 }
@@ -326,6 +347,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedGroupsGroupIdRoute: AuthenticatedGroupsGroupIdRoute,
   AuthenticatedGroupsNewRoute: AuthenticatedGroupsNewRoute,
   AuthenticatedInviteTokenRoute: AuthenticatedInviteTokenRoute,
+  AuthenticatedGamesGameIdHistoryRoute: AuthenticatedGamesGameIdHistoryRoute,
   AuthenticatedGroupsGroupIdInviteRoute: AuthenticatedGroupsGroupIdInviteRoute,
   AuthenticatedGroupsGroupIdSettingsRoute:
     AuthenticatedGroupsGroupIdSettingsRoute,

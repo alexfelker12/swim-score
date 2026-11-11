@@ -31,3 +31,13 @@
   - Pro Runde: Nummer, Ereignistext und Meta („Dealer Anna“, „Schwimmer per Wahl“, „es gab schon einen Schwimmer“, „Stechen mit Anna und Carla“).
   - Zählerwechsel als eigene Zeile ohne Nummer: „Carla übernimmt das Zählen · Ben war offline“ (#9).
   - Extra-Runde mit der Meta „Anna und Dario gleichauf“ (#7).
+
+## Abweichungen in der Umsetzung
+
+- **„Zuschauer einladen“** fehlt im Spielmenü, bis #8 den Zuschauer-Link bringt. Ebenso „alle sehen live mit“ in der Statuszeile.
+- **„Stechen“** in der Leiste kommt mit #7. Der Verlauf zeigt Stechen und Extra-Runde aber schon, wenn sie als Ereignis vorliegen.
+- **Spielverlauf erreichbar:** im laufenden Spiel über das Menü, bei beendeten und abgebrochenen Spielen über ein Verlauf-Icon (`history`) oben rechts im Kopf. Der Verlauf steht allen Spielern der Gruppe offen, auch während das Spiel läuft (Kopf „Läuft, Runde N“, Zeit „seit 21:40“). Ein abgebrochenes Spiel zeigt „Abgebrochen“ und „zählt in keine Statistik“.
+- **Rückgängig nach Spielende** zeigt die Restzeit in ganzen Minuten, aufgerundet („noch 10 Minuten“ direkt nach dem Ende, „noch 1 Minute“ am Schluss). Das Fenster beginnt mit dem Spielende auf dem Server.
+- **Ausgeschiedene ausblenden** gilt pro Gerät und wird im Browser gespeichert. Die Einzahl heißt „1 Ausgeschiedener ausgeblendet.“
+- **Abbrechen** setzt wie das Spielende eine Endzeit, damit der Verlauf „21:40 bis 22:20“ zeigen kann.
+

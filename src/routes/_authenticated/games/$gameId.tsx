@@ -1,19 +1,37 @@
-import { useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
-import { Bomb, ChevronLeft, Eye, Trophy, Waves } from "lucide-react"
+import {
+  Bomb,
+  ChevronLeft,
+  CircleX,
+  Ellipsis,
+  Eye,
+  EyeOff,
+  History,
+  Trophy,
+  Undo2,
+  Waves,
+} from "lucide-react"
 import { BottomSheet } from "@/components/bottom-sheet"
 import {
   PrimaryButton,
   SecondaryButton,
   largeSecondaryButtonClass,
 } from "@/components/buttons"
+import { ConfirmSheet } from "@/components/confirm-sheet"
 import { DealerBadge } from "@/components/dealer-badge"
-import { describeEvent, genitive, joinNames } from "@/lib/game-text"
+import {
+  describeEvent,
+  describeGameLength,
+  genitive,
+  joinNames,
+} from "@/lib/game-text"
 import { cn } from "@/lib/utils"
 import { preview, replay } from "@/rules-engine"
 import { gameQuery } from "@/lib/queries"
-import { recordingKey, useRecordEvent } from "./-game-data"
+import { stepsKey, useGameSteps } from "./-game-data"
+import { useHideOut } from "./-hide-out"
 import type { GameEvent, ParticipantState } from "@/rules-engine"
 import type { GameParticipant, GameView } from "@/server/games"
 
@@ -31,9 +49,9 @@ function GamePage() {
   const { data: game } = useSuspenseQuery({
     ...gameQuery(gameId),
     // Coming back to the app shows the latest state, but not while the
-    // Scorekeeper's Events are still on their way.
+    // Scorekeeper's steps are still on their way.
     refetchOnWindowFocus: () =>
-      queryClient.isMutating({ mutationKey: recordingKey(gameId) }) === 0,
+      queryClient.isMutating({ mutationKey: stepsKey(gameId) }) === 0,
   })
   if (!game) return null
   if (game.status === "finished") return <GameEnd game={game} />
@@ -44,24 +62,29 @@ function GamePage() {
 type Sheet =
   | { kind: "swimmer"; thrower: string; candidates: Array<string> }
   | { kind: "winner"; event: GameEvent; winner: string; text: string }
+  | { kind: "menu" }
+  | { kind: "cancel" }
 
-const recordErrors: Partial<Record<string, string>> = {
+const stepErrors: Partial<Record<string, string>> = {
   versionConflict:
     "Der Stand hatte sich inzwischen geändert. Er ist jetzt neu geladen, tipp bitte noch einmal.",
   network:
     "Keine Verbindung zum Server. Der Stand ist neu geladen, tipp bitte noch einmal.",
   notScorekeeper: "Du zählst dieses Spiel nicht mehr.",
   gameNotRunning: "Das Spiel läuft nicht mehr.",
+  nothingToUndo: "Es gibt nichts mehr zurückzunehmen.",
+  undoExpired: "Die 10 Minuten sind um, das Spiel bleibt beendet.",
 }
 
 function GameTable({ game }: { game: GameView }) {
   const [bombMode, setBombMode] = useState(false)
   const [sheet, setSheet] = useState<Sheet | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const { record, finishing } = useRecordEvent(game.id, {
+  const [hideOut, setHideOut] = useHideOut()
+  const { record, undo, cancel, waiting } = useGameSteps(game.id, {
     onRefused: (code) => {
       setSheet(null)
-      setError(recordErrors[code] ?? "Das ließ sich nicht speichern.")
+      setError(stepErrors[code] ?? "Das ließ sich nicht speichern.")
     },
   })
   const { state, ruleSet } = game
@@ -105,6 +128,9 @@ function GameTable({ game }: { game: GameView }) {
   }
 
   const last = lastEvent(game)
+  const hidden = hideOut
+    ? state.participants.filter((p) => p.status === "out").length
+    : 0
   return (
     <div className="flex h-svh flex-col">
       <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
@@ -117,6 +143,14 @@ function GameTable({ game }: { game: GameView }) {
             {game.groupName}
           </span>
         </div>
+        <button
+          type="button"
+          onClick={() => setSheet({ kind: "menu" })}
+          aria-label="Spiel"
+          className="flex size-11 items-center justify-center justify-self-center rounded-xl"
+        >
+          <Ellipsis className="size-6" aria-hidden="true" />
+        </button>
       </header>
 
       <div className="shrink-0 px-4 pb-2">
@@ -171,25 +205,51 @@ function GameTable({ game }: { game: GameView }) {
         dealer={state.dealer}
         startingLives={ruleSet.startingLives}
         bombMode={bombMode}
-        onTap={isScorekeeper && !finishing ? tap : null}
+        hideOut={hideOut}
+        onTap={isScorekeeper && !waiting ? tap : null}
       />
 
+      {hidden > 0 ? (
+        <p className="shrink-0 px-4 pt-1 text-center text-[15px] text-muted-foreground">
+          {hidden === 1
+            ? "1 Ausgeschiedener ausgeblendet."
+            : `${hidden} Ausgeschiedene ausgeblendet.`}{" "}
+          <button
+            type="button"
+            onClick={() => setHideOut(false)}
+            className="font-semibold text-primary"
+          >
+            Anzeigen
+          </button>
+        </p>
+      ) : null}
+
       <div className="flex shrink-0 flex-col gap-2.5 px-4 pt-3 pb-5">
-        <div className="flex min-h-14 flex-col justify-center rounded-[14px] bg-muted px-3.5 py-1.5">
+        <div className="flex min-h-14 items-center gap-2 rounded-[14px] bg-muted py-1.5 pr-1.5 pl-3.5">
           {last ? (
-            <>
+            <div className="flex min-w-0 flex-1 flex-col">
               <span className="text-xs text-muted-foreground">
                 Runde {last.round}
               </span>
               <span className="text-[15px] leading-snug font-medium text-pretty">
                 {last.text}
               </span>
-            </>
+            </div>
           ) : (
-            <span className="text-[15px] text-muted-foreground">
+            <span className="flex-1 text-[15px] text-muted-foreground">
               Noch keine Runde gezählt. {name(state.dealer)} ist Dealer.
             </span>
           )}
+          {isScorekeeper && last ? (
+            <UndoButton
+              disabled={waiting}
+              onClick={() => {
+                setError(null)
+                setBombMode(false)
+                void undo()
+              }}
+            />
+          ) : null}
         </div>
         {error ? (
           <p role="alert" className="text-sm text-destructive">
@@ -212,7 +272,7 @@ function GameTable({ game }: { game: GameView }) {
                 setError(null)
                 setBombMode(true)
               }}
-              disabled={finishing}
+              disabled={waiting}
               className="flex h-14 items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-bomb bg-bomb-muted text-base font-semibold text-bomb disabled:opacity-40"
             >
               <Bomb className="size-5" aria-hidden="true" />
@@ -221,6 +281,33 @@ function GameTable({ game }: { game: GameView }) {
           )
         ) : null}
       </div>
+
+      {sheet?.kind === "menu" ? (
+        <GameMenu
+          gameId={game.id}
+          hideOut={hideOut}
+          onHideOut={setHideOut}
+          onCancel={
+            isScorekeeper ? () => setSheet({ kind: "cancel" }) : undefined
+          }
+          onClose={() => setSheet(null)}
+        />
+      ) : null}
+
+      {sheet?.kind === "cancel" ? (
+        <ConfirmSheet
+          title="Spiel abbrechen?"
+          description="Das Spiel bleibt in der Spielliste der Gruppe sichtbar, zählt aber in keine Statistik. Das lässt sich nicht zurücknehmen."
+          confirmLabel="Spiel abbrechen"
+          cancelLabel="Weiterspielen"
+          onConfirm={async () => {
+            const refused = await cancel()
+            if (refused === undefined) return
+            return stepErrors[refused] ?? "Das ließ sich nicht abbrechen."
+          }}
+          onClose={() => setSheet(null)}
+        />
+      ) : null}
 
       {sheet?.kind === "swimmer" ? (
         <BottomSheet
@@ -274,7 +361,7 @@ function GameTable({ game }: { game: GameView }) {
           <div className="flex flex-col gap-2.5">
             <PrimaryButton
               type="button"
-              disabled={finishing}
+              disabled={waiting}
               onClick={() => void record(sheet.event, { optimistic: false })}
             >
               Spiel beenden
@@ -305,6 +392,7 @@ function ParticipantRows({
   dealer,
   startingLives,
   bombMode,
+  hideOut,
   onTap,
 }: {
   participants: Array<GameParticipant>
@@ -312,12 +400,17 @@ function ParticipantRows({
   dealer: string
   startingLives: number
   bombMode: boolean
+  /** Leave out the rows of Participants who are Out. */
+  hideOut: boolean
   /** Null when the viewer does not record, or the Game is about to end. */
   onTap: ((id: string) => void) | null
 }) {
   const box = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState(64)
-  const count = participants.length
+  const rows = participants
+    .map((participant, seat) => ({ participant, state: states[seat] }))
+    .filter(({ state }) => !(hideOut && state.status === "out"))
+  const count = rows.length
   useLayoutEffect(() => {
     const element = box.current
     if (!element) return
@@ -337,8 +430,7 @@ function ParticipantRows({
       ref={box}
       className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-4 pb-2"
     >
-      {participants.map((participant, seat) => {
-        const state = states[seat]
+      {rows.map(({ participant, state }) => {
         const out = state.status === "out"
         const swimming = state.status === "swimming"
         const status = out
@@ -474,21 +566,19 @@ function lastEvent(game: GameView) {
 function GameEnd({ game }: { game: GameView }) {
   const { state } = game
   const name = nameOf(game.participants)
-  const extraRounds = game.events.filter((e) => e.type === "extraRound").length
-  const meta = [
-    `${state.round} Runden`,
-    extraRounds > 0
-      ? `${extraRounds} ${extraRounds === 1 ? "Extra-Runde" : "Extra-Runden"}`
-      : null,
-    `${game.participants.length} Teilnehmer`,
-  ]
-    .filter(Boolean)
-    .join(", ")
+  const meta = describeGameLength(game.events, state, game.participants.length)
+  const [error, setError] = useState<string | null>(null)
+  const { undo, waiting } = useGameSteps(game.id, {
+    onRefused: (code) =>
+      setError(stepErrors[code] ?? "Das ließ sich nicht zurücknehmen."),
+  })
+  const minutesLeft = useMinutesLeft(game.undoableUntil)
   return (
     <div className="flex min-h-svh flex-col">
       <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
         <BackToGroup groupId={game.groupId} />
         <h1 className="text-center text-[17px] font-semibold">Spiel beendet</h1>
+        <HistoryLink gameId={game.id} />
       </header>
       <div className="flex flex-col items-center gap-2 px-6 pt-6 pb-7 text-center">
         <div className="flex items-center justify-center gap-3">
@@ -561,7 +651,28 @@ function GameEnd({ game }: { game: GameView }) {
           ))}
         </tbody>
       </table>
-      <div className="mt-auto px-4 pt-6 pb-6">
+      <div className="mt-auto flex flex-col gap-2.5 px-4 pt-6 pb-6">
+        {game.isScorekeeper && minutesLeft !== null ? (
+          <div className="flex items-center gap-2 rounded-[14px] bg-muted py-1.5 pr-1.5 pl-3.5">
+            <p className="flex-1 text-sm text-pretty text-muted-foreground">
+              Falsch gezählt? Der letzte Schritt lässt sich noch{" "}
+              {minutesLeft === 1 ? "1 Minute" : `${minutesLeft} Minuten`}{" "}
+              zurücknehmen.
+            </p>
+            <UndoButton
+              disabled={waiting}
+              onClick={() => {
+                setError(null)
+                void undo({ optimistic: false })
+              }}
+            />
+          </div>
+        ) : null}
+        {error ? (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        ) : null}
         <Link
           to="/groups/$groupId"
           params={{ groupId: game.groupId }}
@@ -572,6 +683,127 @@ function GameEnd({ game }: { game: GameView }) {
         </Link>
       </div>
     </div>
+  )
+}
+
+/**
+ * Whole minutes until `until`, counted up and kept current; null once it has
+ * passed. Null on the server too, since only the browser knows the time the
+ * page is looked at.
+ */
+function useMinutesLeft(until: Date | null): number | null {
+  const [now, setNow] = useState<number | null>(null)
+  useEffect(() => {
+    if (!until) return
+    setNow(Date.now())
+    const timer = window.setInterval(() => setNow(Date.now()), 15_000)
+    return () => window.clearInterval(timer)
+  }, [until])
+  if (!until || now === null) return null
+  const left = until.getTime() - now
+  return left > 0 ? Math.ceil(left / 60_000) : null
+}
+
+function UndoButton({
+  disabled,
+  onClick,
+}: {
+  disabled: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-background px-3.5 text-[15px] font-semibold disabled:opacity-40"
+    >
+      <Undo2 className="size-4.5" aria-hidden="true" />
+      Rückgängig
+    </button>
+  )
+}
+
+function HistoryLink({ gameId }: { gameId: string }) {
+  return (
+    <Link
+      to="/games/$gameId/history"
+      params={{ gameId }}
+      aria-label="Spielverlauf"
+      className="flex size-11 items-center justify-center justify-self-center rounded-xl"
+    >
+      <History className="size-5.5" aria-hidden="true" />
+    </Link>
+  )
+}
+
+/** The sheet behind ⋯: history, hiding Participants who are Out, cancelling. */
+function GameMenu({
+  gameId,
+  hideOut,
+  onHideOut,
+  onCancel,
+  onClose,
+}: {
+  gameId: string
+  hideOut: boolean
+  onHideOut: (hide: boolean) => void
+  /** Only for the Scorekeeper. */
+  onCancel?: () => void
+  onClose: () => void
+}) {
+  const item =
+    "flex h-14 w-full items-center gap-3.5 border-b border-border text-left text-[17px]"
+  return (
+    <BottomSheet title="Spiel" onDismiss={onClose}>
+      <div className="flex flex-col">
+        <Link to="/games/$gameId/history" params={{ gameId }} className={item}>
+          <History className="size-5.5 shrink-0" aria-hidden="true" />
+          Spielverlauf
+        </Link>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={hideOut}
+          onClick={() => onHideOut(!hideOut)}
+          className={item}
+        >
+          <EyeOff className="size-5.5 shrink-0" aria-hidden="true" />
+          <span className="flex-1">Ausgeschiedene ausblenden</span>
+          <span
+            aria-hidden="true"
+            className={cn(
+              "flex h-7 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors",
+              hideOut ? "bg-primary" : "bg-muted"
+            )}
+          >
+            <span
+              className={cn(
+                "size-6 rounded-full bg-foreground transition-transform",
+                hideOut && "translate-x-4 bg-primary-foreground"
+              )}
+            />
+          </span>
+        </button>
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className={cn(item, "border-b-0 text-destructive")}
+          >
+            <CircleX className="size-5.5 shrink-0" aria-hidden="true" />
+            Spiel abbrechen
+          </button>
+        ) : null}
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        className={largeSecondaryButtonClass}
+      >
+        Schließen
+      </button>
+    </BottomSheet>
   )
 }
 
@@ -602,6 +834,7 @@ function Cancelled({ game }: { game: GameView }) {
         <h1 className="text-center text-[17px] font-semibold">
           Spiel abgebrochen
         </h1>
+        <HistoryLink gameId={game.id} />
       </header>
       <p className="px-6 pt-6 text-muted-foreground">
         Dieses Spiel wurde abgebrochen und zählt in keiner Statistik.

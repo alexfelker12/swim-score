@@ -59,6 +59,10 @@ _Avoid_: Aborted, Deleted
 A single recorded thing that happened in a Game, such as a player losing a Life or throwing a Bomb; the Game's state at any point follows from its Events.
 _Avoid_: Action, Snapshot
 
+**Undo** (Rückgängig):
+Taking back the last Event of a Game: it is deleted, as if it never happened, and counts nowhere. Only the Scorekeeper undoes, step by step as far back as wanted while the Game runs; after the end, only the last step within about 10 minutes, after which the Game runs again.
+_Avoid_: Correction, Revert
+
 **Rule Set** (Regelwerk):
 The parameters a Game is played under: number of Participants allowed, starting Lives, whether Bombs exist, whether a Swimmer exists. Every Game currently uses the Standard Rule Set (2 to 9 Participants, 3 Lives, Bomb on, Swimmer on).
 _Avoid_: Variant, Mode

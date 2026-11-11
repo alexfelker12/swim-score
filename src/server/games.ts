@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm"
+import { and, desc, eq, inArray, sql } from "drizzle-orm"
 import {
   preview,
   replay,
@@ -45,7 +45,10 @@ export type GameView = {
   groupName: string
   status: GameStatus
   ruleSet: RuleSet
-  /** Number of recorded Events; record the next one on top of this. */
+  /**
+   * The Game's revision: counts every change (an Event recorded or undone,
+   * the Game cancelled). The next step is sent on top of it.
+   */
   version: number
   /** Display Name of the Scorekeeper; null once their account is deleted. */
   scorekeeper: string | null
@@ -55,8 +58,17 @@ export type GameView = {
   events: Array<GameEvent>
   state: GameState
   startedAt: Date
+  /** When the Game finished or was cancelled. */
   finishedAt: Date | null
+  /**
+   * Until when the Scorekeeper can still undo the last step of a finished
+   * Game; null for a running or cancelled one.
+   */
+  undoableUntil: Date | null
 }
+
+/** How long after the end of a Game its last step can still be undone. */
+const UNDO_AFTER_FINISH_MS = 10 * 60_000
 
 export type NewGame = {
   groupName: string
@@ -194,6 +206,10 @@ export async function getGame(
     state: replayGame(row),
     startedAt: row.startedAt,
     finishedAt: row.finishedAt,
+    undoableUntil:
+      row.status === "finished" && row.finishedAt
+        ? undoDeadline(row.finishedAt)
+        : null,
   }
 }
 
@@ -209,23 +225,7 @@ export async function recordEvent(
   const me = await requireUser(app, headers)
   const event = parseEvent(input.event)
   if (!event) throw new CommandError("invalidEvent")
-  const row = await app.db.query.game.findFirst({
-    where: eq(game.id, input.gameId),
-    columns: {
-      groupId: true,
-      ruleSet: true,
-      scorekeeperId: true,
-      status: true,
-      version: true,
-    },
-    with: {
-      participants: { orderBy: participant.seat, columns: { id: true } },
-      events: { orderBy: (e, { asc }) => asc(e.version) },
-    },
-  })
-  if (!row) throw new CommandError("gameNotFound")
-  await requirePlayer(app, row.groupId, me.id, "gameNotFound")
-  if (row.scorekeeperId !== me.id) throw new CommandError("notScorekeeper")
+  const row = await requireScorekeeper(app, input.gameId, me.id)
   if (row.status !== "running") throw new CommandError("gameNotRunning")
   if (row.version !== input.expectedVersion) {
     throw new CommandError("versionConflict")
@@ -235,25 +235,31 @@ export async function recordEvent(
   if (!next.ok) throw new CommandError(next.reason.code)
   const version = input.expectedVersion + 1
   await app.db.transaction(async (tx) => {
-    // Only one device can move the Game from this version to the next.
+    // Only one device can move the Game from this version to the next, and
+    // not once it was cancelled in the meantime.
     const moved = await tx
       .update(game)
       .set({ version })
       .where(
-        and(eq(game.id, input.gameId), eq(game.version, input.expectedVersion))
+        and(
+          eq(game.id, input.gameId),
+          eq(game.version, input.expectedVersion),
+          eq(game.status, "running")
+        )
       )
       .returning({ id: game.id })
     if (moved.length === 0) throw new CommandError("versionConflict")
     await tx.insert(gameEvent).values({
       gameId: input.gameId,
-      version,
+      // The Event's position, after those recorded before it.
+      version: row.events.length + 1,
       event,
       recordedById: me.id,
     })
     if (next.state.finished) {
       await tx
         .update(game)
-        .set({ status: "finished", finishedAt: new Date() })
+        .set({ status: "finished", finishedAt: app.now() })
         .where(eq(game.id, input.gameId))
       const played = { ...row, events: [...row.events, { event }] }
       for (const { id } of row.participants) {
@@ -265,6 +271,99 @@ export async function recordEvent(
     }
   })
   return { version }
+}
+
+/**
+ * Undoes the last Event: it is deleted, as if it never happened. Step by
+ * step as far back as wanted while the Game runs; after the end only the
+ * last step, within 10 minutes, and the Game then runs again without its
+ * summary. Only the Scorekeeper may, on top of the version they have seen.
+ */
+export async function undoEvent(
+  app: App,
+  headers: Headers,
+  input: { gameId: string; expectedVersion: number }
+): Promise<{ version: number }> {
+  const me = await requireUser(app, headers)
+  const row = await requireScorekeeper(app, input.gameId, me.id)
+  if (row.status === "cancelled") throw new CommandError("gameNotRunning")
+  if (row.version !== input.expectedVersion) {
+    throw new CommandError("versionConflict")
+  }
+  const last = row.events.at(-1)
+  if (!last) throw new CommandError("nothingToUndo")
+  const finished = row.status === "finished"
+  if (
+    finished &&
+    (!row.finishedAt || app.now() > undoDeadline(row.finishedAt))
+  ) {
+    throw new CommandError("undoExpired")
+  }
+  // The revision counts on, so a device that saw the undone Event cannot
+  // act on it any more.
+  const version = input.expectedVersion + 1
+  await app.db.transaction(async (tx) => {
+    // Only one device can move the Game on from this version.
+    const moved = await tx
+      .update(game)
+      .set({ version, status: "running", finishedAt: null })
+      .where(
+        and(
+          eq(game.id, input.gameId),
+          eq(game.version, input.expectedVersion),
+          eq(game.status, row.status)
+        )
+      )
+      .returning({ id: game.id })
+    if (moved.length === 0) throw new CommandError("versionConflict")
+    await tx
+      .delete(gameEvent)
+      .where(
+        and(
+          eq(gameEvent.gameId, input.gameId),
+          eq(gameEvent.version, last.version)
+        )
+      )
+    if (finished) {
+      // The summary was written for the end that is now undone.
+      await tx
+        .update(participant)
+        .set({
+          won: null,
+          swam: null,
+          bombs: null,
+          livesLost: null,
+          outPosition: null,
+        })
+        .where(eq(participant.gameId, input.gameId))
+    }
+  })
+  return { version }
+}
+
+/**
+ * Cancels a running Game for good: it stays in the Group's list, but counts
+ * towards no statistic. Only the Scorekeeper may.
+ */
+export async function cancelGame(
+  app: App,
+  headers: Headers,
+  input: { gameId: string }
+): Promise<void> {
+  const me = await requireUser(app, headers)
+  const row = await requireScorekeeper(app, input.gameId, me.id)
+  if (row.status !== "running") throw new CommandError("gameNotRunning")
+  const cancelled = await app.db
+    .update(game)
+    // A change like any other: steps still sent on the old version fail.
+    .set({
+      status: "cancelled",
+      finishedAt: app.now(),
+      version: sql`${game.version} + 1`,
+    })
+    .where(and(eq(game.id, input.gameId), eq(game.status, "running")))
+    .returning({ id: game.id })
+  if (cancelled.length === 0) throw new CommandError("gameNotRunning")
 }
 
 export type GameListEntry = {
@@ -324,6 +423,37 @@ export async function listGames(
       swimmer: nameOf(state.swimmer),
     }
   })
+}
+
+/**
+ * The Game with its Participants and Events, for its Scorekeeper only. Other
+ * Players of the Group are told they do not keep score; to anyone else the
+ * Game does not exist.
+ */
+async function requireScorekeeper(app: App, gameId: string, userId: string) {
+  const row = await app.db.query.game.findFirst({
+    where: eq(game.id, gameId),
+    columns: {
+      groupId: true,
+      ruleSet: true,
+      scorekeeperId: true,
+      status: true,
+      version: true,
+      finishedAt: true,
+    },
+    with: {
+      participants: { orderBy: participant.seat, columns: { id: true } },
+      events: { orderBy: (e, { asc }) => asc(e.version) },
+    },
+  })
+  if (!row) throw new CommandError("gameNotFound")
+  await requirePlayer(app, row.groupId, userId, "gameNotFound")
+  if (row.scorekeeperId !== userId) throw new CommandError("notScorekeeper")
+  return row
+}
+
+function undoDeadline(finishedAt: Date): Date {
+  return new Date(finishedAt.getTime() + UNDO_AFTER_FINISH_MS)
 }
 
 /** A stored Game as the rules engine takes it. */
