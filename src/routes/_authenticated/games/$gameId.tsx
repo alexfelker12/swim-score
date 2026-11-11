@@ -10,6 +10,7 @@ import {
   Eye,
   EyeOff,
   History,
+  Swords,
   Trophy,
   Undo2,
   Waves,
@@ -33,6 +34,7 @@ import { preview, replay } from "@/rules-engine"
 import { gameQuery } from "@/lib/queries"
 import { stepsKey, useGameSteps } from "./-game-data"
 import { useHideOut } from "./-hide-out"
+import type { ComponentProps } from "react"
 import type { GameEvent, GameState, ParticipantState } from "@/rules-engine"
 import type { GameParticipant, GameView } from "@/server/games"
 
@@ -258,27 +260,30 @@ function GameTable({ game }: { game: GameView }) {
             </span>
           )}
           {tiebreakFor ? (
-            <button
-              type="button"
+            <BarIconButton
+              label="Stechen angeben"
               disabled={waiting}
               onClick={() => {
                 setError(null)
                 setSheet({ kind: "tiebreak" })
               }}
-              className="flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-semibold text-primary disabled:opacity-40"
+              className="text-primary"
             >
-              Stechen
-            </button>
+              <Swords className="size-5" aria-hidden="true" />
+            </BarIconButton>
           ) : null}
           {isScorekeeper && last ? (
-            <UndoButton
+            <BarIconButton
+              label="Rückgängig"
               disabled={waiting}
               onClick={() => {
                 setError(null)
                 setBombMode(false)
                 void undo()
               }}
-            />
+            >
+              <Undo2 className="size-5" aria-hidden="true" />
+            </BarIconButton>
           ) : null}
         </div>
         {error ? (
@@ -882,6 +887,29 @@ function UndoButton({
       <Undo2 className="size-4.5" aria-hidden="true" />
       Rückgängig
     </button>
+  )
+}
+
+/**
+ * A step in the bar with the last Event, as a 44 px icon, so the Event's
+ * text keeps the width.
+ */
+function BarIconButton({
+  label,
+  className,
+  ...props
+}: Omit<ComponentProps<"button">, "aria-label"> & { label: string }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      className={cn(
+        "flex size-11 shrink-0 items-center justify-center rounded-xl bg-background disabled:opacity-40",
+        className
+      )}
+      {...props}
+    />
   )
 }
 

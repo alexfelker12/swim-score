@@ -144,5 +144,10 @@ Spec: `issues/03-fundament.md` › „Nachtrag: Profilbild zuschneiden“.
   - „Entfernen“. Das ist erst mit „Speichern“ wirksam und lässt sich vorher mit „Bild doch behalten“ zurücknehmen.
 - **Speichern fürs Nachbearbeiten (entschieden):** Damit dasselbe Bild später neu zugeschnitten werden kann, speichert die App neben dem 256-px-Bild das verkleinerte Originalbild und den Ausschnitt. Pro Nutzer gibt es genau ein Originalbild, ohne Verlauf. Ein neues Bild ersetzt es.
 
+### Leiste mit dem letzten Ereignis (#7, 11.11.2026)
+
+- „Rückgängig“ und „Stechen“ sind in der Spielansicht **Icon-Buttons** (44 × 44 px, `undo-2` bzw. `swords` in Primärfarbe, Hintergrund wie die Seite), mit „Rückgängig“ bzw. „Stechen angeben“ als zugänglichem Namen. Grund: Mit Text nahmen die Buttons der Ereigniszeile so viel Breite, dass lange Texte über fünf Zeilen umbrachen und die Leiste den Spielerzeilen Platz wegnahm.
+- Am Spielende bleibt „Rückgängig“ mit Text, weil der Hinweis daneben ihn erklärt.
+
 ## Nicht entschieden oder nicht entworfen
 - Weitere kosmetische Anpassungen will der Nutzer später nachreichen. Für die Entwicklung sind sie nicht nötig.
