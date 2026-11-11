@@ -182,3 +182,54 @@ function describeEffects(
       return { text: `Extra-Runde, Dealer bleibt ${name(state.dealer)}` }
   }
 }
+
+/** Names by Participant id; "" for an unknown one. */
+export function nameOf(
+  participants: ReadonlyArray<{ id: string; name: string }>
+): Names {
+  const names = new Map(participants.map((p) => [p.id, p.name]))
+  return (id) => names.get(id) ?? ""
+}
+
+/**
+ * The last Event with the state before it, its Round and text, as the bar
+ * at the bottom of the Game shows it; null before the first.
+ */
+export function describeLastEvent(game: {
+  ruleSet: RuleSet
+  participants: ReadonlyArray<{ id: string; name: string }>
+  events: ReadonlyArray<GameEvent>
+}): {
+  event: GameEvent
+  before: GameState
+  round: number
+  text: string
+} | null {
+  const event = game.events.at(-1)
+  if (!event) return null
+  const before = replay(
+    game.ruleSet,
+    game.participants.map((p) => p.id),
+    game.events.slice(0, -1)
+  )
+  return {
+    event,
+    before,
+    round: before.round,
+    text: describeEvent(before, game.ruleSet, event, nameOf(game.participants)),
+  }
+}
+
+/**
+ * "Extra-Runde, Dealer bleibt Anna" ("2. Extra-Runde, …" for the second in a
+ * row) while the current Round is an Extra Round, otherwise null.
+ */
+export function describeExtraRound(
+  events: ReadonlyArray<GameEvent>,
+  dealer: string
+): string | null {
+  let count = 0
+  while (events.at(-1 - count)?.type === "extraRound") count++
+  if (count === 0) return null
+  return `${count > 1 ? `${count}. ` : ""}Extra-Runde, Dealer bleibt ${dealer}`
+}

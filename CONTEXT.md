@@ -102,7 +102,11 @@ A joining account's statement "I am this Guest". The account is a Player at once
 _Avoid_: Request, Link request
 
 **Spectator** (Zuschauer):
-Anyone watching a running Game read-only via its link, with or without an account.
+Anyone watching a running Game read-only via its Spectator Link, with or without an account.
+
+**Spectator Link** (Zuschauer-Link):
+A link or QR code with a secret per Game that lets anyone watch it live, without an account. Any Player of the Group can share it; it shows the Game only while it runs (again, if its end is undone).
+_Avoid_: Share link, Watch link
 
 **Scorekeeper** (Zähler):
 The one Participant with an account who records Events for a Game; any other Participant with an account can take over, except during a short grace period while the current Scorekeeper is offline.
