@@ -14,6 +14,7 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as ZTokenRouteImport } from './routes/z/$token'
 import { Route as AuthenticatedGamesGameIdRouteImport } from './routes/_authenticated/games/$gameId'
 import { Route as AuthenticatedGamesNewRouteImport } from './routes/_authenticated/games/new'
 import { Route as AuthenticatedGroupsGroupIdRouteImport } from './routes/_authenticated/groups/$groupId'
@@ -48,6 +49,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ZTokenRoute = ZTokenRouteImport.update({
+  id: '/z/$token',
+  path: '/z/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedGamesGameIdRoute =
   AuthenticatedGamesGameIdRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/z/$token': typeof ZTokenRoute
   '/games/$gameId': typeof AuthenticatedGamesGameIdRoute
   '/games/new': typeof AuthenticatedGamesNewRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/z/$token': typeof ZTokenRoute
   '/': typeof AuthenticatedIndexRoute
   '/games/$gameId': typeof AuthenticatedGamesGameIdRoute
   '/games/new': typeof AuthenticatedGamesNewRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/z/$token': typeof ZTokenRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/games/$gameId': typeof AuthenticatedGamesGameIdRoute
   '/_authenticated/games/new': typeof AuthenticatedGamesNewRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/profile'
+    | '/z/$token'
     | '/games/$gameId'
     | '/games/new'
     | '/groups/$groupId'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/profile'
+    | '/z/$token'
     | '/'
     | '/games/$gameId'
     | '/games/new'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/_authenticated/profile'
+    | '/z/$token'
     | '/_authenticated/'
     | '/_authenticated/games/$gameId'
     | '/_authenticated/games/new'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  ZTokenRoute: typeof ZTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAvatarUserIdRoute: typeof ApiAvatarUserIdRoute
 }
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/z/$token': {
+      id: '/z/$token'
+      path: '/z/$token'
+      fullPath: '/z/$token'
+      preLoaderRoute: typeof ZTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/games/$gameId': {
       id: '/_authenticated/games/$gameId'
@@ -361,6 +381,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  ZTokenRoute: ZTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAvatarUserIdRoute: ApiAvatarUserIdRoute,
 }

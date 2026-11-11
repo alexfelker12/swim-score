@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react"
+import { useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
 import { X } from "lucide-react"
-import qrcode from "qrcode-generator"
 import { PrimaryButton } from "@/components/buttons"
+import { LinkField } from "@/components/link-field"
+import { QrCode } from "@/components/qr-code"
 import { groupQuery, inviteLinkQuery } from "@/lib/queries"
+import { useShareLink } from "@/lib/use-share-link"
 import { renewInviteFn } from "@/server/functions"
 
 /** "In die Gruppe einladen": the Group's Invite as QR code and link; Group Admin only. */
@@ -42,38 +44,12 @@ function InviteLink({
   token: string
 }) {
   const queryClient = useQueryClient()
-  // The link carries this site's address, which only the browser knows for sure.
-  const [origin, setOrigin] = useState<string | null>(null)
-  useEffect(() => setOrigin(window.location.origin), [])
-  const url = origin ? `${origin}/invite/${token}` : null
-  const [copied, setCopied] = useState(false)
+  const link = useShareLink(`/invite/${token}`, {
+    title: `Einladung in die Gruppe ${groupName}`,
+    text: `Komm in unsere Schwimmen-Gruppe „${groupName}“ bei Swim Score:`,
+  })
   const [renewing, setRenewing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  async function copy() {
-    if (!url) return
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      setError("Kopieren hat nicht geklappt. Markiere den Link von Hand.")
-    }
-  }
-
-  async function share() {
-    if (!url) return
-    if (!("share" in navigator)) return copy()
-    try {
-      await navigator.share({
-        title: `Einladung in die Gruppe ${groupName}`,
-        text: `Komm in unsere Schwimmen-Gruppe „${groupName}“ bei Swim Score:`,
-        url,
-      })
-    } catch {
-      // Closing the share sheet is not an error.
-    }
-  }
 
   async function renew() {
     setRenewing(true)
@@ -109,9 +85,9 @@ function InviteLink({
           mitgespielt hat, kann sich darüber seinen Gast holen.
         </p>
         <div className="size-62 self-center rounded-[20px] bg-white p-4">
-          {url ? (
+          {link.url ? (
             <QrCode
-              text={url}
+              text={link.url}
               label={`QR-Code der Einladung in die Gruppe ${groupName}`}
             />
           ) : null}
@@ -119,26 +95,18 @@ function InviteLink({
         <div className="text-center text-xl font-bold wrap-break-word">
           {groupName}
         </div>
-        <div className="flex h-13 items-center gap-2 rounded-xl bg-muted pr-1.5 pl-3.5">
-          <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground select-all">
-            {url?.replace(/^https?:\/\//, "")}
-          </span>
-          <button
-            type="button"
-            onClick={copy}
-            disabled={!url}
-            className="h-10 shrink-0 rounded-[10px] bg-card px-3 text-sm font-medium"
-          >
-            {copied ? "Kopiert" : "Kopieren"}
-          </button>
-        </div>
+        <LinkField
+          shownUrl={link.shownUrl}
+          copied={link.copied}
+          onCopy={link.copy}
+        />
         <p role="status" className="text-center text-sm text-destructive">
-          {error}
+          {error ?? link.error}
         </p>
       </main>
 
       <div className="flex flex-col gap-2.5 px-4 pt-4 pb-6">
-        <PrimaryButton type="button" onClick={share} disabled={!url}>
+        <PrimaryButton type="button" onClick={link.share} disabled={!link.url}>
           Link teilen
         </PrimaryButton>
         <button
@@ -154,33 +122,5 @@ function InviteLink({
         </span>
       </div>
     </div>
-  )
-}
-
-/** A QR code as one SVG path; dark on the white card in both themes so cameras read it. */
-function QrCode({ text, label }: { text: string; label: string }) {
-  const { size, path } = useMemo(() => {
-    const code = qrcode(0, "M")
-    code.addData(text)
-    code.make()
-    const count = code.getModuleCount()
-    let d = ""
-    for (let row = 0; row < count; row++) {
-      for (let col = 0; col < count; col++) {
-        if (code.isDark(row, col)) d += `M${col} ${row}h1v1h-1z`
-      }
-    }
-    return { size: count, path: d }
-  }, [text])
-  return (
-    <svg
-      role="img"
-      aria-label={label}
-      viewBox={`0 0 ${size} ${size}`}
-      shapeRendering="crispEdges"
-      className="size-full fill-black"
-    >
-      <path d={path} />
-    </svg>
   )
 }

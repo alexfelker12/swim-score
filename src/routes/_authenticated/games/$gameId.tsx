@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
 import {
@@ -7,13 +7,12 @@ import {
   ChevronLeft,
   CircleX,
   Ellipsis,
-  Eye,
   EyeOff,
   History,
+  QrCode as QrCodeIcon,
   Swords,
   Trophy,
   Undo2,
-  Waves,
 } from "lucide-react"
 import { BottomSheet } from "@/components/bottom-sheet"
 import {
@@ -22,20 +21,32 @@ import {
   largeSecondaryButtonClass,
 } from "@/components/buttons"
 import { ConfirmSheet } from "@/components/confirm-sheet"
-import { DealerBadge } from "@/components/dealer-badge"
+import {
+  LastEventBar,
+  ParticipantRows,
+  ScorekeeperStatus,
+  SwimmerLabel,
+} from "@/components/game-board"
+import { LinkField } from "@/components/link-field"
+import { QrCode } from "@/components/qr-code"
 import {
   describeEvent,
   describeGameLength,
+  describeExtraRound,
+  describeLastEvent,
   genitive,
   joinNames,
+  nameOf,
 } from "@/lib/game-text"
+import { useLiveGame } from "@/lib/use-live-game"
+import { useShareLink } from "@/lib/use-share-link"
 import { cn } from "@/lib/utils"
-import { preview, replay } from "@/rules-engine"
-import { gameQuery } from "@/lib/queries"
+import { preview } from "@/rules-engine"
+import { gameChanged, gameQuery } from "@/lib/queries"
 import { stepsKey, useGameSteps } from "./-game-data"
 import { useHideOut } from "./-hide-out"
 import type { ComponentProps } from "react"
-import type { GameEvent, GameState, ParticipantState } from "@/rules-engine"
+import type { GameEvent } from "@/rules-engine"
 import type { GameParticipant, GameView } from "@/server/games"
 
 export const Route = createFileRoute("/_authenticated/games/$gameId")({
@@ -49,12 +60,22 @@ export const Route = createFileRoute("/_authenticated/games/$gameId")({
 function GamePage() {
   const { gameId } = Route.useParams()
   const queryClient = useQueryClient()
+  // The Scorekeeper's steps still on their way load the Game again when done.
+  const isBusy = () =>
+    queryClient.isMutating({ mutationKey: stepsKey(gameId) }) > 0
   const { data: game } = useSuspenseQuery({
     ...gameQuery(gameId),
-    // Coming back to the app shows the latest state, but not while the
-    // Scorekeeper's steps are still on their way.
-    refetchOnWindowFocus: () =>
-      queryClient.isMutating({ mutationKey: stepsKey(gameId) }) === 0,
+    // Coming back to the app shows the latest state.
+    refetchOnWindowFocus: () => !isBusy(),
+  })
+  const groupId = game?.groupId
+  useLiveGame({
+    gameId: groupId ? gameId : null,
+    version: game?.version ?? null,
+    onChange: () => {
+      if (groupId) void gameChanged(queryClient, gameId, groupId)
+    },
+    isBusy,
   })
   if (!game) return null
   if (game.status === "finished") return <GameEnd game={game} />
@@ -67,6 +88,7 @@ type Sheet =
   | { kind: "winner"; event: GameEvent; winner: string; text: string }
   | { kind: "tiebreak" }
   | { kind: "menu" }
+  | { kind: "spectators"; token: string }
   | { kind: "cancel" }
 
 const stepErrors: Partial<Record<string, string>> = {
@@ -131,7 +153,8 @@ function GameTable({ game }: { game: GameView }) {
     propose({ type: "bomb", thrower: id })
   }
 
-  const last = lastEvent(game)
+  const last = describeLastEvent(game)
+  const { spectatorToken } = game
   const remaining = state.participants.filter((p) => p.status !== "out")
   // Only a loss decides a Round by Tiebreak, and only with more than two left
   // before it; two left play an Extra Round instead.
@@ -144,7 +167,6 @@ function GameTable({ game }: { game: GameView }) {
       ? { loser: last.event.loser, before: last.before }
       : null
   const canExtraRound = isScorekeeper && !bombMode && remaining.length === 2
-  const extraRounds = trailingExtraRounds(game.events)
   const hidden = hideOut
     ? state.participants.filter((p) => p.status === "out").length
     : 0
@@ -157,9 +179,8 @@ function GameTable({ game }: { game: GameView }) {
             Runde {state.round}
           </h1>
           <span className="max-w-full truncate text-[13px] text-muted-foreground">
-            {extraRounds > 0
-              ? `${extraRounds > 1 ? `${extraRounds}. ` : ""}Extra-Runde, Dealer bleibt ${name(state.dealer)}`
-              : game.groupName}
+            {describeExtraRound(game.events, name(state.dealer)) ??
+              game.groupName}
           </span>
         </div>
         <button
@@ -172,38 +193,10 @@ function GameTable({ game }: { game: GameView }) {
         </button>
       </header>
 
-      <div className="shrink-0 px-4 pb-2">
-        <div className="flex h-10 items-center gap-2.5 rounded-xl bg-muted px-3.5 text-sm">
-          {isScorekeeper ? (
-            <>
-              <span
-                aria-hidden="true"
-                className="size-2 rounded-full bg-primary"
-              />
-              <span className="font-semibold">Du zählst</span>
-            </>
-          ) : (
-            <>
-              <Eye
-                className="size-4.5 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <span>
-                {game.scorekeeper ? (
-                  <>
-                    Du schaust zu,{" "}
-                    <span className="font-semibold">{game.scorekeeper}</span>{" "}
-                    zählt
-                  </>
-                ) : (
-                  // The Scorekeeper's account was deleted; taking over comes with #9.
-                  "Du schaust zu, niemand zählt"
-                )}
-              </span>
-            </>
-          )}
-        </div>
-      </div>
+      <ScorekeeperStatus
+        viewer={isScorekeeper ? "scorekeeper" : "participant"}
+        scorekeeper={game.scorekeeper}
+      />
 
       {isScorekeeper ? (
         <p
@@ -223,6 +216,9 @@ function GameTable({ game }: { game: GameView }) {
         states={state.participants}
         dealer={state.dealer}
         startingLives={ruleSet.startingLives}
+        scorekeeperParticipantId={
+          isScorekeeper ? null : game.scorekeeperParticipantId
+        }
         bombMode={bombMode}
         hideOut={hideOut}
         onTap={isScorekeeper && !waiting ? tap : null}
@@ -244,21 +240,10 @@ function GameTable({ game }: { game: GameView }) {
       ) : null}
 
       <div className="flex shrink-0 flex-col gap-2.5 px-4 pt-3 pb-5">
-        <div className="flex min-h-14 items-center gap-2 rounded-[14px] bg-muted py-1.5 pr-1.5 pl-3.5">
-          {last ? (
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className="text-xs text-muted-foreground">
-                Runde {last.round}
-              </span>
-              <span className="text-[15px] leading-snug font-medium text-pretty">
-                {last.text}
-              </span>
-            </div>
-          ) : (
-            <span className="flex-1 text-[15px] text-muted-foreground">
-              Noch keine Runde gezählt. {name(state.dealer)} ist Dealer.
-            </span>
-          )}
+        <LastEventBar
+          last={last}
+          emptyText={`Noch keine Runde gezählt. ${name(state.dealer)} ist Dealer.`}
+        >
           {tiebreakFor ? (
             <BarIconButton
               label="Stechen angeben"
@@ -285,7 +270,7 @@ function GameTable({ game }: { game: GameView }) {
               <Undo2 className="size-5" aria-hidden="true" />
             </BarIconButton>
           ) : null}
-        </div>
+        </LastEventBar>
         {error ? (
           <p role="alert" className="text-sm text-destructive">
             {error}
@@ -333,6 +318,11 @@ function GameTable({ game }: { game: GameView }) {
       {sheet?.kind === "menu" ? (
         <GameMenu
           gameId={game.id}
+          onSpectators={
+            spectatorToken
+              ? () => setSheet({ kind: "spectators", token: spectatorToken })
+              : undefined
+          }
           hideOut={hideOut}
           onHideOut={setHideOut}
           onCancel={
@@ -340,6 +330,10 @@ function GameTable({ game }: { game: GameView }) {
           }
           onClose={() => setSheet(null)}
         />
+      ) : null}
+
+      {sheet?.kind === "spectators" ? (
+        <SpectatorSheet token={sheet.token} onClose={() => setSheet(null)} />
       ) : null}
 
       {sheet?.kind === "cancel" ? (
@@ -443,154 +437,6 @@ function GameTable({ game }: { game: GameView }) {
   )
 }
 
-const ROW_GAP = 6
-
-/**
- * One row per Participant in Seating Order, high enough to fill the space
- * without scrolling (52–88 px), so 9 players fit on a phone.
- */
-function ParticipantRows({
-  participants,
-  states,
-  dealer,
-  startingLives,
-  bombMode,
-  hideOut,
-  onTap,
-}: {
-  participants: Array<GameParticipant>
-  states: Array<ParticipantState>
-  dealer: string
-  startingLives: number
-  bombMode: boolean
-  /** Leave out the rows of Participants who are Out. */
-  hideOut: boolean
-  /** Null when the viewer does not record, or the Game is about to end. */
-  onTap: ((id: string) => void) | null
-}) {
-  const box = useRef<HTMLDivElement>(null)
-  const [height, setHeight] = useState(64)
-  const rows = participants
-    .map((participant, seat) => ({ participant, state: states[seat] }))
-    .filter(({ state }) => !(hideOut && state.status === "out"))
-  const count = rows.length
-  useLayoutEffect(() => {
-    const element = box.current
-    if (!element) return
-    const fit = () => {
-      const free = element.clientHeight - ROW_GAP * (count - 1)
-      setHeight(Math.max(52, Math.min(88, Math.floor(free / count))))
-    }
-    fit()
-    const observer = new ResizeObserver(fit)
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [count])
-  const largeText = height >= 70
-
-  return (
-    <div
-      ref={box}
-      className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-4 pb-2"
-    >
-      {rows.map(({ participant, state }) => {
-        const out = state.status === "out"
-        const swimming = state.status === "swimming"
-        const status = out
-          ? "ausgeschieden"
-          : swimming
-            ? "schwimmt"
-            : `${state.lives} Leben`
-        const tappable = onTap !== null && !out
-        const className = cn(
-          "relative flex w-full shrink-0 items-center justify-between gap-3 rounded-[14px] border-[1.5px] bg-card px-4.5 text-left",
-          out
-            ? "border-dashed border-border bg-transparent opacity-50"
-            : bombMode && tappable
-              ? "border-bomb"
-              : swimming
-                ? "border-swimmer"
-                : "border-border"
-        )
-        const content = (
-          <>
-            <span
-              className={cn(
-                "truncate font-semibold",
-                largeText ? "text-[21px]" : "text-lg"
-              )}
-            >
-              {participant.name}
-            </span>
-            {out ? (
-              <span className="shrink-0 text-sm text-muted-foreground">
-                ausgeschieden
-              </span>
-            ) : swimming ? (
-              <SwimmerLabel />
-            ) : (
-              <LifeBar lives={state.lives} of={startingLives} />
-            )}
-            {participant.id === dealer && !out ? (
-              <DealerBadge placement="corner" />
-            ) : null}
-          </>
-        )
-        return tappable ? (
-          <button
-            key={participant.id}
-            type="button"
-            style={{ height }}
-            onClick={() => onTap(participant.id)}
-            aria-label={`${participant.name}, ${status}. Tippen: ${bombMode ? "wirft die Bombe" : "verliert die Runde"}`}
-            className={className}
-          >
-            {content}
-          </button>
-        ) : (
-          <div
-            key={participant.id}
-            style={{ height }}
-            aria-label={`${participant.name}, ${status}`}
-            role="group"
-            className={className}
-          >
-            {content}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-/** Lives as a bar of segments; lost ones stay as an outline. */
-function LifeBar({ lives, of }: { lives: number; of: number }) {
-  return (
-    <span aria-hidden="true" className="flex w-21 shrink-0 gap-1">
-      {Array.from({ length: of }, (_, index) => (
-        <span
-          key={index}
-          className={cn(
-            "h-2.5 flex-1 rounded-[5px]",
-            index < lives
-              ? "bg-foreground"
-              : "shadow-[inset_0_0_0_1.5px_var(--life-off)]"
-          )}
-        />
-      ))}
-    </span>
-  )
-}
-
-function SwimmerLabel() {
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 text-[15px] font-semibold text-swimmer">
-      <Waves className="size-5.5" aria-hidden="true" />
-      schwimmt
-    </span>
-  )
-}
-
 function BackToGroup({ groupId }: { groupId: string }) {
   return (
     <Link
@@ -603,12 +449,6 @@ function BackToGroup({ groupId }: { groupId: string }) {
       <ChevronLeft className="size-6" aria-hidden="true" />
     </Link>
   )
-}
-
-/** Names by Participant id. */
-function nameOf(participants: Array<GameParticipant>) {
-  const names = new Map(participants.map((p) => [p.id, p.name]))
-  return (id: string) => names.get(id) ?? ""
 }
 
 /**
@@ -698,35 +538,6 @@ function TiebreakSheet({
       </div>
     </BottomSheet>
   )
-}
-
-/** How many Extra Rounds were just played in a row, i.e. the current Round's. */
-function trailingExtraRounds(events: ReadonlyArray<GameEvent>) {
-  let count = 0
-  for (let i = events.length - 1; i >= 0; i--) {
-    if (events[i].type !== "extraRound") break
-    count++
-  }
-  return count
-}
-
-/** The last Event with the state before it, its Round and text; null before the first. */
-function lastEvent(
-  game: GameView
-): { event: GameEvent; before: GameState; round: number; text: string } | null {
-  const event = game.events.at(-1)
-  if (!event) return null
-  const before = replay(
-    game.ruleSet,
-    game.participants.map((p) => p.id),
-    game.events.slice(0, -1)
-  )
-  return {
-    event,
-    before,
-    round: before.round,
-    text: describeEvent(before, game.ruleSet, event, nameOf(game.participants)),
-  }
 }
 
 function GameEnd({ game }: { game: GameView }) {
@@ -926,15 +737,72 @@ function HistoryLink({ gameId }: { gameId: string }) {
   )
 }
 
+/** "Zuschauer einladen": the Game's Spectator link as QR code and link. */
+function SpectatorSheet({
+  token,
+  onClose,
+}: {
+  token: string
+  onClose: () => void
+}) {
+  const link = useShareLink(`/z/${token}`, {
+    title: "Schwimmen live",
+    text: "Schau unserem Spiel Schwimmen live zu:",
+  })
+  return (
+    <BottomSheet
+      title="Zuschauer einladen"
+      description="Wer den Code scannt, sieht das Spiel live, auch ohne Konto. Der Link gilt nur, solange das Spiel läuft."
+      onDismiss={onClose}
+    >
+      <div className="size-53 self-center rounded-[20px] bg-white p-3.5">
+        {link.url ? (
+          <QrCode text={link.url} label="QR-Code des Zuschauer-Links" />
+        ) : null}
+      </div>
+      <LinkField
+        shownUrl={link.shownUrl}
+        copied={link.copied}
+        onCopy={link.copy}
+      />
+      {link.error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {link.error}
+        </p>
+      ) : null}
+      <div className="flex gap-2.5">
+        <SecondaryButton
+          type="button"
+          onClick={onClose}
+          className="h-13 flex-1 rounded-[14px] bg-transparent text-base"
+        >
+          Fertig
+        </SecondaryButton>
+        <PrimaryButton
+          type="button"
+          onClick={link.share}
+          disabled={!link.url}
+          className="h-13 flex-1"
+        >
+          Link teilen
+        </PrimaryButton>
+      </div>
+    </BottomSheet>
+  )
+}
+
 /** The sheet behind ⋯: history, hiding Participants who are Out, cancelling. */
 function GameMenu({
   gameId,
+  onSpectators,
   hideOut,
   onHideOut,
   onCancel,
   onClose,
 }: {
   gameId: string
+  /** While the Game runs. */
+  onSpectators?: () => void
   hideOut: boolean
   onHideOut: (hide: boolean) => void
   /** Only for the Scorekeeper. */
@@ -950,6 +818,12 @@ function GameMenu({
           <History className="size-5.5 shrink-0" aria-hidden="true" />
           Spielverlauf
         </Link>
+        {onSpectators ? (
+          <button type="button" onClick={onSpectators} className={item}>
+            <QrCodeIcon className="size-5.5 shrink-0" aria-hidden="true" />
+            Zuschauer einladen
+          </button>
+        ) : null}
         <button
           type="button"
           role="switch"

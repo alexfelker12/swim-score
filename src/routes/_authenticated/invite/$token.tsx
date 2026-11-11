@@ -1,14 +1,9 @@
 import { useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
-import {
-  Link,
-  createFileRoute,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router"
-import { Unlink } from "lucide-react"
-import { PrimaryButton, primaryButtonClass } from "@/components/buttons"
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
+import { PrimaryButton } from "@/components/buttons"
 import { ChoiceCard } from "@/components/choice-card"
+import { LinkGone } from "@/components/link-gone"
 import { Logo } from "@/components/logo"
 import { gameCount } from "@/lib/plural"
 import { inviteQuery, joined, queryKeys } from "@/lib/queries"
@@ -150,31 +145,9 @@ function AcceptInvite({ invite }: { invite: InviteView }) {
 
 function InvalidInvite() {
   return (
-    <div className="flex min-h-svh flex-col">
-      <header className="flex h-14 shrink-0 items-center px-5">
-        <Logo />
-      </header>
-      <main className="flex flex-1 flex-col justify-center gap-3.5 px-7 pb-20">
-        <div className="flex items-center gap-3">
-          <Unlink
-            className="size-8 shrink-0 text-muted-foreground"
-            strokeWidth={1.8}
-            aria-hidden="true"
-          />
-          <h1 className="text-[26px] leading-[1.2] font-bold text-balance">
-            Diese Einladung gilt nicht mehr
-          </h1>
-        </div>
-        <p className="text-pretty text-muted-foreground">
-          Der Verwalter der Gruppe hat den Einladungslink erneuert. Bitte ihn um
-          den aktuellen Link oder QR-Code.
-        </p>
-      </main>
-      <div className="px-4 pb-6">
-        <Link to="/" className={primaryButtonClass}>
-          Zur Startseite
-        </Link>
-      </div>
-    </div>
+    <LinkGone title="Diese Einladung gilt nicht mehr" action="Zur Startseite">
+      Der Verwalter der Gruppe hat den Einladungslink erneuert. Bitte ihn um den
+      aktuellen Link oder QR-Code.
+    </LinkGone>
   )
 }

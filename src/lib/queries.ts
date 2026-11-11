@@ -8,6 +8,7 @@ import {
   getInviteLinkFn,
   getNewGameFn,
   getProfileFn,
+  getSpectatorGameFn,
   listGamesFn,
   listMyGroupsFn,
 } from "@/server/functions"
@@ -32,6 +33,7 @@ export const queryKeys = {
   games: () => ["game"] as const,
   game: (gameId: string) => ["game", gameId] as const,
   profile: () => ["profile"] as const,
+  spectatorGame: (token: string) => ["spectatorGame", token] as const,
 }
 
 /** Mutation keys, so pending mutations can be found again. */
@@ -160,6 +162,29 @@ export async function groupChanged(
   ])
 }
 
+/**
+ * Another device changed the Game (ADR 0005): load it again, and mark what
+ * the Group shows of its Games (Round, Winner, running or not) as stale.
+ */
+export async function gameChanged(
+  queryClient: QueryClient,
+  gameId: string,
+  groupId: string
+) {
+  await Promise.all([
+    invalidate(queryClient, queryKeys.game(gameId), {}),
+    groupChanged(queryClient, groupId, { later: true }),
+  ])
+}
+
+/** The Game behind a Spectator link changed: load it again. */
+export async function spectatorGameChanged(
+  queryClient: QueryClient,
+  token: string
+) {
+  await invalidate(queryClient, queryKeys.spectatorGame(token), {})
+}
+
 /** The signed-in account joined a Group via this Invite. */
 export async function joined(
   queryClient: QueryClient,
@@ -186,4 +211,12 @@ export async function leftGroup(queryClient: QueryClient, groupId: string) {
 export async function profileChanged(queryClient: QueryClient) {
   await queryClient.invalidateQueries({ refetchType: "none" })
   await invalidate(queryClient, queryKeys.profile(), {})
+}
+
+/** The running Game behind a Spectator link (see `getSpectatorGameFn`). */
+export function spectatorGameQuery(token: string) {
+  return queryOptions({
+    queryKey: queryKeys.spectatorGame(token),
+    queryFn: () => getSpectatorGameFn({ data: { token } }),
+  })
 }

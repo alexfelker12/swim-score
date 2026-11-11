@@ -149,7 +149,10 @@ export const group = pgTable("group", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
-/** 128 random bits, URL-safe: knowing it is all it takes to join the Group. */
+/**
+ * 128 random bits, URL-safe: knowing it is all it takes to join the Group
+ * (or to watch a Game).
+ */
 export function newInviteToken(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16))
   return Buffer.from(bytes).toString("base64url")
@@ -254,6 +257,14 @@ export const game = pgTable(
       onDelete: "set null",
     }),
     version: integer("version").default(0).notNull(),
+    /**
+     * The secret in the Game's Spectator link: anyone who knows it can watch
+     * the Game while it runs, without an account.
+     */
+    spectatorToken: text("spectator_token")
+      .notNull()
+      .unique()
+      .$defaultFn(newInviteToken),
     startedAt: timestamp("started_at").defaultNow().notNull(),
     finishedAt: timestamp("finished_at"),
   },

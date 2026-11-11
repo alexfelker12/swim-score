@@ -4,7 +4,7 @@ import { migrate } from "drizzle-orm/pglite/migrator"
 import * as schema from "../db/schema"
 import { createAuth } from "../auth"
 import type { GoogleProfile as GoogleIdToken } from "better-auth/social-providers"
-import type { App } from "../app"
+import type { App, Notifier } from "../app"
 
 export type GoogleProfile = {
   sub: string
@@ -13,12 +13,20 @@ export type GoogleProfile = {
   picture?: string
 }
 
+/** A test application that also keeps every Game-changed notification it sent. */
+export type TestApp = App & {
+  notifications: Array<{ gameId: string; version: number }>
+}
+
 /**
  * A complete server application on a fresh in-memory Postgres (PGlite),
  * with the real migrations applied. Google sign-in accepts any ID token that
- * is a JSON-encoded `GoogleProfile`.
+ * is a JSON-encoded `GoogleProfile`. Notifications are kept in
+ * `notifications` instead of going to Pusher, unless `notifier` replaces them.
  */
-export async function createTestApp(): Promise<App> {
+export async function createTestApp({
+  notifier,
+}: { notifier?: Notifier } = {}): Promise<TestApp> {
   const client = new PGlite()
   const db = drizzle({ client, schema })
   await migrate(db, { migrationsFolder: "drizzle" })
@@ -49,7 +57,18 @@ export async function createTestApp(): Promise<App> {
       },
     },
   })
-  return { db, auth, now: () => new Date() }
+  const notifications: TestApp["notifications"] = []
+  return {
+    db,
+    auth,
+    now: () => new Date(),
+    notifier: notifier ?? {
+      gameChanged: async (gameId, version) => {
+        notifications.push({ gameId, version })
+      },
+    },
+    notifications,
+  }
 }
 
 type Auth = App["auth"]

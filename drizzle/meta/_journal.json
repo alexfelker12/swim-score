@@ -43,6 +43,13 @@
       "when": 1794346970797,
       "tag": "0005_former_players",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794434934116,
+      "tag": "0006_spectator_token",
+      "breakpoints": true
     }
   ]
 }

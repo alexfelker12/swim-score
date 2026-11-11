@@ -1,4 +1,5 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm"
+import type { SQL } from "drizzle-orm"
 import {
   preview,
   replay,
@@ -52,7 +53,14 @@ export type GameView = {
   version: number
   /** Display Name of the Scorekeeper; null once their account is deleted. */
   scorekeeper: string | null
+  /** The Participant who keeps score; null once their account is deleted. */
+  scorekeeperParticipantId: string | null
   isScorekeeper: boolean
+  /**
+   * The secret of the Game's Spectator link, for every Player of the Group
+   * while the Game runs; null once it is over.
+   */
+  spectatorToken: string | null
   /** In Seating Order. */
   participants: Array<GameParticipant>
   events: Array<GameEvent>
@@ -156,23 +164,7 @@ export async function getGame(
   input: { gameId: string }
 ): Promise<GameView> {
   const me = await requireUser(app, headers)
-  const row = await app.db.query.game.findFirst({
-    where: eq(game.id, input.gameId),
-    with: {
-      group: { columns: { name: true } },
-      scorekeeper: { columns: { name: true } },
-      participants: {
-        orderBy: participant.seat,
-        with: {
-          player: {
-            columns: { name: true, userId: true, formerNumber: true },
-            with: { user: { columns: { name: true } } },
-          },
-        },
-      },
-      events: { orderBy: (e, { asc }) => asc(e.version) },
-    },
-  })
+  const row = await loadGame(app, eq(game.id, input.gameId))
   if (!row) throw new CommandError("gameNotFound")
   await requirePlayer(app, row.groupId, me.id, "gameNotFound")
   const participants = row.participants.map((p) => ({
@@ -200,7 +192,9 @@ export async function getGame(
     ruleSet: row.ruleSet,
     version: row.version,
     scorekeeper: row.scorekeeper?.name ?? null,
+    scorekeeperParticipantId: scorekeeperParticipant(row),
     isScorekeeper: row.scorekeeperId === me.id,
+    spectatorToken: row.status === "running" ? row.spectatorToken : null,
     participants,
     events,
     state: replayGame(row),
@@ -257,6 +251,7 @@ export async function recordEvent(
       }
     }
   })
+  await notifyGameChanged(app, input.gameId, version)
   return { version }
 }
 
@@ -303,6 +298,7 @@ export async function addTiebreak(
         )
       )
   })
+  await notifyGameChanged(app, input.gameId, version)
   return { version }
 }
 
@@ -371,6 +367,7 @@ export async function undoEvent(
         .where(eq(participant.gameId, input.gameId))
     }
   })
+  await notifyGameChanged(app, input.gameId, version)
   return { version }
 }
 
@@ -395,8 +392,52 @@ export async function cancelGame(
       version: sql`${game.version} + 1`,
     })
     .where(and(eq(game.id, input.gameId), eq(game.status, "running")))
-    .returning({ id: game.id })
+    .returning({ version: game.version })
   if (cancelled.length === 0) throw new CommandError("gameNotRunning")
+  await notifyGameChanged(app, input.gameId, cancelled[0].version)
+}
+
+/** A running Game as Spectators see it: no Players' or accounts' ids. */
+export type SpectatorView = {
+  id: string
+  groupName: string
+  ruleSet: RuleSet
+  version: number
+  /** Display Name of the Scorekeeper; null once their account is deleted. */
+  scorekeeper: string | null
+  scorekeeperParticipantId: string | null
+  /** In Seating Order. */
+  participants: Array<{ id: string; name: string }>
+  events: Array<GameEvent>
+  state: GameState
+}
+
+/**
+ * The running Game behind a Spectator link, for anyone who has it, with or
+ * without an account; hence no session headers. Once the Game is over, the
+ * link shows nothing.
+ */
+export async function getSpectatorGame(
+  app: App,
+  input: { token: string }
+): Promise<SpectatorView> {
+  const row = await loadGame(app, eq(game.spectatorToken, input.token))
+  if (!row) throw new CommandError("spectatorLinkNotFound")
+  if (row.status !== "running") throw new CommandError("spectatorLinkExpired")
+  return {
+    id: row.id,
+    groupName: row.group.name,
+    ruleSet: row.ruleSet,
+    version: row.version,
+    scorekeeper: row.scorekeeper?.name ?? null,
+    scorekeeperParticipantId: scorekeeperParticipant(row),
+    participants: row.participants.map((p) => ({
+      id: p.id,
+      name: playerName(p.player),
+    })),
+    events: row.events.map((e) => e.event),
+    state: replayGame(row),
+  }
 }
 
 export type GameListEntry = {
@@ -483,6 +524,55 @@ async function requireScorekeeper(app: App, gameId: string, userId: string) {
   await requirePlayer(app, row.groupId, userId, "gameNotFound")
   if (row.scorekeeperId !== userId) throw new CommandError("notScorekeeper")
   return row
+}
+
+/** A Game with what it shows: Group name, Scorekeeper, Participants, Events. */
+function loadGame(app: App, where: SQL) {
+  return app.db.query.game.findFirst({
+    where,
+    with: {
+      group: { columns: { name: true } },
+      scorekeeper: { columns: { name: true } },
+      participants: {
+        orderBy: participant.seat,
+        with: {
+          player: {
+            columns: { name: true, userId: true, formerNumber: true },
+            with: { user: { columns: { name: true } } },
+          },
+        },
+      },
+      events: { orderBy: (e, { asc }) => asc(e.version) },
+    },
+  })
+}
+
+/** The Participant whose account keeps score, if it still exists. */
+function scorekeeperParticipant(row: {
+  scorekeeperId: string | null
+  participants: ReadonlyArray<{ id: string; player: { userId: string | null } }>
+}): string | null {
+  if (row.scorekeeperId === null) return null
+  return (
+    row.participants.find((p) => p.player.userId === row.scorekeeperId)?.id ??
+    null
+  )
+}
+
+/**
+ * Tells the devices showing the Game about its new version. The change is
+ * already saved, so a failing notification only logs: devices still see it
+ * when they load the Game again.
+ */
+async function notifyGameChanged(app: App, gameId: string, version: number) {
+  try {
+    await app.notifier.gameChanged(gameId, version)
+  } catch (error) {
+    console.error(
+      `Game ${gameId}: notification of version ${version} failed`,
+      error
+    )
+  }
 }
 
 type Transaction = Parameters<Parameters<App["db"]["transaction"]>[0]>[0]

@@ -16,6 +16,7 @@ import {
   cancelGame,
   getGame,
   getNewGame,
+  getSpectatorGame,
   listGames,
   recordEvent,
   startGame,
@@ -202,6 +203,14 @@ export const addTiebreakFn = createServerFn({ method: "POST" })
 export const cancelGameFn = createServerFn({ method: "POST" })
   .validator((input: { gameId: string }) => input)
   .handler(({ data }) => outcome(() => cancelGame(getApp(), headers(), data)))
+
+/**
+ * The running Game behind a Spectator link, without a session; refused with
+ * `spectatorLinkExpired` once it is over.
+ */
+export const getSpectatorGameFn = createServerFn({ method: "GET" })
+  .validator((input: { token: string }) => input)
+  .handler(({ data }) => outcome(() => getSpectatorGame(getApp(), data)))
 
 /** The Group's Games, or none when the viewer is not its Player. */
 export const listGamesFn = createServerFn({ method: "GET" })
