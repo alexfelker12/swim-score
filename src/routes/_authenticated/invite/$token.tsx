@@ -1,17 +1,18 @@
 import { useState } from "react"
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import {
   Link,
   createFileRoute,
   redirect,
   useNavigate,
-  useRouter,
 } from "@tanstack/react-router"
 import { Unlink } from "lucide-react"
 import { PrimaryButton, primaryButtonClass } from "@/components/buttons"
 import { ChoiceCard } from "@/components/choice-card"
 import { Logo } from "@/components/logo"
 import { gameCount } from "@/lib/plural"
-import { getInviteFn, joinGroupFn } from "@/server/functions"
+import { inviteQuery, joined, queryKeys } from "@/lib/queries"
+import { joinGroupFn } from "@/server/functions"
 import type { InviteView } from "@/server/invites"
 
 /**
@@ -19,21 +20,21 @@ import type { InviteView } from "@/server/invites"
  * sends people without a session to sign in or sign up first and back here.
  */
 export const Route = createFileRoute("/_authenticated/invite/$token")({
-  loader: async ({ params }) => {
-    const invite = await getInviteFn({ data: { token: params.token } })
+  loader: async ({ context, params }) => {
+    const invite = await context.queryClient.query(inviteQuery(params.token))
     if (invite?.alreadyPlayer) {
       throw redirect({
         to: "/groups/$groupId",
         params: { groupId: invite.groupId },
       })
     }
-    return { invite }
   },
   component: InvitePage,
 })
 
 function InvitePage() {
-  const { invite } = Route.useLoaderData()
+  const { token } = Route.useParams()
+  const { data: invite } = useSuspenseQuery(inviteQuery(token))
   return invite ? <AcceptInvite invite={invite} /> : <InvalidInvite />
 }
 
@@ -47,7 +48,7 @@ const joinErrors: Partial<Record<string, string>> = {
 function AcceptInvite({ invite }: { invite: InviteView }) {
   const { token } = Route.useParams()
   const navigate = useNavigate()
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const [choice, setChoice] = useState(NEW_PLAYER)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,15 +63,19 @@ function AcceptInvite({ invite }: { invite: InviteView }) {
     })
     if (!result.ok) {
       // A renewed Invite: the reloaded page says so.
-      if (result.code === "inviteInvalid") return router.invalidate()
+      if (result.code === "inviteInvalid") {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.invite(token),
+        })
+        return
+      }
       setPending(false)
       setError(joinErrors[result.code] ?? "Das hat nicht geklappt.")
       return
     }
-    await navigate({
-      to: "/groups/$groupId",
-      params: { groupId: result.value.groupId },
-    })
+    const { groupId } = result.value
+    await joined(queryClient, token, groupId, { later: true })
+    await navigate({ to: "/groups/$groupId", params: { groupId } })
   }
 
   return (

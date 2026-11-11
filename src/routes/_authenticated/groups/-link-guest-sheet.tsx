@@ -1,9 +1,10 @@
 import { useState } from "react"
-import { useRouter } from "@tanstack/react-router"
+import { useQueryClient } from "@tanstack/react-query"
 import { BottomSheet } from "@/components/bottom-sheet"
 import { PrimaryButton, SecondaryButton } from "@/components/buttons"
 import { ChoiceCard } from "@/components/choice-card"
 import { gameCount } from "@/lib/plural"
+import { groupChanged } from "@/lib/queries"
 import { linkGuestFn } from "@/server/functions"
 import type { GroupPlayer, GroupView } from "@/server/groups"
 import type { GroupManagement } from "@/server/invites"
@@ -41,7 +42,7 @@ function LinkGuestSheet({
   guest: GroupPlayer
   onClose: () => void
 }) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const [choice, setChoice] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,7 +63,8 @@ function LinkGuestSheet({
       setError(mergeErrors[result.code] ?? "Das hat nicht geklappt.")
       return
     }
-    await router.invalidate()
+    // The Guest's name in their past Games changes too.
+    await groupChanged(queryClient, group.id, { games: true })
     onClose()
   }
 

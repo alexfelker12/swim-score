@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   Link,
   createFileRoute,
@@ -32,6 +33,7 @@ function SignUp() {
   const search = Route.useSearch()
   const target = safeRedirect(search.redirect)
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -65,6 +67,8 @@ function SignUp() {
       setPending(false)
       return
     }
+    // Nothing loaded for an earlier account may show for this one.
+    queryClient.clear()
     // Reloading the route runs its beforeLoad, which now sends the signed-in
     // account on to the original page.
     await router.invalidate()

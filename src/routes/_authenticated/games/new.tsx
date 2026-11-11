@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react"
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import {
   Link,
   createFileRoute,
   notFound,
   useNavigate,
-  useRouter,
 } from "@tanstack/react-router"
 import { ChevronLeft, CircleAlert, GripVertical, Plus, X } from "lucide-react"
 import { PrimaryButton } from "@/components/buttons"
@@ -12,7 +12,8 @@ import { DealerBadge } from "@/components/dealer-badge"
 import { TextInput } from "@/components/form-field"
 import { cn } from "@/lib/utils"
 import { standardRuleSet } from "@/rules-engine"
-import { addGuestFn, getNewGameFn, startGameFn } from "@/server/functions"
+import { groupChanged, newGameQuery } from "@/lib/queries"
+import { addGuestFn, startGameFn } from "@/server/functions"
 import type { NewGame } from "@/server/games"
 
 export const Route = createFileRoute("/_authenticated/games/new")({
@@ -20,13 +21,11 @@ export const Route = createFileRoute("/_authenticated/games/new")({
     groupId: typeof search.groupId === "string" ? search.groupId : "",
   }),
   loaderDeps: ({ search }) => ({ groupId: search.groupId }),
-  // The form starts from the loaded preselection, so it must never start
-  // from a cached one while the fresh one is still loading.
-  gcTime: 0,
-  loader: async ({ deps }) => {
-    const setup = await getNewGameFn({ data: { groupId: deps.groupId } })
+  // The form starts from the preselection it renders with; `query` loads
+  // it again whenever it is stale or invalidated, e.g. by a Game started.
+  loader: async ({ context, deps }) => {
+    const setup = await context.queryClient.query(newGameQuery(deps.groupId))
     if (!setup) throw notFound()
-    return setup
   },
   component: NewGamePage,
 })
@@ -36,8 +35,14 @@ const { minParticipants, maxParticipants } = standardRuleSet
 const ROW_PITCH = 64
 
 function NewGamePage() {
-  const setup = Route.useLoaderData()
   const { groupId } = Route.useSearch()
+  const setup = useSuspenseQuery(newGameQuery(groupId)).data
+  if (!setup) return null
+  return <NewGameForm groupId={groupId} setup={setup} />
+}
+
+function NewGameForm({ groupId, setup }: { groupId: string; setup: NewGame }) {
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [seated, setSeated] = useState(setup.preselected)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +66,9 @@ function NewGamePage() {
       setError("Das Spiel ließ sich nicht starten. Lade die Seite neu.")
       return
     }
+    // The Group's Game list and the next preselection; the Game page loads
+    // the Game itself.
+    await groupChanged(queryClient, groupId, { later: true })
     await navigate({
       to: "/games/$gameId",
       params: { gameId: result.value.id },
@@ -352,7 +360,7 @@ function NewGuest({
   groupId: string
   onAdded: (id: string) => void
 }) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const [name, setName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -363,7 +371,7 @@ function NewGuest({
     setError(null)
     const result = await addGuestFn({ data: { groupId, name } })
     if (result.ok) {
-      await router.invalidate()
+      await groupChanged(queryClient, groupId)
       onAdded(result.value.id)
       setName("")
     } else {

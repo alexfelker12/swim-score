@@ -1,25 +1,21 @@
 import { useEffect, useMemo, useState } from "react"
-import {
-  Link,
-  createFileRoute,
-  notFound,
-  useRouter,
-} from "@tanstack/react-router"
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
+import { Link, createFileRoute, notFound } from "@tanstack/react-router"
 import { X } from "lucide-react"
 import qrcode from "qrcode-generator"
 import { PrimaryButton } from "@/components/buttons"
-import { getGroupFn, getInviteLinkFn, renewInviteFn } from "@/server/functions"
+import { groupQuery, inviteLinkQuery } from "@/lib/queries"
+import { renewInviteFn } from "@/server/functions"
 
 /** "In die Gruppe einladen": the Group's Invite as QR code and link; Group Admin only. */
 export const Route = createFileRoute("/_authenticated/groups/$groupId_/invite")(
   {
-    loader: async ({ params }) => {
+    loader: async ({ context, params }) => {
       const [group, link] = await Promise.all([
-        getGroupFn({ data: params }),
-        getInviteLinkFn({ data: params }),
+        context.queryClient.query(groupQuery(params.groupId)),
+        context.queryClient.query(inviteLinkQuery(params.groupId)),
       ])
       if (!group || !link) throw notFound()
-      return { groupName: group.name, token: link.token }
     },
     component: InvitePage,
   }
@@ -27,8 +23,25 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId_/invite")(
 
 function InvitePage() {
   const { groupId } = Route.useParams()
-  const { groupName, token } = Route.useLoaderData()
-  const router = useRouter()
+  const group = useSuspenseQuery(groupQuery(groupId)).data
+  const link = useSuspenseQuery(inviteLinkQuery(groupId)).data
+  // The loader lets only the Group Admin of an existing Group get here.
+  if (!group || !link) return null
+  return (
+    <InviteLink groupId={groupId} groupName={group.name} token={link.token} />
+  )
+}
+
+function InviteLink({
+  groupId,
+  groupName,
+  token,
+}: {
+  groupId: string
+  groupName: string
+  token: string
+}) {
+  const queryClient = useQueryClient()
   // The link carries this site's address, which only the browser knows for sure.
   const [origin, setOrigin] = useState<string | null>(null)
   useEffect(() => setOrigin(window.location.origin), [])
@@ -66,8 +79,10 @@ function InvitePage() {
     setRenewing(true)
     setError(null)
     const result = await renewInviteFn({ data: { groupId } })
-    if (result.ok) await router.invalidate()
-    else setError("Erneuern hat nicht geklappt.")
+    if (result.ok) {
+      // The server says what the new token is; nothing to load again.
+      queryClient.setQueryData(inviteLinkQuery(groupId).queryKey, result.value)
+    } else setError("Erneuern hat nicht geklappt.")
     setRenewing(false)
   }
 

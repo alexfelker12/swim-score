@@ -1,8 +1,10 @@
 import { useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 import { X } from "lucide-react"
 import { PrimaryButton } from "@/components/buttons"
 import { Field, TextInput } from "@/components/form-field"
+import { groupChanged } from "@/lib/queries"
 import { createGroupFn } from "@/server/functions"
 
 export const Route = createFileRoute("/_authenticated/groups/new")({
@@ -15,6 +17,7 @@ const groupErrors: Partial<Record<string, string>> = {
 
 function NewGroupPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [name, setName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -29,6 +32,7 @@ function NewGroupPage() {
       setError(groupErrors[result.code] ?? "Das hat nicht geklappt.")
       return
     }
+    await groupChanged(queryClient, result.value.id, { later: true })
     await navigate({
       to: "/groups/$groupId",
       params: { groupId: result.value.id },

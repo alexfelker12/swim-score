@@ -1,25 +1,12 @@
-import {
-  queryOptions,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { preview } from "@/rules-engine"
-import { getGameFn, recordEventFn } from "@/server/functions"
+import { gameQuery, groupChanged, mutationKeys } from "@/lib/queries"
+import { recordEventFn } from "@/server/functions"
 import type { GameEvent } from "@/rules-engine"
 import type { GameView } from "@/server/games"
 
-/** The Game as the server has it, or null when the viewer may not see it. */
-export function gameQuery(gameId: string) {
-  return queryOptions({
-    queryKey: ["game", gameId],
-    queryFn: () => getGameFn({ data: { gameId } }),
-  })
-}
-
 /** Identifies the Scorekeeper's recordings of one Game. */
-export function recordingKey(gameId: string) {
-  return ["recordEvent", gameId]
-}
+export const recordingKey = mutationKeys.recordEvent
 
 /** The server refused an Event; `code` says why. */
 export class RecordRefused extends Error {
@@ -77,9 +64,18 @@ export function useRecordEvent(
     onSettled: async () => {
       // Load again only after the last recording, or the screen would jump
       // back to a state without the Events still on their way.
-      if (queryClient.isMutating({ mutationKey: recordingKey(gameId) }) === 1) {
-        await queryClient.invalidateQueries({ queryKey })
+      if (queryClient.isMutating({ mutationKey: recordingKey(gameId) }) !== 1) {
+        return
       }
+      const groupId = queryClient.getQueryData(queryKey)?.groupId
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey }),
+        // Round, Winner and Swimmer in the Game list and the next
+        // preselection; they load when shown next.
+        groupId === undefined
+          ? null
+          : groupChanged(queryClient, groupId, { later: true }),
+      ])
     },
   })
 
