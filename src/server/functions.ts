@@ -12,6 +12,7 @@ import {
   renameGroup,
 } from "./groups"
 import {
+  addTiebreak,
   cancelGame,
   getGame,
   getNewGame,
@@ -187,6 +188,16 @@ export const recordEventFn = createServerFn({ method: "POST" })
 export const undoEventFn = createServerFn({ method: "POST" })
   .validator((input: { gameId: string; expectedVersion: number }) => input)
   .handler(({ data }) => outcome(() => undoEvent(getApp(), headers(), data)))
+
+export const addTiebreakFn = createServerFn({ method: "POST" })
+  .validator(
+    (input: {
+      gameId: string
+      expectedVersion: number
+      tiebreak: Array<string>
+    }) => input
+  )
+  .handler(({ data }) => outcome(() => addTiebreak(getApp(), headers(), data)))
 
 export const cancelGameFn = createServerFn({ method: "POST" })
   .validator((input: { gameId: string }) => input)

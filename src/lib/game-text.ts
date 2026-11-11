@@ -19,8 +19,8 @@ export function genitive(name: string): string {
 
 /**
  * What the Event did, e.g. "Ben verliert ein Leben", "Carla wirft eine
- * Bombe, Dario schwimmt, Ben scheidet aus" or "Dario scheidet aus, Anna
- * gewinnt". `state` is the state before it. `withWinner: false` leaves out
+ * Bombe, Dario schwimmt, Ben scheidet aus", "Ben verliert ein Leben, Stechen
+ * mit Anna" or "Dario scheidet aus, Anna gewinnt". `state` is the state before it. `withWinner: false` leaves out
  * who wins (the Winner sheet says so in its heading).
  */
 export function describeEvent(
@@ -39,13 +39,23 @@ export function describeEvent(
     result.effects,
     name
   )
-  const full = note ? `${text}, ${note}` : text
+  // A Tiebreak says why the loser lost, so it takes the note's place.
+  const tiebreak =
+    event.type === "lost" && event.tiebreak
+      ? `Stechen mit ${joinNames(tiebreakOthers(event).map(name))}`
+      : note
+  const full = tiebreak ? `${text}, ${tiebreak}` : text
   return withWinner ? withWinnerOf(full, result.effects, name) : full
 }
 
 /** "…, Anna gewinnt" when the Event ends the Game. */
 function withWinnerOf(text: string, { winner }: Effects, name: Names) {
   return winner ? `${text}, ${name(winner)} gewinnt` : text
+}
+
+/** Who was in the loss's Tiebreak besides the loser. */
+function tiebreakOthers(event: Extract<GameEvent, { type: "lost" }>) {
+  return (event.tiebreak ?? []).filter((id) => id !== event.loser)
 }
 
 /** One Round in the Game's history ("Spielverlauf"). */
@@ -91,8 +101,7 @@ export function describeHistory(
     if (note) meta.push(note)
     if (event.type === "bomb" && event.swimmer) meta.push("Schwimmer per Wahl")
     if (event.type === "lost" && event.tiebreak) {
-      const others = event.tiebreak.filter((id) => id !== event.loser)
-      meta.push(`Stechen mit ${joinNames(others.map(name))}`)
+      meta.push(`Stechen mit ${joinNames(tiebreakOthers(event).map(name))}`)
     }
     if (event.type === "extraRound") {
       const remaining = state.participants.filter((p) => p.status !== "out")

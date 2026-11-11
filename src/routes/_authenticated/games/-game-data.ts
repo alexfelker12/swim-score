@@ -1,7 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { preview, replay } from "@/rules-engine"
 import { gameQuery, groupChanged, mutationKeys } from "@/lib/queries"
-import { cancelGameFn, recordEventFn, undoEventFn } from "@/server/functions"
+import {
+  addTiebreakFn,
+  cancelGameFn,
+  recordEventFn,
+  undoEventFn,
+} from "@/server/functions"
 import type { GameEvent } from "@/rules-engine"
 import type { GameView } from "@/server/games"
 
@@ -15,15 +20,23 @@ export class StepRefused extends Error {
   }
 }
 
-/** One step of the Scorekeeper: record an Event, or undo the last one. */
-type StepInput = ({ kind: "record"; event: GameEvent } | { kind: "undo" }) & {
+/**
+ * One step of the Scorekeeper: record an Event, undo the last one, or add the
+ * Tiebreak to the last loss.
+ */
+type StepInput = (
+  | { kind: "record"; event: GameEvent }
+  | { kind: "undo" }
+  | { kind: "tiebreak"; tiebreak: Array<string> }
+) & {
   optimistic: boolean
 }
 
 type Step = StepInput & { expectedVersion: number }
 
 /**
- * The Scorekeeper's steps on one Game: recording Events and undoing them.
+ * The Scorekeeper's steps on one Game: recording Events, undoing them and
+ * adding a Tiebreak to the last loss.
  * A step shows at once ("optimistic"), and the steps reach the server one
  * after another in the order tapped, each on top of the version the one
  * before it produced. When one is refused, the ones after it are too, and
@@ -61,18 +74,17 @@ export function useGameSteps(
     mutationKey,
     scope,
     mutationFn: async (step: Step) => {
+      const { expectedVersion } = step
       const result =
         step.kind === "record"
           ? await recordEventFn({
-              data: {
-                gameId,
-                expectedVersion: step.expectedVersion,
-                event: step.event,
-              },
+              data: { gameId, expectedVersion, event: step.event },
             })
-          : await undoEventFn({
-              data: { gameId, expectedVersion: step.expectedVersion },
-            })
+          : step.kind === "tiebreak"
+            ? await addTiebreakFn({
+                data: { gameId, expectedVersion, tiebreak: step.tiebreak },
+              })
+            : await undoEventFn({ data: { gameId, expectedVersion } })
       if (!result.ok) throw new StepRefused(result.code)
       return result.value
     },
@@ -120,6 +132,9 @@ export function useGameSteps(
     record: (event: GameEvent, { optimistic = true } = {}) =>
       run({ kind: "record", event, optimistic }),
     undo: ({ optimistic = true } = {}) => run({ kind: "undo", optimistic }),
+    /** Adds the Tiebreak, the loser included, to the last loss. */
+    addTiebreak: (tiebreak: Array<string>) =>
+      run({ kind: "tiebreak", tiebreak, optimistic: true }),
     /** Resolves with the reason when the server refuses, or nothing. */
     cancel: () =>
       cancelling.mutateAsync().then(
@@ -147,6 +162,19 @@ function applyStep(game: GameView, step: Step): GameView {
         game.participants.map((p) => p.id),
         events
       ),
+    }
+  }
+  if (step.kind === "tiebreak") {
+    const last = game.events.at(-1)
+    if (last?.type !== "lost") return game
+    // The Tiebreak only describes the loss; the state stays as it is.
+    return {
+      ...game,
+      version: game.version + 1,
+      events: [
+        ...game.events.slice(0, -1),
+        { ...last, tiebreak: step.tiebreak },
+      ],
     }
   }
   const result = preview(game.state, game.ruleSet, step.event)

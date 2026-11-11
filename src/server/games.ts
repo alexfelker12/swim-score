@@ -235,20 +235,7 @@ export async function recordEvent(
   if (!next.ok) throw new CommandError(next.reason.code)
   const version = input.expectedVersion + 1
   await app.db.transaction(async (tx) => {
-    // Only one device can move the Game from this version to the next, and
-    // not once it was cancelled in the meantime.
-    const moved = await tx
-      .update(game)
-      .set({ version })
-      .where(
-        and(
-          eq(game.id, input.gameId),
-          eq(game.version, input.expectedVersion),
-          eq(game.status, "running")
-        )
-      )
-      .returning({ id: game.id })
-    if (moved.length === 0) throw new CommandError("versionConflict")
+    await advanceRunningGame(tx, input.gameId, input.expectedVersion)
     await tx.insert(gameEvent).values({
       gameId: input.gameId,
       // The Event's position, after those recorded before it.
@@ -269,6 +256,52 @@ export async function recordEvent(
           .where(eq(participant.id, id))
       }
     }
+  })
+  return { version }
+}
+
+/**
+ * Adds the Tiebreak that decided the last Round to its loss, after the fact:
+ * the loss is recorded with one tap, the Tiebreak only when wanted. A
+ * Tiebreak recorded before is replaced. `tiebreak` names everyone in it, the
+ * loser included; the rules decide who may be. Only the Scorekeeper may, on
+ * top of the version they have seen.
+ */
+export async function addTiebreak(
+  app: App,
+  headers: Headers,
+  input: { gameId: string; expectedVersion: number; tiebreak: Array<string> }
+): Promise<{ version: number }> {
+  const me = await requireUser(app, headers)
+  const row = await requireScorekeeper(app, input.gameId, me.id)
+  if (row.status !== "running") throw new CommandError("gameNotRunning")
+  if (row.version !== input.expectedVersion) {
+    throw new CommandError("versionConflict")
+  }
+  const last = row.events.at(-1)
+  if (last?.event.type !== "lost") throw new CommandError("noLossForTiebreak")
+  const event = parseEvent({
+    type: "lost",
+    loser: last.event.loser,
+    tiebreak: input.tiebreak,
+  })
+  if (!event) throw new CommandError("invalidEvent")
+  // The loss as if recorded with its Tiebreak in the first place.
+  const before = replayGame({ ...row, events: row.events.slice(0, -1) })
+  const amended = preview(before, row.ruleSet, event)
+  if (!amended.ok) throw new CommandError(amended.reason.code)
+  const version = input.expectedVersion + 1
+  await app.db.transaction(async (tx) => {
+    await advanceRunningGame(tx, input.gameId, input.expectedVersion)
+    await tx
+      .update(gameEvent)
+      .set({ event })
+      .where(
+        and(
+          eq(gameEvent.gameId, input.gameId),
+          eq(gameEvent.version, last.version)
+        )
+      )
   })
   return { version }
 }
@@ -450,6 +483,31 @@ async function requireScorekeeper(app: App, gameId: string, userId: string) {
   await requirePlayer(app, row.groupId, userId, "gameNotFound")
   if (row.scorekeeperId !== userId) throw new CommandError("notScorekeeper")
   return row
+}
+
+type Transaction = Parameters<Parameters<App["db"]["transaction"]>[0]>[0]
+
+/**
+ * Moves a running Game from the version the device has seen to the next.
+ * Only one device can, and not once the Game was cancelled in the meantime.
+ */
+async function advanceRunningGame(
+  tx: Transaction,
+  gameId: string,
+  expectedVersion: number
+) {
+  const moved = await tx
+    .update(game)
+    .set({ version: expectedVersion + 1 })
+    .where(
+      and(
+        eq(game.id, gameId),
+        eq(game.version, expectedVersion),
+        eq(game.status, "running")
+      )
+    )
+    .returning({ id: game.id })
+  if (moved.length === 0) throw new CommandError("versionConflict")
 }
 
 function undoDeadline(finishedAt: Date): Date {

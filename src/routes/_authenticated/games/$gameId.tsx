@@ -3,6 +3,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
 import {
   Bomb,
+  Check,
   ChevronLeft,
   CircleX,
   Ellipsis,
@@ -32,7 +33,7 @@ import { preview, replay } from "@/rules-engine"
 import { gameQuery } from "@/lib/queries"
 import { stepsKey, useGameSteps } from "./-game-data"
 import { useHideOut } from "./-hide-out"
-import type { GameEvent, ParticipantState } from "@/rules-engine"
+import type { GameEvent, GameState, ParticipantState } from "@/rules-engine"
 import type { GameParticipant, GameView } from "@/server/games"
 
 export const Route = createFileRoute("/_authenticated/games/$gameId")({
@@ -62,6 +63,7 @@ function GamePage() {
 type Sheet =
   | { kind: "swimmer"; thrower: string; candidates: Array<string> }
   | { kind: "winner"; event: GameEvent; winner: string; text: string }
+  | { kind: "tiebreak" }
   | { kind: "menu" }
   | { kind: "cancel" }
 
@@ -81,7 +83,7 @@ function GameTable({ game }: { game: GameView }) {
   const [sheet, setSheet] = useState<Sheet | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [hideOut, setHideOut] = useHideOut()
-  const { record, undo, cancel, waiting } = useGameSteps(game.id, {
+  const { record, undo, addTiebreak, cancel, waiting } = useGameSteps(game.id, {
     onRefused: (code) => {
       setSheet(null)
       setError(stepErrors[code] ?? "Das ließ sich nicht speichern.")
@@ -128,6 +130,19 @@ function GameTable({ game }: { game: GameView }) {
   }
 
   const last = lastEvent(game)
+  const remaining = state.participants.filter((p) => p.status !== "out")
+  // Only a loss decides a Round by Tiebreak, and only with more than two left
+  // before it; two left play an Extra Round instead.
+  const tiebreakFor =
+    isScorekeeper &&
+    !bombMode &&
+    last?.event.type === "lost" &&
+    !last.event.tiebreak &&
+    last.before.participants.filter((p) => p.status !== "out").length > 2
+      ? { loser: last.event.loser, before: last.before }
+      : null
+  const canExtraRound = isScorekeeper && !bombMode && remaining.length === 2
+  const extraRounds = trailingExtraRounds(game.events)
   const hidden = hideOut
     ? state.participants.filter((p) => p.status === "out").length
     : 0
@@ -140,7 +155,9 @@ function GameTable({ game }: { game: GameView }) {
             Runde {state.round}
           </h1>
           <span className="max-w-full truncate text-[13px] text-muted-foreground">
-            {game.groupName}
+            {extraRounds > 0
+              ? `${extraRounds > 1 ? `${extraRounds}. ` : ""}Extra-Runde, Dealer bleibt ${name(state.dealer)}`
+              : game.groupName}
           </span>
         </div>
         <button
@@ -240,6 +257,19 @@ function GameTable({ game }: { game: GameView }) {
               Noch keine Runde gezählt. {name(state.dealer)} ist Dealer.
             </span>
           )}
+          {tiebreakFor ? (
+            <button
+              type="button"
+              disabled={waiting}
+              onClick={() => {
+                setError(null)
+                setSheet({ kind: "tiebreak" })
+              }}
+              className="flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-semibold text-primary disabled:opacity-40"
+            >
+              Stechen
+            </button>
+          ) : null}
           {isScorekeeper && last ? (
             <UndoButton
               disabled={waiting}
@@ -257,28 +287,41 @@ function GameTable({ game }: { game: GameView }) {
           </p>
         ) : null}
         {isScorekeeper ? (
-          bombMode ? (
-            <SecondaryButton
-              type="button"
-              onClick={() => setBombMode(false)}
-              className="h-14 rounded-[14px] text-base"
-            >
-              Keine Bombe
-            </SecondaryButton>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setError(null)
-                setBombMode(true)
-              }}
-              disabled={waiting}
-              className="flex h-14 items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-bomb bg-bomb-muted text-base font-semibold text-bomb disabled:opacity-40"
-            >
-              <Bomb className="size-5" aria-hidden="true" />
-              Bombe
-            </button>
-          )
+          <div className="flex gap-2.5">
+            {bombMode ? (
+              <SecondaryButton
+                type="button"
+                onClick={() => setBombMode(false)}
+                className="h-14 flex-1 rounded-[14px] text-base"
+              >
+                Keine Bombe
+              </SecondaryButton>
+            ) : null}
+            {canExtraRound ? (
+              <SecondaryButton
+                type="button"
+                disabled={waiting}
+                onClick={() => propose({ type: "extraRound" })}
+                className="h-14 flex-1 rounded-[14px] text-base"
+              >
+                Extra-Runde
+              </SecondaryButton>
+            ) : null}
+            {bombMode ? null : (
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null)
+                  setBombMode(true)
+                }}
+                disabled={waiting}
+                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-bomb bg-bomb-muted text-base font-semibold text-bomb disabled:opacity-40"
+              >
+                <Bomb className="size-5" aria-hidden="true" />
+                Bombe
+              </button>
+            )}
+          </div>
         ) : null}
       </div>
 
@@ -304,6 +347,21 @@ function GameTable({ game }: { game: GameView }) {
             const refused = await cancel()
             if (refused === undefined) return
             return stepErrors[refused] ?? "Das ließ sich nicht abbrechen."
+          }}
+          onClose={() => setSheet(null)}
+        />
+      ) : null}
+
+      {sheet?.kind === "tiebreak" && tiebreakFor ? (
+        <TiebreakSheet
+          loser={tiebreakFor.loser}
+          others={tiebreakFor.before.participants
+            .filter((p) => p.status !== "out" && p.id !== tiebreakFor.loser)
+            .map((p) => p.id)}
+          name={name}
+          onSave={(tiebreak) => {
+            setSheet(null)
+            void addTiebreak(tiebreak)
           }}
           onClose={() => setSheet(null)}
         />
@@ -548,8 +606,109 @@ function nameOf(participants: Array<GameParticipant>) {
   return (id: string) => names.get(id) ?? ""
 }
 
-/** The last Event's Round and text, or null before the first. */
-function lastEvent(game: GameView) {
+/**
+ * The Tiebreak of the last loss, added after the fact: who else was in it
+ * (at least one). The loser is fixed; only those still in before the loss
+ * can be chosen.
+ */
+function TiebreakSheet({
+  loser,
+  others,
+  name,
+  onSave,
+  onClose,
+}: {
+  loser: string
+  /** Who else was still in before the loss, in Seating Order. */
+  others: Array<string>
+  name: (id: string) => string
+  /** With everyone in the Tiebreak, the loser first. */
+  onSave: (tiebreak: Array<string>) => void
+  onClose: () => void
+}) {
+  const [chosen, setChosen] = useState<Array<string>>([])
+  const toggle = (id: string) =>
+    setChosen((ids) =>
+      ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]
+    )
+  const cell =
+    "flex h-13 min-w-0 items-center justify-between gap-2 rounded-xl border-[1.5px] px-3.5"
+  return (
+    <BottomSheet
+      title="Stechen angeben"
+      description={`Wer war mit ${name(loser)} im Stechen? Wähle mindestens eine Person.`}
+      onDismiss={onClose}
+    >
+      <div className="grid grid-cols-2 gap-2">
+        <div className={cn(cell, "border-border bg-muted")}>
+          <span className="truncate font-semibold">{name(loser)}</span>
+          <span className="shrink-0 text-[13px] text-muted-foreground">
+            verloren
+          </span>
+        </div>
+        {others.map((id) => {
+          const on = chosen.includes(id)
+          return (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => toggle(id)}
+              className={cn(
+                cell,
+                "text-left font-semibold",
+                on ? "border-primary bg-primary-muted" : "border-border"
+              )}
+            >
+              <span className="truncate">{name(id)}</span>
+              {on ? (
+                <Check
+                  className="size-4.5 shrink-0 text-primary"
+                  strokeWidth={2.4}
+                  aria-hidden="true"
+                />
+              ) : null}
+            </button>
+          )
+        })}
+      </div>
+      <div className="flex gap-2.5">
+        <SecondaryButton
+          type="button"
+          onClick={onClose}
+          className="h-13 flex-1 rounded-[14px] bg-transparent text-base"
+        >
+          Abbrechen
+        </SecondaryButton>
+        <PrimaryButton
+          type="button"
+          disabled={chosen.length === 0}
+          onClick={() =>
+            onSave([loser, ...others.filter((id) => chosen.includes(id))])
+          }
+          className="h-13 flex-1"
+        >
+          Speichern
+        </PrimaryButton>
+      </div>
+    </BottomSheet>
+  )
+}
+
+/** How many Extra Rounds were just played in a row, i.e. the current Round's. */
+function trailingExtraRounds(events: ReadonlyArray<GameEvent>) {
+  let count = 0
+  for (let i = events.length - 1; i >= 0; i--) {
+    if (events[i].type !== "extraRound") break
+    count++
+  }
+  return count
+}
+
+/** The last Event with the state before it, its Round and text; null before the first. */
+function lastEvent(
+  game: GameView
+): { event: GameEvent; before: GameState; round: number; text: string } | null {
   const event = game.events.at(-1)
   if (!event) return null
   const before = replay(
@@ -558,6 +717,8 @@ function lastEvent(game: GameView) {
     game.events.slice(0, -1)
   )
   return {
+    event,
+    before,
     round: before.round,
     text: describeEvent(before, game.ruleSet, event, nameOf(game.participants)),
   }
