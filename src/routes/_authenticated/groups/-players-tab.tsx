@@ -1,10 +1,12 @@
 import { useState } from "react"
-import { Link, useRouter } from "@tanstack/react-router"
+import { useQueryClient } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { Plus } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { PrimaryButton, SecondaryButton } from "@/components/buttons"
 import { TextInput } from "@/components/form-field"
 import { UserAvatar } from "@/components/user-avatar"
+import { groupChanged } from "@/lib/queries"
 import { addGuestFn, confirmClaimFn, rejectClaimFn } from "@/server/functions"
 import { mergeErrors } from "./-link-guest-sheet"
 import type { GroupPlayer, GroupView } from "@/server/groups"
@@ -26,7 +28,7 @@ export function PlayersTab({
   group: GroupView
   management: GroupManagement | null
 }) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const [name, setName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -38,7 +40,7 @@ export function PlayersTab({
     const result = await addGuestFn({ data: { groupId: group.id, name } })
     if (result.ok) {
       setName("")
-      await router.invalidate()
+      await groupChanged(queryClient, group.id)
     } else {
       setError(guestErrors[result.code] ?? "Das hat nicht geklappt.")
     }
@@ -57,6 +59,7 @@ export function PlayersTab({
         return (
           <ClaimCard
             key={claim.id}
+            groupId={group.id}
             claimId={claim.id}
             username={username}
             guest={guest.name}
@@ -131,17 +134,19 @@ function claimEffect(guest: string, games: number): string {
 
 /** An open Claim, for the Group Admin to confirm or reject. */
 function ClaimCard({
+  groupId,
   claimId,
   username,
   guest,
   games,
 }: {
+  groupId: string
   claimId: string
   username: string
   guest: string
   games: number
 }) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -152,8 +157,9 @@ function ClaimCard({
     if (!result.ok) {
       setError(mergeErrors[result.code] ?? "Das hat nicht geklappt.")
     }
-    // Also after a refusal: the Claim may be gone by now.
-    await router.invalidate()
+    // Also after a refusal: the Claim may be gone by now. A confirmed Claim
+    // also renames the Guest in their past Games.
+    await groupChanged(queryClient, groupId, { games: true })
     setPending(false)
   }
 

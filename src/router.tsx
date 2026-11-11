@@ -19,6 +19,12 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
+    // The query cache decides what is fresh (ADR 0004). Without this the
+    // router would show a page it has seen before at once, with whatever data
+    // it rendered then, and reload in the background; a form such as "Neues
+    // Spiel" would start from that old data. Loaders take fresh data from the
+    // query cache, so waiting for them only costs time when something changed.
+    defaultStaleReloadMode: "blocking",
   })
   // Sends the server's query data along with the page and wraps the app in a
   // QueryClientProvider.

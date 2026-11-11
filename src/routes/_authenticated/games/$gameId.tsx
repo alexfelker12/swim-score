@@ -12,15 +12,14 @@ import { DealerBadge } from "@/components/dealer-badge"
 import { describeEvent, genitive, joinNames } from "@/lib/game-text"
 import { cn } from "@/lib/utils"
 import { preview, replay } from "@/rules-engine"
-import { gameQuery, recordingKey, useRecordEvent } from "./-game-data"
+import { gameQuery } from "@/lib/queries"
+import { recordingKey, useRecordEvent } from "./-game-data"
 import type { GameEvent, ParticipantState } from "@/rules-engine"
 import type { GameParticipant, GameView } from "@/server/games"
 
 export const Route = createFileRoute("/_authenticated/games/$gameId")({
   loader: async ({ context, params }) => {
-    const game = await context.queryClient.ensureQueryData(
-      gameQuery(params.gameId)
-    )
+    const game = await context.queryClient.query(gameQuery(params.gameId))
     if (!game) throw notFound()
   },
   component: GamePage,

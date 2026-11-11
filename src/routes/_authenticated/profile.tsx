@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
 import { ChevronLeft } from "lucide-react"
 import { PrimaryButton, SecondaryButton } from "@/components/buttons"
@@ -9,21 +10,21 @@ import { SegmentedTabs } from "@/components/segmented-tabs"
 import type { AvatarEditorStart } from "@/components/avatar-editor"
 import { UserAvatar } from "@/components/user-avatar"
 import { authClient } from "@/lib/auth-client"
+import { profileChanged, profileQuery, queryKeys } from "@/lib/queries"
 import {
   deleteAccountFn,
-  getProfileFn,
   setThemeFn,
   updateProfileFn,
 } from "@/server/functions"
 import type { Profile, Theme } from "@/server/profile"
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  loader: () => getProfileFn(),
+  loader: ({ context }) => context.queryClient.query(profileQuery()),
   component: ProfilePage,
 })
 
 function ProfilePage() {
-  const profile = Route.useLoaderData()
+  const { data: profile } = useSuspenseQuery(profileQuery())
   const [tab, setTab] = useState<"details" | "stats">("details")
   return (
     <div className="flex min-h-svh flex-col">
@@ -88,6 +89,13 @@ const profileErrors: Partial<
 
 function Details({ profile }: { profile: Profile }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
+
+  /** The own name, e-mail or picture changed; the Viewer (header) via the router. */
+  async function reloadAfterChange() {
+    await profileChanged(queryClient)
+    await router.invalidate()
+  }
   const fileInput = useRef<HTMLInputElement>(null)
   const [name, setName] = useState(profile.name)
   const [email, setEmail] = useState(profile.email)
@@ -115,7 +123,7 @@ function Details({ profile }: { profile: Profile }) {
       return
     }
     setSaved(true)
-    await router.invalidate()
+    await reloadAfterChange()
   }
 
   /** With a picture the editor opens on it; without one, the file picker comes first. */
@@ -126,11 +134,14 @@ function Details({ profile }: { profile: Profile }) {
 
   async function chooseTheme(theme: Theme) {
     await setThemeFn({ data: { theme } })
+    await queryClient.invalidateQueries({ queryKey: queryKeys.profile() })
+    // The theme comes with the Viewer.
     await router.invalidate()
   }
 
   async function signOut() {
     await authClient.signOut()
+    queryClient.clear()
     await router.invalidate()
     await router.navigate({ to: "/sign-in" })
   }
@@ -167,7 +178,7 @@ function Details({ profile }: { profile: Profile }) {
             name={profile.name}
             onClose={() => setEditor(null)}
             onSaved={async () => {
-              await router.invalidate()
+              await reloadAfterChange()
               setEditor(null)
             }}
           />
@@ -273,6 +284,7 @@ function Details({ profile }: { profile: Profile }) {
 /** "Konto löschen?": the last step before the account is gone. */
 function DeleteAccountSheet({ onClose }: { onClose: () => void }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   async function remove() {
     const result = await deleteAccountFn()
@@ -283,6 +295,7 @@ function DeleteAccountSheet({ onClose }: { onClose: () => void }) {
     }
     // The session is gone with the account; this clears its cookie.
     await authClient.signOut().catch(() => undefined)
+    queryClient.clear()
     await router.invalidate()
     await router.navigate({ to: "/sign-in" })
   }

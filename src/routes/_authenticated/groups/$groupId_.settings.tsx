@@ -1,10 +1,10 @@
 import { useState } from "react"
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import {
   Link,
   createFileRoute,
   notFound,
   useNavigate,
-  useRouter,
 } from "@tanstack/react-router"
 import {
   ChevronLeft,
@@ -19,8 +19,13 @@ import { ConfirmSheet } from "@/components/confirm-sheet"
 import { TextInput } from "@/components/form-field"
 import { formatMonth, isToday } from "@/lib/dates"
 import {
-  getGroupFn,
-  getGroupManagementFn,
+  groupChanged,
+  groupManagementQuery,
+  groupQuery,
+  leftGroup,
+} from "@/lib/queries"
+import { useManagement } from "./-use-management"
+import {
   handOverAdminFn,
   leaveGroupFn,
   removePlayerFn,
@@ -37,13 +42,12 @@ import type { GroupManagement } from "@/server/invites"
 export const Route = createFileRoute(
   "/_authenticated/groups/$groupId_/settings"
 )({
-  loader: async ({ params }) => {
-    const group = await getGroupFn({ data: params })
+  loader: async ({ context, params }) => {
+    const group = await context.queryClient.query(groupQuery(params.groupId))
     if (!group) throw notFound()
-    const management = group.isAdmin
-      ? await getGroupManagementFn({ data: params })
-      : null
-    return { group, management }
+    if (group.isAdmin) {
+      await context.queryClient.query(groupManagementQuery(params.groupId))
+    }
   },
   component: SettingsPage,
 })
@@ -53,7 +57,10 @@ const nameErrors: Partial<Record<string, string>> = {
 }
 
 function SettingsPage() {
-  const { group, management } = Route.useLoaderData()
+  const { groupId } = Route.useParams()
+  const group = useSuspenseQuery(groupQuery(groupId)).data
+  const management = useManagement(groupId, group?.isAdmin ?? false)
+  if (!group) return null
   return (
     <div className="flex min-h-svh flex-col">
       <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
@@ -245,7 +252,7 @@ function MemberSettings({ group }: { group: GroupView }) {
 }
 
 function RenameForm({ group }: { group: GroupView }) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const [name, setName] = useState(group.name)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -256,7 +263,8 @@ function RenameForm({ group }: { group: GroupView }) {
     setPending(true)
     setError(null)
     const result = await renameGroupFn({ data: { groupId: group.id, name } })
-    if (result.ok) await router.invalidate()
+    // The name also shows in the Group's Games.
+    if (result.ok) await groupChanged(queryClient, group.id, { games: true })
     else setError(nameErrors[result.code] ?? "Das hat nicht geklappt.")
     setPending(false)
   }
@@ -327,7 +335,7 @@ function RemoveSheet({
   player: GroupPlayer
   onClose: () => void
 }) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
 
   async function remove() {
     const result = await removePlayerFn({
@@ -338,7 +346,7 @@ function RemoveSheet({
         ? `${player.name} ist schon nicht mehr in der Gruppe.`
         : "Das hat nicht geklappt."
     }
-    await router.invalidate()
+    await groupChanged(queryClient, groupId)
     onClose()
   }
 
@@ -361,7 +369,7 @@ function HandOverSheet({
   group: GroupView
   onClose: () => void
 }) {
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const [choice, setChoice] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -385,7 +393,7 @@ function HandOverSheet({
       return
     }
     // The page reloads as "Gruppe", without the Group Admin's tools.
-    await router.invalidate()
+    await groupChanged(queryClient, group.id)
     onClose()
   }
 
@@ -452,6 +460,7 @@ function LeaveSheet({
   onClose: () => void
 }) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   async function leave() {
     const result = await leaveGroupFn({ data: { groupId: group.id } })
@@ -460,7 +469,9 @@ function LeaveSheet({
         ? "Du verwaltest die Gruppe inzwischen. Übergib die Rolle zuerst."
         : "Das hat nicht geklappt."
     }
+    // Away from the Group first: its page would load it again otherwise.
     await navigate({ to: "/" })
+    await leftGroup(queryClient, group.id)
   }
 
   return (

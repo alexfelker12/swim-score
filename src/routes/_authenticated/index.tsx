@@ -1,18 +1,19 @@
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { ChevronRight, Plus, QrCode } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { UserAvatar } from "@/components/user-avatar"
-import { listMyGroupsFn } from "@/server/functions"
+import { myGroupsQuery } from "@/lib/queries"
 
 export const Route = createFileRoute("/_authenticated/")({
-  loader: () => listMyGroupsFn(),
+  loader: ({ context }) => context.queryClient.query(myGroupsQuery()),
   component: Start,
 })
 
 /** Start page: so far only "Meine Gruppen" and the empty state (the rest comes with #15). */
 function Start() {
   const { viewer } = Route.useRouteContext()
-  const groups = Route.useLoaderData()
+  const { data: groups } = useSuspenseQuery(myGroupsQuery())
   return (
     <div className="flex min-h-svh flex-col">
       <header className="flex h-16 shrink-0 items-center justify-between px-5">

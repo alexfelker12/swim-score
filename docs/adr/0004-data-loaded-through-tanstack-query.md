@@ -1,0 +1,11 @@
+# All data is loaded through TanStack Query
+
+Pages used to load their data in router loaders and read the loader's return value; after a change they called `router.invalidate()`, which reloaded whatever the router still had cached, but not data for pages it had already dropped or kept (the "Neues Spiel" preselection needed `gcTime: 0` to stay right). Every page now loads through TanStack Query: the loader calls `queryClient.query(...)` so the page arrives rendered from the server, and the component reads the same query with `useSuspenseQuery`. All query keys and the reloads after a change live in `src/lib/queries.ts`; a change names what it affected (`groupChanged`, `joined`, `leftGroup`, `profileChanged`), and that module decides which queries it means. One place to load data also lets Live Events (#8) be written straight into the cache.
+
+## Consequences
+
+- Loaders use `queryClient.query(...)`, not `ensureQueryData`: in TanStack Query 5.107 `ensureQueryData` is deprecated and returns cached data even after it was invalidated, while `query()` loads stale or invalidated data again before the page renders and takes fresh data (default `staleTime` 5 s) from the cache, so a server-rendered page does not load again in the browser.
+- The router waits for loaders even on pages it has shown before (`defaultStaleReloadMode: "blocking"`) instead of showing its earlier render and reloading in the background. Otherwise a page could start from data that was already invalidated, which is what the "Neues Spiel" preselection needed `gcTime: 0` against.
+- A change followed by navigating elsewhere only marks queries as stale (`later: true`); the next page's loader loads what it needs, so nobody waits for a reload that is thrown away.
+- The session and the Viewer stay in the router's `beforeLoad`, because redirects depend on them; changes to them (signing in or out, the own name, picture or theme) still go through `router.invalidate()`. Signing in, signing up, signing out and deleting the account also clear the query cache, so no account sees what was loaded for another.
+- New pages and changes add their keys and reload helpers to `src/lib/queries.ts` rather than writing keys inline.
