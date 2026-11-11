@@ -7,19 +7,22 @@ import {
 import type { ReactNode } from "react"
 
 /**
- * "Ben entfernen?" and the like: a coral confirm button over "Abbrechen".
+ * "Ben entfernen?" and the like: a coral confirm button over "Abbrechen"
+ * (or `cancelLabel`).
  * `onConfirm` returns an error message to show, or nothing when it is done.
  */
 export function ConfirmSheet({
   title,
   description,
   confirmLabel,
+  cancelLabel = "Abbrechen",
   onConfirm,
   onClose,
 }: {
   title: ReactNode
   description: ReactNode
   confirmLabel: string
+  cancelLabel?: string
   onConfirm: () => Promise<string | undefined>
   onClose: () => void
 }) {
@@ -56,7 +59,7 @@ export function ConfirmSheet({
           onClick={onClose}
           className={largeSecondaryButtonClass}
         >
-          Abbrechen
+          {cancelLabel}
         </button>
       </div>
     </BottomSheet>

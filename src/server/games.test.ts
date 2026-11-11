@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest"
-import { getGame, getNewGame, listGames, recordEvent, startGame } from "./games"
+import {
+  cancelGame,
+  getGame,
+  getNewGame,
+  listGames,
+  recordEvent,
+  startGame,
+  undoEvent,
+} from "./games"
 import { addGuest, createGroup, getGroup } from "./groups"
 import { joinViaInvite } from "./testing/groups"
 import { createTestApp, signUp } from "./testing/test-app"
@@ -526,6 +534,243 @@ describe("the Group's Games", () => {
   })
 })
 
+/** A running Game of Anna, Ben and Carla, kept by Anna, with `losses` Rounds Ben lost. */
+async function runningGame(losses: number) {
+  const setup = await table()
+  const { app, anna, groupId, players } = setup
+  const { id: gameId } = await startGame(app, anna.headers, {
+    groupId,
+    playerIds: [players.Anna, players.Ben, players.Carla],
+  })
+  const ids = (await getGame(app, anna.headers, { gameId })).participants.map(
+    (p) => p.id
+  )
+  for (let version = 0; version < losses; version++) {
+    await recordEvent(app, anna.headers, {
+      gameId,
+      expectedVersion: version,
+      event: { type: "lost", loser: ids[1] },
+    })
+  }
+  return { ...setup, gameId, ids }
+}
+
+describe("undoing an Event", () => {
+  it("deletes the last Event, so the Game is as if it never happened", async () => {
+    const { app, anna, gameId } = await runningGame(2)
+    const before = await getGame(app, anna.headers, { gameId })
+
+    expect(
+      await undoEvent(app, anna.headers, { gameId, expectedVersion: 2 })
+    ).toEqual({ version: 3 })
+
+    const after = await getGame(app, anna.headers, { gameId })
+    expect(after.version).toBe(3)
+    expect(after.events).toEqual(before.events.slice(0, 1))
+    expect(after.state.round).toBe(2)
+    expect(after.state.participants[1].lives).toBe(2)
+  })
+
+  it("goes back step by step as far as wanted, then there is nothing left", async () => {
+    const { app, anna, gameId } = await runningGame(3)
+
+    for (const expectedVersion of [3, 4, 5]) {
+      await undoEvent(app, anna.headers, { gameId, expectedVersion })
+    }
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.events).toEqual([])
+    expect(game.state.round).toBe(1)
+    await expect(
+      undoEvent(app, anna.headers, { gameId, expectedVersion: 6 })
+    ).rejects.toMatchObject({ code: "nothingToUndo" })
+  })
+
+  it("leaves no trace: the next Event takes the undone one's place", async () => {
+    const { app, anna, gameId, ids, groupId } = await runningGame(1)
+    await undoEvent(app, anna.headers, { gameId, expectedVersion: 1 })
+
+    await recordEvent(app, anna.headers, {
+      gameId,
+      expectedVersion: 2,
+      event: { type: "lost", loser: ids[2] },
+    })
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.events).toEqual([{ type: "lost", loser: ids[2] }])
+    expect(game.state.participants.map((p) => p.lives)).toEqual([3, 3, 2])
+    const [listed] = await listGames(app, anna.headers, { groupId })
+    expect(listed.round).toBe(2)
+  })
+
+  it("counts the version on, so a device that saw the undone Event cannot act on it", async () => {
+    const { app, anna, gameId, ids } = await runningGame(2)
+    // Undo Ben's second loss and record Carla's instead: two Events again.
+    await undoEvent(app, anna.headers, { gameId, expectedVersion: 2 })
+    await recordEvent(app, anna.headers, {
+      gameId,
+      expectedVersion: 3,
+      event: { type: "lost", loser: ids[2] },
+    })
+
+    // A device that last saw Ben's second loss (version 2) must not undo
+    // Carla's in its place.
+    await expect(
+      undoEvent(app, anna.headers, { gameId, expectedVersion: 2 })
+    ).rejects.toMatchObject({ code: "versionConflict" })
+    expect((await getGame(app, anna.headers, { gameId })).version).toBe(4)
+  })
+
+  it("must be on top of the version the device has seen", async () => {
+    const { app, anna, gameId } = await runningGame(2)
+
+    await expect(
+      undoEvent(app, anna.headers, { gameId, expectedVersion: 1 })
+    ).rejects.toMatchObject({ code: "versionConflict" })
+    expect((await getGame(app, anna.headers, { gameId })).version).toBe(2)
+  })
+
+  it("is only for the Scorekeeper", async () => {
+    const { app, ben, gameId } = await runningGame(1)
+    const mallory = await signUp(app.auth, { username: "Mallory" })
+
+    await expect(
+      undoEvent(app, ben.headers, { gameId, expectedVersion: 1 })
+    ).rejects.toMatchObject({ code: "notScorekeeper" })
+    await expect(
+      undoEvent(app, mallory.headers, { gameId, expectedVersion: 1 })
+    ).rejects.toMatchObject({ code: "gameNotFound" })
+  })
+})
+
+describe("undoing after the end of a Game", () => {
+  it("is possible for 10 minutes and runs the Game again without its summary", async () => {
+    const { app, anna, gameId, groupId } = await playedToTheEnd()
+    const finished = await getGame(app, anna.headers, { gameId })
+    const finishedAt = finished.finishedAt ?? new Date(0)
+    expect(finished.undoableUntil).toEqual(
+      new Date(finishedAt.getTime() + 10 * 60_000)
+    )
+    app.now = () => new Date(finishedAt.getTime() + 9 * 60_000)
+
+    await undoEvent(app, anna.headers, { gameId, expectedVersion: 6 })
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.status).toBe("running")
+    expect(game.events).toHaveLength(5)
+    expect(game.finishedAt).toBeNull()
+    expect(game.undoableUntil).toBeNull()
+    expect(game.state.winner).toBeNull()
+    expect(game.participants.map((p) => p.summary)).toEqual([null, null, null])
+    const [listed] = await listGames(app, anna.headers, { groupId })
+    expect(listed).toMatchObject({ status: "running", winner: null })
+  })
+
+  it("lets the Game end again, with a new summary", async () => {
+    const { app, anna, gameId } = await playedToTheEnd()
+    const [annaP, benP] = (await getGame(app, anna.headers, { gameId }))
+      .participants
+    await undoEvent(app, anna.headers, { gameId, expectedVersion: 6 })
+
+    // This time Anna loses a Life before Ben, the Swimmer, is Out.
+    await recordEvent(app, anna.headers, {
+      gameId,
+      expectedVersion: 7,
+      event: { type: "lost", loser: annaP.id },
+    })
+    await recordEvent(app, anna.headers, {
+      gameId,
+      expectedVersion: 8,
+      event: { type: "lost", loser: benP.id },
+    })
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.status).toBe("finished")
+    expect(game.participants.map((p) => p.summary?.livesLost)).toEqual([
+      1, 4, 3,
+    ])
+  })
+
+  it("is refused after 10 minutes, and the Game stays finished", async () => {
+    const { app, anna, gameId } = await playedToTheEnd()
+    const before = await getGame(app, anna.headers, { gameId })
+    const finishedAt = before.finishedAt ?? new Date(0)
+    app.now = () => new Date(finishedAt.getTime() + 10 * 60_000 + 1)
+
+    await expect(
+      undoEvent(app, anna.headers, { gameId, expectedVersion: 6 })
+    ).rejects.toMatchObject({ code: "undoExpired" })
+    expect(await getGame(app, anna.headers, { gameId })).toEqual(before)
+  })
+
+  it("is only for the Scorekeeper", async () => {
+    const { app, ben, gameId } = await playedToTheEnd()
+
+    await expect(
+      undoEvent(app, ben.headers, { gameId, expectedVersion: 6 })
+    ).rejects.toMatchObject({ code: "notScorekeeper" })
+  })
+})
+
+describe("cancelling a Game", () => {
+  it("stops it for good; it stays in the Group's list, without a Winner", async () => {
+    const { app, anna, gameId, groupId } = await runningGame(2)
+
+    await cancelGame(app, anna.headers, { gameId })
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.status).toBe("cancelled")
+    // A change like any other: a device on the old version cannot act on it.
+    expect(game.version).toBe(3)
+    expect(game.finishedAt).toBeInstanceOf(Date)
+    expect(game.undoableUntil).toBeNull()
+    expect(game.participants.map((p) => p.summary)).toEqual([null, null, null])
+    expect(await listGames(app, anna.headers, { groupId })).toMatchObject([
+      { id: gameId, status: "cancelled", round: 3, winner: null },
+    ])
+  })
+
+  it("leaves nothing to record, undo or cancel again", async () => {
+    const { app, anna, gameId, ids } = await runningGame(1)
+    await cancelGame(app, anna.headers, { gameId })
+
+    await expect(
+      recordEvent(app, anna.headers, {
+        gameId,
+        expectedVersion: 1,
+        event: { type: "lost", loser: ids[0] },
+      })
+    ).rejects.toMatchObject({ code: "gameNotRunning" })
+    await expect(
+      undoEvent(app, anna.headers, { gameId, expectedVersion: 1 })
+    ).rejects.toMatchObject({ code: "gameNotRunning" })
+    await expect(
+      cancelGame(app, anna.headers, { gameId })
+    ).rejects.toMatchObject({ code: "gameNotRunning" })
+  })
+
+  it("is not possible for a finished Game", async () => {
+    const { app, anna, gameId } = await playedToTheEnd()
+
+    await expect(
+      cancelGame(app, anna.headers, { gameId })
+    ).rejects.toMatchObject({ code: "gameNotRunning" })
+  })
+
+  it("is only for the Scorekeeper", async () => {
+    const { app, ben, gameId } = await runningGame(1)
+    const mallory = await signUp(app.auth, { username: "Mallory" })
+
+    await expect(
+      cancelGame(app, ben.headers, { gameId })
+    ).rejects.toMatchObject({ code: "notScorekeeper" })
+    await expect(
+      cancelGame(app, mallory.headers, { gameId })
+    ).rejects.toMatchObject({ code: "gameNotFound" })
+    expect((await getGame(app, ben.headers, { gameId })).status).toBe("running")
+  })
+})
+
 describe("every game command", () => {
   it.each([
     {
@@ -553,6 +798,15 @@ describe("every game command", () => {
     {
       command: "listGames",
       run: (app, headers) => listGames(app, headers, { groupId: "g" }),
+    },
+    {
+      command: "undoEvent",
+      run: (app, headers) =>
+        undoEvent(app, headers, { gameId: "x", expectedVersion: 1 }),
+    },
+    {
+      command: "cancelGame",
+      run: (app, headers) => cancelGame(app, headers, { gameId: "x" }),
     },
   ] satisfies Array<{
     command: string

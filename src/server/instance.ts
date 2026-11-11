@@ -26,6 +26,7 @@ export function getApp(): App {
           ? { clientId: googleId, clientSecret: googleSecret }
           : undefined,
     }),
+    now: () => new Date(),
   }
   return app
 }

@@ -49,7 +49,7 @@ export async function createTestApp(): Promise<App> {
       },
     },
   })
-  return { db, auth }
+  return { db, auth, now: () => new Date() }
 }
 
 type Auth = App["auth"]

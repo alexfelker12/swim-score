@@ -14,6 +14,12 @@ const day = new Intl.DateTimeFormat("de", {
   day: "numeric",
   month: "short",
 })
+const longDay = new Intl.DateTimeFormat("de", {
+  timeZone: TIME_ZONE,
+  weekday: "short",
+  day: "numeric",
+  month: "long",
+})
 const month = new Intl.DateTimeFormat("de", {
   timeZone: TIME_ZONE,
   month: "long",
@@ -60,4 +66,14 @@ export function monthKey(date: Date): string {
 /** Same calendar day in German time. */
 export function isToday(date: Date, now = new Date()): boolean {
   return dayKey.format(date) === dayKey.format(now)
+}
+
+/** "Do., 5. November" */
+export function formatLongDay(date: Date): string {
+  return longDay.format(date)
+}
+
+/** "21:40" */
+export function formatTime(date: Date): string {
+  return time.format(date)
 }

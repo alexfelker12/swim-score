@@ -1,109 +1,160 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { preview } from "@/rules-engine"
+import { preview, replay } from "@/rules-engine"
 import { gameQuery, groupChanged, mutationKeys } from "@/lib/queries"
-import { recordEventFn } from "@/server/functions"
+import { cancelGameFn, recordEventFn, undoEventFn } from "@/server/functions"
 import type { GameEvent } from "@/rules-engine"
 import type { GameView } from "@/server/games"
 
-/** Identifies the Scorekeeper's recordings of one Game. */
-export const recordingKey = mutationKeys.recordEvent
+/** Identifies the Scorekeeper's steps on one Game, including cancelling. */
+export const stepsKey = mutationKeys.gameSteps
 
-/** The server refused an Event; `code` says why. */
-export class RecordRefused extends Error {
+/** The server refused a step; `code` says why. */
+export class StepRefused extends Error {
   constructor(readonly code: string) {
-    super(`Event refused: ${code}`)
+    super(`Step refused: ${code}`)
   }
 }
 
+/** One step of the Scorekeeper: record an Event, or undo the last one. */
+type StepInput = ({ kind: "record"; event: GameEvent } | { kind: "undo" }) & {
+  optimistic: boolean
+}
+
+type Step = StepInput & { expectedVersion: number }
+
 /**
- * Records Events for the Scorekeeper. An Event shows at once ("optimistic"),
- * and the recordings reach the server one after another in the order tapped,
- * each on top of the version the one before it produced. When one is refused,
- * the ones after it are too, and once the last has come back the Game is
- * loaded again, so the screen shows what the server has.
+ * The Scorekeeper's steps on one Game: recording Events and undoing them.
+ * A step shows at once ("optimistic"), and the steps reach the server one
+ * after another in the order tapped, each on top of the version the one
+ * before it produced. When one is refused, the ones after it are too, and
+ * once the last has come back the Game is loaded again, so the screen shows
+ * what the server has.
  *
- * `record(event, { optimistic: false })` waits for the server instead; used
- * for the Event that ends the Game, which shows a different screen.
+ * `{ optimistic: false }` waits for the server instead; used for the Event
+ * that ends the Game and for undoing that end, which change the screen.
+ * `cancel` cancels the Game after the steps still on their way.
  */
-export function useRecordEvent(
+export function useGameSteps(
   gameId: string,
   { onRefused }: { onRefused: (code: string) => void }
 ) {
   const queryClient = useQueryClient()
   const { queryKey } = gameQuery(gameId)
-  const mutation = useMutation({
-    mutationKey: recordingKey(gameId),
-    // Same scope: one recording at a time, in the order they were made.
-    scope: { id: `record-event-${gameId}` },
-    mutationFn: async (variables: {
-      event: GameEvent
-      expectedVersion: number
-      optimistic: boolean
-    }) => {
-      const result = await recordEventFn({
-        data: {
-          gameId,
-          expectedVersion: variables.expectedVersion,
-          event: variables.event,
-        },
-      })
-      if (!result.ok) throw new RecordRefused(result.code)
+  const mutationKey = stepsKey(gameId)
+  // Same scope: one step at a time, in the order they were made; cancelling
+  // waits for them too.
+  const scope = { id: mutationKey.join(":") }
+
+  async function reload() {
+    const groupId = queryClient.getQueryData(queryKey)?.groupId
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey }),
+      // Round, Winner and Swimmer in the Game list and the next
+      // preselection; they load when shown next.
+      groupId === undefined
+        ? null
+        : groupChanged(queryClient, groupId, { later: true }),
+    ])
+  }
+
+  const steps = useMutation({
+    mutationKey,
+    scope,
+    mutationFn: async (step: Step) => {
+      const result =
+        step.kind === "record"
+          ? await recordEventFn({
+              data: {
+                gameId,
+                expectedVersion: step.expectedVersion,
+                event: step.event,
+              },
+            })
+          : await undoEventFn({
+              data: { gameId, expectedVersion: step.expectedVersion },
+            })
+      if (!result.ok) throw new StepRefused(result.code)
       return result.value
     },
-    onMutate: async ({ event, optimistic }) => {
-      if (!optimistic) return
-      // A fetch still on its way would overwrite the Event shown here.
+    onMutate: async (step) => {
+      if (!step.optimistic) return
+      // A fetch still on its way would overwrite the step shown here.
       await queryClient.cancelQueries({ queryKey })
       queryClient.setQueryData(queryKey, (game) =>
-        game ? withEvent(game, event) : game
+        game ? applyStep(game, step) : game
       )
     },
     onError: (error) => {
-      onRefused(error instanceof RecordRefused ? error.code : "network")
+      onRefused(error instanceof StepRefused ? error.code : "network")
     },
     onSettled: async () => {
-      // Load again only after the last recording, or the screen would jump
-      // back to a state without the Events still on their way.
-      if (queryClient.isMutating({ mutationKey: recordingKey(gameId) }) !== 1) {
-        return
+      // Load again only after the last step, or the screen would jump back
+      // to a state without the steps still on their way.
+      if (queryClient.isMutating({ mutationKey }) === 1) {
+        await reload()
       }
-      const groupId = queryClient.getQueryData(queryKey)?.groupId
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey }),
-        // Round, Winner and Swimmer in the Game list and the next
-        // preselection; they load when shown next.
-        groupId === undefined
-          ? null
-          : groupChanged(queryClient, groupId, { later: true }),
-      ])
     },
   })
 
-  return {
-    record: (event: GameEvent, { optimistic = true } = {}) => {
-      // The version as shown, including Events still on their way.
-      const shown = queryClient.getQueryData(queryKey)
-      if (!shown) return Promise.resolve()
-      return mutation
-        .mutateAsync({ event, expectedVersion: shown.version, optimistic })
-        .then(
-          () => undefined,
-          () => undefined
-        )
+  const cancelling = useMutation({
+    mutationKey,
+    scope,
+    mutationFn: async () => {
+      const result = await cancelGameFn({ data: { gameId } })
+      if (!result.ok) throw new StepRefused(result.code)
     },
-    /** True while the Event that ends the Game is on its way. */
-    finishing: mutation.isPending && mutation.variables.optimistic === false,
+    onSettled: reload,
+  })
+
+  function run(step: StepInput) {
+    // The version as shown, including steps still on their way.
+    const shown = queryClient.getQueryData(queryKey)
+    if (!shown) return Promise.resolve()
+    return steps.mutateAsync({ ...step, expectedVersion: shown.version }).then(
+      () => undefined,
+      () => undefined
+    )
+  }
+
+  return {
+    record: (event: GameEvent, { optimistic = true } = {}) =>
+      run({ kind: "record", event, optimistic }),
+    undo: ({ optimistic = true } = {}) => run({ kind: "undo", optimistic }),
+    /** Resolves with the reason when the server refuses, or nothing. */
+    cancel: () =>
+      cancelling.mutateAsync().then(
+        () => undefined,
+        (error: unknown) =>
+          error instanceof StepRefused ? error.code : "network"
+      ),
+    /** True while a step that changes the screen is on its way. */
+    waiting: steps.isPending && steps.variables.optimistic === false,
   }
 }
 
-/** The Game as it will be once the server has recorded the Event. */
-function withEvent(game: GameView, event: GameEvent): GameView {
-  const result = preview(game.state, game.ruleSet, event)
+/** The Game as it will be once the server has taken the step. */
+function applyStep(game: GameView, step: Step): GameView {
+  if (step.kind === "undo") {
+    if (game.events.length === 0) return game
+    const events = game.events.slice(0, -1)
+    return {
+      ...game,
+      // The revision counts every change, undoing included.
+      version: game.version + 1,
+      events,
+      state: replay(
+        game.ruleSet,
+        game.participants.map((p) => p.id),
+        events
+      ),
+    }
+  }
+  const result = preview(game.state, game.ruleSet, step.event)
   if (!result.ok) return game
   return {
     ...game,
     version: game.version + 1,
-    events: [...game.events, event],
+    events: [...game.events, step.event],
     state: result.state,
   }
 }

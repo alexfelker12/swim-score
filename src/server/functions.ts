@@ -11,7 +11,15 @@ import {
   removePlayer,
   renameGroup,
 } from "./groups"
-import { getGame, getNewGame, listGames, recordEvent, startGame } from "./games"
+import {
+  cancelGame,
+  getGame,
+  getNewGame,
+  listGames,
+  recordEvent,
+  startGame,
+  undoEvent,
+} from "./games"
 import { getApp } from "./instance"
 import {
   confirmClaim,
@@ -175,6 +183,14 @@ export const recordEventFn = createServerFn({ method: "POST" })
       input
   )
   .handler(({ data }) => outcome(() => recordEvent(getApp(), headers(), data)))
+
+export const undoEventFn = createServerFn({ method: "POST" })
+  .validator((input: { gameId: string; expectedVersion: number }) => input)
+  .handler(({ data }) => outcome(() => undoEvent(getApp(), headers(), data)))
+
+export const cancelGameFn = createServerFn({ method: "POST" })
+  .validator((input: { gameId: string }) => input)
+  .handler(({ data }) => outcome(() => cancelGame(getApp(), headers(), data)))
 
 /** The Group's Games, or none when the viewer is not its Player. */
 export const listGamesFn = createServerFn({ method: "GET" })

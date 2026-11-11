@@ -1,4 +1,4 @@
-import { preview } from "@/rules-engine"
+import { preview, replay } from "@/rules-engine"
 import type { Effects, GameEvent, GameState, RuleSet } from "@/rules-engine"
 
 // The German texts for Events, the same wherever an Event is shown (bottom
@@ -32,26 +32,133 @@ export function describeEvent(
 ): string {
   const result = preview(state, ruleSet, event)
   if (!result.ok) return ""
-  const text = describeEffects(state, ruleSet, event, result.effects, name)
-  const { winner } = result.effects
-  return withWinner && winner ? `${text}, ${name(winner)} gewinnt` : text
+  const { text, note } = describeEffects(
+    state,
+    ruleSet,
+    event,
+    result.effects,
+    name
+  )
+  const full = note ? `${text}, ${note}` : text
+  return withWinner ? withWinnerOf(full, result.effects, name) : full
 }
 
+/** "…, Anna gewinnt" when the Event ends the Game. */
+function withWinnerOf(text: string, { winner }: Effects, name: Names) {
+  return winner ? `${text}, ${name(winner)} gewinnt` : text
+}
+
+/** One Round in the Game's history ("Spielverlauf"). */
+export type HistoryEntry = {
+  /** The Round's number. */
+  round: number
+  /** "Ben verliert ein Leben", "Anna wirft eine Bombe", "Extra-Runde" … */
+  text: string
+  /** "Dealer Anna", "Dealer Emil, es gab schon einen Schwimmer" … */
+  meta: string
+  bomb: boolean
+  extraRound: boolean
+  /** The Event that ended the Game. */
+  end: boolean
+}
+
+/** The Game Round by Round, from its Events. */
+export function describeHistory(
+  ruleSet: RuleSet,
+  seatingOrder: ReadonlyArray<string>,
+  events: ReadonlyArray<GameEvent>,
+  name: Names
+): Array<HistoryEntry> {
+  let state = replay(ruleSet, [...seatingOrder], [])
+  const entries: Array<HistoryEntry> = []
+  let afterExtraRound = false
+  for (const event of events) {
+    const result = preview(state, ruleSet, event)
+    if (!result.ok) break
+    const { text, note } = describeEffects(
+      state,
+      ruleSet,
+      event,
+      result.effects,
+      name
+    )
+    // An Extra Round is dealt again by the same Dealer.
+    const meta = [
+      afterExtraRound
+        ? `Dealer bleibt ${name(state.dealer)}`
+        : `Dealer ${name(state.dealer)}`,
+    ]
+    if (note) meta.push(note)
+    if (event.type === "bomb" && event.swimmer) meta.push("Schwimmer per Wahl")
+    if (event.type === "lost" && event.tiebreak) {
+      const others = event.tiebreak.filter((id) => id !== event.loser)
+      meta.push(`Stechen mit ${joinNames(others.map(name))}`)
+    }
+    if (event.type === "extraRound") {
+      const remaining = state.participants.filter((p) => p.status !== "out")
+      meta.push(`${joinNames(remaining.map((p) => name(p.id)))} gleichauf`)
+    }
+    entries.push({
+      round: state.round,
+      text:
+        event.type === "extraRound"
+          ? "Extra-Runde"
+          : withWinnerOf(text, result.effects, name),
+      meta: meta.join(", "),
+      bomb: event.type === "bomb",
+      extraRound: event.type === "extraRound",
+      end: result.state.finished,
+    })
+    afterExtraRound = event.type === "extraRound"
+    state = result.state
+  }
+  return entries
+}
+
+/** "10 Runden, 1 Extra-Runde, 6 Teilnehmer"; Rounds played so far. */
+export function describeGameLength(
+  events: ReadonlyArray<GameEvent>,
+  state: GameState,
+  participantCount: number
+): string {
+  const rounds = state.finished ? state.round : state.round - 1
+  const extraRounds = events.filter((e) => e.type === "extraRound").length
+  return [
+    `${rounds} ${rounds === 1 ? "Runde" : "Runden"}`,
+    extraRounds > 0
+      ? `${extraRounds} ${extraRounds === 1 ? "Extra-Runde" : "Extra-Runden"}`
+      : null,
+    `${participantCount} Teilnehmer`,
+  ]
+    .filter(Boolean)
+    .join(", ")
+}
+
+/**
+ * What the Event did, and an explaining note the history shows apart
+ * ("es gab schon einen Schwimmer").
+ */
 function describeEffects(
   state: GameState,
   ruleSet: RuleSet,
   event: GameEvent,
   { becameSwimmer, out }: Effects,
   name: Names
-): string {
+): { text: string; note?: string } {
   switch (event.type) {
     case "lost": {
       const loser = name(event.loser)
-      if (becameSwimmer === event.loser) return `${loser} schwimmt jetzt`
-      if (!out.includes(event.loser)) return `${loser} verliert ein Leben`
+      if (becameSwimmer === event.loser)
+        return { text: `${loser} schwimmt jetzt` }
+      if (!out.includes(event.loser)) {
+        return { text: `${loser} verliert ein Leben` }
+      }
       return state.swimmer !== event.loser && ruleSet.swimmer
-        ? `${loser} scheidet aus, es gab schon einen Schwimmer`
-        : `${loser} scheidet aus`
+        ? {
+            text: `${loser} scheidet aus`,
+            note: "es gab schon einen Schwimmer",
+          }
+        : { text: `${loser} scheidet aus` }
     }
     case "bomb": {
       const parts = [`${name(event.thrower)} wirft eine Bombe`]
@@ -60,9 +167,9 @@ function describeEffects(
         const verb = out.length > 1 ? "scheiden aus" : "scheidet aus"
         parts.push(`${joinNames(out.map(name))} ${verb}`)
       }
-      return parts.join(", ")
+      return { text: parts.join(", ") }
     }
     case "extraRound":
-      return `Extra-Runde, Dealer bleibt ${name(state.dealer)}`
+      return { text: `Extra-Runde, Dealer bleibt ${name(state.dealer)}` }
   }
 }

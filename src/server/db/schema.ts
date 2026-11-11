@@ -231,8 +231,9 @@ export type GameStatus = (typeof GAME_STATUSES)[number]
 
 /**
  * A Game within a Group. Its state is not stored: it follows from its Events
- * (ADR 0001). `version` counts the recorded Events, so a device can only
- * record on top of the state it has seen (ADR 0002).
+ * (ADR 0001). `version` is the Game's revision: it counts every change (an
+ * Event recorded or undone, the Game cancelled) and never goes back, so a
+ * device can only act on top of the state it has seen (ADR 0002).
  */
 export const game = pgTable(
   "game",
@@ -291,7 +292,10 @@ export const participant = pgTable(
   ]
 )
 
-/** One recorded Event; `version` is its position in the Game, from 1. */
+/**
+ * One recorded Event; `version` is its position among the Game's Events,
+ * from 1 (not the Game's revision). Undoing deletes the last one.
+ */
 export const gameEvent = pgTable(
   "game_event",
   {
