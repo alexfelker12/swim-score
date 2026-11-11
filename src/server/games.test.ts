@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  addTiebreak,
   cancelGame,
   getGame,
   getNewGame,
@@ -12,6 +13,7 @@ import { addGuest, createGroup, getGroup } from "./groups"
 import { joinViaInvite } from "./testing/groups"
 import { createTestApp, signUp } from "./testing/test-app"
 import type { App } from "./app"
+import type { GameEvent } from "@/rules-engine"
 
 /** Anna's Group "Donnerstagsrunde" with Ben (account) and the Guests Carla and Dario. */
 async function table() {
@@ -771,6 +773,348 @@ describe("cancelling a Game", () => {
   })
 })
 
+/**
+ * A running Game of Anna, Ben, Carla and Dario, kept by Anna, after `events`;
+ * `ids` in Seating Order.
+ */
+async function fourAtTheTable(
+  events: (ids: Array<string>) => Array<GameEvent> = () => []
+) {
+  const setup = await table()
+  const { app, anna, groupId, players } = setup
+  const { id: gameId } = await startGame(app, anna.headers, {
+    groupId,
+    playerIds: [players.Anna, players.Ben, players.Carla, players.Dario],
+  })
+  const ids = (await getGame(app, anna.headers, { gameId })).participants.map(
+    (p) => p.id
+  )
+  for (const [version, event] of events(ids).entries()) {
+    await recordEvent(app, anna.headers, {
+      gameId,
+      expectedVersion: version,
+      event,
+    })
+  }
+  return { ...setup, gameId, ids }
+}
+
+describe("adding a Tiebreak to a loss", () => {
+  it("records who was in the Tiebreak with the last loss, without changing the state", async () => {
+    const { app, anna, gameId, ids } = await fourAtTheTable((seat) => [
+      { type: "lost", loser: seat[1] },
+    ])
+    const before = await getGame(app, anna.headers, { gameId })
+
+    expect(
+      await addTiebreak(app, anna.headers, {
+        gameId,
+        expectedVersion: 1,
+        tiebreak: [ids[1], ids[3]],
+      })
+    ).toEqual({ version: 2 })
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.version).toBe(2)
+    expect(game.events).toEqual([
+      { type: "lost", loser: ids[1], tiebreak: [ids[1], ids[3]] },
+    ])
+    expect(game.state).toEqual(before.state)
+  })
+
+  it("can be corrected: a new Tiebreak replaces the one recorded", async () => {
+    const { app, anna, gameId, ids } = await fourAtTheTable((seat) => [
+      { type: "lost", loser: seat[1], tiebreak: [seat[1], seat[3]] },
+    ])
+
+    await addTiebreak(app, anna.headers, {
+      gameId,
+      expectedVersion: 1,
+      tiebreak: [ids[2], ids[1], ids[0]],
+    })
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.events).toEqual([
+      { type: "lost", loser: ids[1], tiebreak: [ids[2], ids[1], ids[0]] },
+    ])
+  })
+
+  it("may include the loser who went Out by that loss", async () => {
+    // Carla loses three times and swims; her fourth loss puts her Out.
+    const { app, anna, gameId, ids } = await fourAtTheTable((seat) => [
+      { type: "lost", loser: seat[2] },
+      { type: "lost", loser: seat[2] },
+      { type: "lost", loser: seat[2] },
+      { type: "lost", loser: seat[2] },
+    ])
+    const { state } = await getGame(app, anna.headers, { gameId })
+    expect(state.participants[2].status).toBe("out")
+
+    await addTiebreak(app, anna.headers, {
+      gameId,
+      expectedVersion: 4,
+      tiebreak: [ids[2], ids[0]],
+    })
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.events.at(-1)).toEqual({
+      type: "lost",
+      loser: ids[2],
+      tiebreak: [ids[2], ids[0]],
+    })
+  })
+
+  it("is undone together with the loss it belongs to", async () => {
+    const { app, anna, gameId, ids } = await fourAtTheTable((seat) => [
+      { type: "lost", loser: seat[0] },
+      { type: "lost", loser: seat[1] },
+    ])
+    await addTiebreak(app, anna.headers, {
+      gameId,
+      expectedVersion: 2,
+      tiebreak: [ids[1], ids[2]],
+    })
+
+    await undoEvent(app, anna.headers, { gameId, expectedVersion: 3 })
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.events).toEqual([{ type: "lost", loser: ids[0] }])
+  })
+
+  it.each([
+    {
+      case: "nothing was recorded yet",
+      events: () => [],
+    },
+    {
+      case: "the last Event is a Bomb",
+      events: (ids: Array<string>) => [{ type: "bomb", thrower: ids[0] }],
+    },
+  ] satisfies Array<{
+    case: string
+    events: (ids: Array<string>) => Array<GameEvent>
+  }>)("is refused when $case", async ({ events }) => {
+    const { app, anna, gameId, ids } = await fourAtTheTable(events)
+    const version = events(ids).length
+
+    await expect(
+      addTiebreak(app, anna.headers, {
+        gameId,
+        expectedVersion: version,
+        tiebreak: [ids[0], ids[1]],
+      })
+    ).rejects.toMatchObject({ code: "noLossForTiebreak" })
+  })
+
+  it.each([
+    {
+      case: "only the loser is in it",
+      tiebreak: (ids: Array<string>) => [ids[1]],
+      code: "tiebreakNeedsTwoParticipants",
+    },
+    {
+      case: "the loser is not in it",
+      tiebreak: (ids: Array<string>) => [ids[2], ids[3]],
+      code: "tiebreakWithoutLoser",
+    },
+    {
+      case: "someone is in it twice",
+      tiebreak: (ids: Array<string>) => [ids[1], ids[2], ids[2]],
+      code: "tiebreakDuplicateParticipant",
+    },
+    {
+      case: "someone is not in the Game",
+      tiebreak: (ids: Array<string>) => [ids[1], "stranger"],
+      code: "unknownParticipant",
+    },
+  ])(
+    "follows the rules: refused when $case, and nothing changes",
+    async ({ tiebreak, code }) => {
+      const { app, anna, gameId, ids } = await fourAtTheTable((seat) => [
+        { type: "lost", loser: seat[1] },
+      ])
+
+      await expect(
+        addTiebreak(app, anna.headers, {
+          gameId,
+          expectedVersion: 1,
+          tiebreak: tiebreak(ids),
+        })
+      ).rejects.toMatchObject({ code })
+
+      const game = await getGame(app, anna.headers, { gameId })
+      expect(game.version).toBe(1)
+      expect(game.events).toEqual([{ type: "lost", loser: ids[1] }])
+    }
+  )
+
+  it("is refused for someone already Out before the loss", async () => {
+    // Dario is Out after swimming and losing again; Anna loses next.
+    const { app, anna, gameId, ids } = await fourAtTheTable((seat) => [
+      ...Array.from({ length: 4 }, () => ({
+        type: "lost" as const,
+        loser: seat[3],
+      })),
+      { type: "lost", loser: seat[0] },
+    ])
+
+    await expect(
+      addTiebreak(app, anna.headers, {
+        gameId,
+        expectedVersion: 5,
+        tiebreak: [ids[0], ids[3]],
+      })
+    ).rejects.toMatchObject({ code: "participantOut" })
+  })
+
+  it("is refused when only two were left, since they play an Extra Round instead", async () => {
+    // Carla and Dario go Out; Anna loses with only Anna and Ben left.
+    const { app, anna, gameId, ids } = await fourAtTheTable((seat) => [
+      ...Array.from({ length: 4 }, () => ({
+        type: "lost" as const,
+        loser: seat[2],
+      })),
+      ...Array.from({ length: 3 }, () => ({
+        type: "lost" as const,
+        loser: seat[3],
+      })),
+      { type: "lost", loser: seat[0] },
+    ])
+
+    await expect(
+      addTiebreak(app, anna.headers, {
+        gameId,
+        expectedVersion: 8,
+        tiebreak: [ids[0], ids[1]],
+      })
+    ).rejects.toMatchObject({ code: "tiebreakNeedsMoreThanTwoRemaining" })
+  })
+
+  it("refuses a Tiebreak that is not a list of Participants", async () => {
+    const { app, anna, gameId, ids } = await fourAtTheTable((seat) => [
+      { type: "lost", loser: seat[1] },
+    ])
+
+    await expect(
+      addTiebreak(app, anna.headers, {
+        gameId,
+        expectedVersion: 1,
+        tiebreak: [ids[1], 7] as unknown as Array<string>,
+      })
+    ).rejects.toMatchObject({ code: "invalidEvent" })
+  })
+
+  it("must be on top of the version the device has seen", async () => {
+    const { app, anna, gameId, ids } = await fourAtTheTable((seat) => [
+      { type: "lost", loser: seat[0] },
+      { type: "lost", loser: seat[1] },
+    ])
+
+    // A device that only saw Anna's loss must not put the Tiebreak on Ben's.
+    await expect(
+      addTiebreak(app, anna.headers, {
+        gameId,
+        expectedVersion: 1,
+        tiebreak: [ids[0], ids[2]],
+      })
+    ).rejects.toMatchObject({ code: "versionConflict" })
+    expect((await getGame(app, anna.headers, { gameId })).version).toBe(2)
+  })
+
+  it("is only for the Scorekeeper", async () => {
+    const { app, ben, gameId, ids } = await fourAtTheTable((seat) => [
+      { type: "lost", loser: seat[1] },
+    ])
+    const mallory = await signUp(app.auth, { username: "Mallory" })
+    const input = { gameId, expectedVersion: 1, tiebreak: [ids[1], ids[2]] }
+
+    await expect(addTiebreak(app, ben.headers, input)).rejects.toMatchObject({
+      code: "notScorekeeper",
+    })
+    await expect(
+      addTiebreak(app, mallory.headers, input)
+    ).rejects.toMatchObject({ code: "gameNotFound" })
+  })
+
+  it("is not possible once the Game is cancelled", async () => {
+    const { app, anna, gameId, ids } = await fourAtTheTable((seat) => [
+      { type: "lost", loser: seat[1] },
+    ])
+    await cancelGame(app, anna.headers, { gameId })
+
+    await expect(
+      addTiebreak(app, anna.headers, {
+        gameId,
+        expectedVersion: 2,
+        tiebreak: [ids[1], ids[2]],
+      })
+    ).rejects.toMatchObject({ code: "gameNotRunning" })
+  })
+})
+
+describe("an Extra Round", () => {
+  /** Anna and Ben left, Ben dealing Round 8 (Carla and Dario are Out). */
+  const twoLeft = (ids: Array<string>): Array<GameEvent> => [
+    ...Array.from({ length: 4 }, () => ({
+      type: "lost" as const,
+      loser: ids[2],
+    })),
+    ...Array.from({ length: 3 }, () => ({
+      type: "lost" as const,
+      loser: ids[3],
+    })),
+  ]
+
+  it("is recorded when exactly two are left; the Round and its Dealer stay", async () => {
+    const { app, anna, gameId } = await fourAtTheTable(twoLeft)
+    const before = await getGame(app, anna.headers, { gameId })
+
+    for (const expectedVersion of [7, 8]) {
+      await recordEvent(app, anna.headers, {
+        gameId,
+        expectedVersion,
+        event: { type: "extraRound" },
+      })
+    }
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.version).toBe(9)
+    expect(game.events.slice(-2)).toEqual([
+      { type: "extraRound" },
+      { type: "extraRound" },
+    ])
+    expect(game.state.round).toBe(before.state.round)
+    expect(game.state.dealer).toBe(before.state.dealer)
+  })
+
+  it("is refused while more than two are left", async () => {
+    const { app, anna, gameId } = await fourAtTheTable((seat) => [
+      { type: "lost", loser: seat[1] },
+    ])
+
+    await expect(
+      recordEvent(app, anna.headers, {
+        gameId,
+        expectedVersion: 1,
+        event: { type: "extraRound" },
+      })
+    ).rejects.toMatchObject({ code: "extraRoundNeedsTwoRemaining" })
+  })
+
+  it("can be undone", async () => {
+    const { app, anna, gameId } = await fourAtTheTable((seat) => [
+      ...twoLeft(seat),
+      { type: "extraRound" },
+    ])
+
+    await undoEvent(app, anna.headers, { gameId, expectedVersion: 8 })
+
+    const game = await getGame(app, anna.headers, { gameId })
+    expect(game.events).toHaveLength(7)
+    expect(game.events.at(-1)?.type).toBe("lost")
+  })
+})
+
 describe("every game command", () => {
   it.each([
     {
@@ -803,6 +1147,15 @@ describe("every game command", () => {
       command: "undoEvent",
       run: (app, headers) =>
         undoEvent(app, headers, { gameId: "x", expectedVersion: 1 }),
+    },
+    {
+      command: "addTiebreak",
+      run: (app, headers) =>
+        addTiebreak(app, headers, {
+          gameId: "x",
+          expectedVersion: 1,
+          tiebreak: ["a", "b"],
+        }),
     },
     {
       command: "cancelGame",

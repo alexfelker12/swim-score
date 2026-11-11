@@ -40,7 +40,7 @@ A Round outcome thrown by one player in which every other remaining player loses
 _Avoid_: Nuke
 
 **Tiebreak** (Stechen):
-How a Round with several lowest-scoring players is decided when more than two players remain: each tied player draws one card from the rest of the deck, starting from the Dealer clockwise, and the lowest loses; repeated among those still tied.
+How a Round with several lowest-scoring players is decided when more than two players remain: each tied player draws one card from the rest of the deck, starting from the Dealer clockwise, and the lowest loses; repeated among those still tied. Recording it is optional and comes after the loss: the Scorekeeper adds who was in it to that loss's Event, which is the only time a recorded Event changes. Undo takes back the loss together with its Tiebreak.
 
 **Extra Round** (Extra-Runde):
 A re-deal by the same Dealer when exactly two players remain and tie; repeated until one of them loses.
