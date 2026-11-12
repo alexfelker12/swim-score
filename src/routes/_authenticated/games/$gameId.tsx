@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
 import {
@@ -11,6 +11,7 @@ import {
   History,
   QrCode as QrCodeIcon,
   Swords,
+  TriangleAlert,
   Trophy,
   Undo2,
 } from "lucide-react"
@@ -38,12 +39,14 @@ import {
   joinNames,
   nameOf,
 } from "@/lib/game-text"
+import { formatOfflineForLong } from "@/lib/takeover"
 import { useLiveGame } from "@/lib/use-live-game"
+import { useServerNow } from "@/lib/use-server-now"
 import { useShareLink } from "@/lib/use-share-link"
 import { cn } from "@/lib/utils"
 import { preview } from "@/rules-engine"
 import { gameChanged, gameQuery } from "@/lib/queries"
-import { stepsKey, useGameSteps } from "./-game-data"
+import { stepsKey, useGameSteps, useTakeOver } from "./-game-data"
 import { useHideOut } from "./-hide-out"
 import type { ComponentProps } from "react"
 import type { GameEvent } from "@/rules-engine"
@@ -76,6 +79,8 @@ function GamePage() {
       if (groupId) void gameChanged(queryClient, gameId, groupId)
     },
     isBusy,
+    // Participants with an account let the server know they are here.
+    present: Boolean(game && (game.isScorekeeper || game.canTakeOver)),
   })
   if (!game) return null
   if (game.status === "finished") return <GameEnd game={game} />
@@ -89,6 +94,8 @@ type Sheet =
   | { kind: "tiebreak" }
   | { kind: "menu" }
   | { kind: "spectators"; token: string }
+  | { kind: "takeOver" }
+  | { kind: "replaced"; by: string; offline: boolean; discarded: number }
   | { kind: "cancel" }
 
 const stepErrors: Partial<Record<string, string>> = {
@@ -100,6 +107,10 @@ const stepErrors: Partial<Record<string, string>> = {
   gameNotRunning: "Das Spiel läuft nicht mehr.",
   nothingToUndo: "Es gibt nichts mehr zurückzunehmen.",
   undoExpired: "Die 10 Minuten sind um, das Spiel bleibt beendet.",
+  scorekeeperJustWentOffline:
+    "Gerade erst offline gegangen. Übernehmen geht nach Ablauf der Zeit.",
+  alreadyScorekeeper: "Du zählst schon.",
+  notParticipant: "Übernehmen können nur Teilnehmer mit Konto.",
 }
 
 function GameTable({ game }: { game: GameView }) {
@@ -107,15 +118,64 @@ function GameTable({ game }: { game: GameView }) {
   const [sheet, setSheet] = useState<Sheet | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [hideOut, setHideOut] = useHideOut()
+  // Rounds refused because someone else took over: told in one sheet,
+  // also when they come back after it opened.
+  const discarded = useRef(0)
   const { record, undo, addTiebreak, cancel, waiting } = useGameSteps(game.id, {
-    onRefused: (code) => {
+    onRefused: (code, kind) => {
+      if (code === "notScorekeeper") {
+        if (kind !== "record") return
+        if (sheet?.kind === "replaced") {
+          setSheet((open) =>
+            open?.kind === "replaced"
+              ? { ...open, discarded: open.discarded + 1 }
+              : open
+          )
+        } else {
+          discarded.current++
+        }
+        return
+      }
       setSheet(null)
       setError(stepErrors[code] ?? "Das ließ sich nicht speichern.")
     },
   })
+  const { takeOver, takingOver } = useTakeOver(game.id, game.groupId)
   const { state, ruleSet } = game
   const name = nameOf(game.participants)
   const { isScorekeeper } = game
+  const lastTakeover = game.takeovers.at(-1)
+  const replacedBy = lastTakeover ? name(lastTakeover.by) : ""
+  const replacedOffline = lastTakeover?.fromWasOffline ?? false
+
+  // Someone took over from this device: say so once, with what was lost.
+  const wasScorekeeper = useRef(isScorekeeper)
+  useEffect(() => {
+    if (wasScorekeeper.current && !isScorekeeper && replacedBy) {
+      setBombMode(false)
+      setError(null)
+      setSheet({
+        kind: "replaced",
+        by: replacedBy,
+        offline: replacedOffline,
+        discarded: discarded.current,
+      })
+      discarded.current = 0
+    }
+    wasScorekeeper.current = isScorekeeper
+  }, [isScorekeeper, replacedBy, replacedOffline])
+
+  async function startTakeOver(confirmOffline = false) {
+    setError(null)
+    const refused = await takeOver({ confirmOffline })
+    if (refused === "takeoverNeedsConfirmation") {
+      setSheet({ kind: "takeOver" })
+      return
+    }
+    setSheet(null)
+    if (refused)
+      setError(stepErrors[refused] ?? "Das ließ sich nicht übernehmen.")
+  }
 
   /** Records the Event, unless it ends the Game: then the Winner is confirmed first. */
   function propose(event: GameEvent) {
@@ -196,6 +256,10 @@ function GameTable({ game }: { game: GameView }) {
       <ScorekeeperStatus
         viewer={isScorekeeper ? "scorekeeper" : "participant"}
         scorekeeper={game.scorekeeper}
+        offlineSince={game.scorekeeperOfflineSince}
+        serverTime={game.serverTime}
+        onTakeOver={game.canTakeOver ? () => void startTakeOver() : undefined}
+        takingOver={takingOver}
       />
 
       {isScorekeeper ? (
@@ -334,6 +398,21 @@ function GameTable({ game }: { game: GameView }) {
 
       {sheet?.kind === "spectators" ? (
         <SpectatorSheet token={sheet.token} onClose={() => setSheet(null)} />
+      ) : null}
+
+      {sheet?.kind === "takeOver" ? (
+        <TakeOverSheet
+          scorekeeper={game.scorekeeper ?? ""}
+          offlineSince={game.scorekeeperOfflineSince}
+          serverTime={game.serverTime}
+          pending={takingOver}
+          onConfirm={() => void startTakeOver(true)}
+          onClose={() => setSheet(null)}
+        />
+      ) : null}
+
+      {sheet?.kind === "replaced" ? (
+        <ReplacedSheet {...sheet} onClose={() => setSheet(null)} />
       ) : null}
 
       {sheet?.kind === "cancel" ? (
@@ -734,6 +813,99 @@ function HistoryLink({ gameId }: { gameId: string }) {
     >
       <History className="size-5.5" aria-hidden="true" />
     </Link>
+  )
+}
+
+/**
+ * "Zählen übernehmen?": the warning before replacing a Scorekeeper who has
+ * been offline for a while, whose unsent Rounds get lost.
+ */
+function TakeOverSheet({
+  scorekeeper,
+  offlineSince,
+  serverTime,
+  pending,
+  onConfirm,
+  onClose,
+}: {
+  scorekeeper: string
+  offlineSince: Date | null
+  serverTime: Date
+  pending: boolean
+  onConfirm: () => void
+  onClose: () => void
+}) {
+  const now = useServerNow(serverTime, false)
+  const since = offlineSince
+    ? `${scorekeeper} ist seit ${formatOfflineForLong(now.getTime() - offlineSince.getTime())} offline. `
+    : ""
+  return (
+    <BottomSheet
+      title={
+        <span className="flex items-center gap-2.5">
+          <TriangleAlert
+            className="size-6 shrink-0 text-bomb"
+            aria-hidden="true"
+          />
+          Zählen übernehmen?
+        </span>
+      }
+      description={`${since}Runden, die ${scorekeeper} in dieser Zeit gezählt und noch nicht gesendet hat, gehen verloren.`}
+      onDismiss={onClose}
+    >
+      <div className="flex flex-col gap-2.5">
+        <PrimaryButton type="button" onClick={onConfirm} disabled={pending}>
+          Trotzdem übernehmen
+        </PrimaryButton>
+        <button
+          type="button"
+          onClick={onClose}
+          className={largeSecondaryButtonClass}
+        >
+          Abbrechen
+        </button>
+      </div>
+    </BottomSheet>
+  )
+}
+
+/** "Carla zählt jetzt": told once on the device someone took over from. */
+function ReplacedSheet({
+  by,
+  offline,
+  discarded,
+  onClose,
+}: {
+  by: string
+  offline: boolean
+  discarded: number
+  onClose: () => void
+}) {
+  const what = offline
+    ? `Du warst offline, als ${by} übernommen hat.`
+    : `${by} hat das Zählen übernommen.`
+  const lost =
+    discarded === 0
+      ? " Du kannst das Zählen jederzeit wieder übernehmen."
+      : ` ${discarded === 1 ? "Deine nicht gesendete Runde wurde" : `Deine ${discarded} nicht gesendeten Runden wurden`} verworfen. Gleicht den Stand am Tisch ab, angezeigt wird jetzt der gespeicherte Stand.`
+  return (
+    <BottomSheet
+      title={
+        <span className="flex items-center gap-2.5">
+          <TriangleAlert
+            className="size-6 shrink-0 text-bomb"
+            aria-hidden="true"
+          />
+          {by} zählt jetzt
+        </span>
+      }
+      description={what + lost}
+      onDismiss={onClose}
+    >
+      <PrimaryButton type="button" onClick={onClose}>
+        Verstanden
+      </PrimaryButton>
+    </BottomSheet>
   )
 }
 

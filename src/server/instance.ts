@@ -2,7 +2,8 @@ import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 import * as schema from "./db/schema"
 import { createAuth } from "./auth"
-import { pusherNotifier, silentNotifier } from "./pusher"
+import { createPusher, pusherNotifier, silentNotifier } from "./pusher"
+import type Pusher from "pusher"
 import type { App } from "./app"
 
 let app: App | undefined
@@ -33,17 +34,30 @@ export function getApp(): App {
   return app
 }
 
-/** Pusher when it is configured; without it, Games still work, just not live. */
-function createNotifier() {
+let pusher: Pusher | null | undefined
+
+/**
+ * Pusher when it is configured, else null: Games still work, just not live,
+ * and nobody's presence is known.
+ */
+export function getPusher(): Pusher | null {
+  if (pusher !== undefined) return pusher
   const appId = process.env.PUSHER_APP_ID
   const key = process.env.VITE_PUSHER_KEY
   const secret = process.env.PUSHER_SECRET
   const cluster = process.env.VITE_PUSHER_CLUSTER
   if (!appId || !key || !secret || !cluster) {
     console.warn("Pusher is not configured: Games are not updated live.")
-    return silentNotifier
+    pusher = null
+  } else {
+    pusher = createPusher({ appId, key, secret, cluster })
   }
-  return pusherNotifier({ appId, key, secret, cluster })
+  return pusher
+}
+
+function createNotifier() {
+  const connection = getPusher()
+  return connection ? pusherNotifier(connection) : silentNotifier
 }
 
 function requireEnv(name: string): string {

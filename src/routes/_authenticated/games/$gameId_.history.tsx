@@ -2,7 +2,11 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
 import { Bomb, ChevronLeft, Trophy } from "lucide-react"
 import { formatLongDay, formatTime } from "@/lib/dates"
-import { describeGameLength, describeHistory } from "@/lib/game-text"
+import {
+  describeGameLength,
+  describeHistory,
+  withTakeovers,
+} from "@/lib/game-text"
 import { gameQuery } from "@/lib/queries"
 import { cn } from "@/lib/utils"
 import type { GameView } from "@/server/games"
@@ -22,10 +26,14 @@ function HistoryPage() {
   if (!game) return null
   const names = new Map(game.participants.map((p) => [p.id, p.name]))
   const name = (id: string) => names.get(id) ?? ""
-  const entries = describeHistory(
-    game.ruleSet,
-    game.participants.map((p) => p.id),
-    game.events,
+  const entries = withTakeovers(
+    describeHistory(
+      game.ruleSet,
+      game.participants.map((p) => p.id),
+      game.events,
+      name
+    ),
+    game.takeovers,
     name
   )
   return (
@@ -70,7 +78,8 @@ function HistoryPage() {
                     className={cn(
                       "flex items-start gap-2 text-[15px] text-pretty",
                       entry.end ? "font-semibold" : "font-medium",
-                      entry.extraRound && "text-muted-foreground"
+                      (entry.extraRound || entry.takeover) &&
+                        "text-muted-foreground"
                     )}
                   >
                     {entry.bomb ? (

@@ -22,6 +22,8 @@ import { Route as AuthenticatedGroupsNewRouteImport } from './routes/_authentica
 import { Route as AuthenticatedInviteTokenRouteImport } from './routes/_authenticated/invite/$token'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAvatarUserIdRouteImport } from './routes/api/avatar/$userId'
+import { Route as ApiPusherAuthRouteImport } from './routes/api/pusher/auth'
+import { Route as ApiPusherWebhookRouteImport } from './routes/api/pusher/webhook'
 import { Route as AuthenticatedGamesGameIdHistoryRouteImport } from './routes/_authenticated/games/$gameId_.history'
 import { Route as AuthenticatedGroupsGroupIdInviteRouteImport } from './routes/_authenticated/groups/$groupId_.invite'
 import { Route as AuthenticatedGroupsGroupIdSettingsRouteImport } from './routes/_authenticated/groups/$groupId_.settings'
@@ -93,6 +95,16 @@ const ApiAvatarUserIdRoute = ApiAvatarUserIdRouteImport.update({
   path: '/api/avatar/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPusherAuthRoute = ApiPusherAuthRouteImport.update({
+  id: '/api/pusher/auth',
+  path: '/api/pusher/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPusherWebhookRoute = ApiPusherWebhookRouteImport.update({
+  id: '/api/pusher/webhook',
+  path: '/api/pusher/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedGamesGameIdHistoryRoute =
   AuthenticatedGamesGameIdHistoryRouteImport.update({
     id: '/games/$gameId_/history',
@@ -125,6 +137,8 @@ export interface FileRoutesByFullPath {
   '/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/avatar/$userId': typeof ApiAvatarUserIdRoute
+  '/api/pusher/auth': typeof ApiPusherAuthRoute
+  '/api/pusher/webhook': typeof ApiPusherWebhookRoute
   '/games/$gameId/history': typeof AuthenticatedGamesGameIdHistoryRoute
   '/groups/$groupId/invite': typeof AuthenticatedGroupsGroupIdInviteRoute
   '/groups/$groupId/settings': typeof AuthenticatedGroupsGroupIdSettingsRoute
@@ -142,6 +156,8 @@ export interface FileRoutesByTo {
   '/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/avatar/$userId': typeof ApiAvatarUserIdRoute
+  '/api/pusher/auth': typeof ApiPusherAuthRoute
+  '/api/pusher/webhook': typeof ApiPusherWebhookRoute
   '/games/$gameId/history': typeof AuthenticatedGamesGameIdHistoryRoute
   '/groups/$groupId/invite': typeof AuthenticatedGroupsGroupIdInviteRoute
   '/groups/$groupId/settings': typeof AuthenticatedGroupsGroupIdSettingsRoute
@@ -161,6 +177,8 @@ export interface FileRoutesById {
   '/_authenticated/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/avatar/$userId': typeof ApiAvatarUserIdRoute
+  '/api/pusher/auth': typeof ApiPusherAuthRoute
+  '/api/pusher/webhook': typeof ApiPusherWebhookRoute
   '/_authenticated/games/$gameId_/history': typeof AuthenticatedGamesGameIdHistoryRoute
   '/_authenticated/groups/$groupId_/invite': typeof AuthenticatedGroupsGroupIdInviteRoute
   '/_authenticated/groups/$groupId_/settings': typeof AuthenticatedGroupsGroupIdSettingsRoute
@@ -180,6 +198,8 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/api/auth/$'
     | '/api/avatar/$userId'
+    | '/api/pusher/auth'
+    | '/api/pusher/webhook'
     | '/games/$gameId/history'
     | '/groups/$groupId/invite'
     | '/groups/$groupId/settings'
@@ -197,6 +217,8 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/api/auth/$'
     | '/api/avatar/$userId'
+    | '/api/pusher/auth'
+    | '/api/pusher/webhook'
     | '/games/$gameId/history'
     | '/groups/$groupId/invite'
     | '/groups/$groupId/settings'
@@ -215,6 +237,8 @@ export interface FileRouteTypes {
     | '/_authenticated/invite/$token'
     | '/api/auth/$'
     | '/api/avatar/$userId'
+    | '/api/pusher/auth'
+    | '/api/pusher/webhook'
     | '/_authenticated/games/$gameId_/history'
     | '/_authenticated/groups/$groupId_/invite'
     | '/_authenticated/groups/$groupId_/settings'
@@ -227,6 +251,8 @@ export interface RootRouteChildren {
   ZTokenRoute: typeof ZTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAvatarUserIdRoute: typeof ApiAvatarUserIdRoute
+  ApiPusherAuthRoute: typeof ApiPusherAuthRoute
+  ApiPusherWebhookRoute: typeof ApiPusherWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -322,6 +348,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAvatarUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/pusher/auth': {
+      id: '/api/pusher/auth'
+      path: '/api/pusher/auth'
+      fullPath: '/api/pusher/auth'
+      preLoaderRoute: typeof ApiPusherAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pusher/webhook': {
+      id: '/api/pusher/webhook'
+      path: '/api/pusher/webhook'
+      fullPath: '/api/pusher/webhook'
+      preLoaderRoute: typeof ApiPusherWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/games/$gameId_/history': {
       id: '/_authenticated/games/$gameId_/history'
       path: '/games/$gameId/history'
@@ -384,6 +424,8 @@ const rootRouteChildren: RootRouteChildren = {
   ZTokenRoute: ZTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAvatarUserIdRoute: ApiAvatarUserIdRoute,
+  ApiPusherAuthRoute: ApiPusherAuthRoute,
+  ApiPusherWebhookRoute: ApiPusherWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

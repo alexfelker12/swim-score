@@ -112,7 +112,10 @@ describe("removing a Player", () => {
     await removePlayer(app, anna.headers, { groupId, playerId: ids.Ben })
     await removePlayer(app, anna.headers, { groupId, playerId: ids.Emil })
 
-    expect(await getGame(app, anna.headers, { gameId })).toEqual(before)
+    expect(await getGame(app, anna.headers, { gameId })).toEqual({
+      ...before,
+      serverTime: expect.any(Date),
+    })
     expect(await listGames(app, anna.headers, { groupId })).toEqual(listed)
   })
 
@@ -214,7 +217,10 @@ describe("leaving a Group", () => {
       players: ["Anna", "Carla", "Emil"],
       former: ["Ben (left)"],
     })
-    expect(await getGame(app, anna.headers, { gameId })).toEqual(before)
+    expect(await getGame(app, anna.headers, { gameId })).toEqual({
+      ...before,
+      serverTime: expect.any(Date),
+    })
     await expect(
       leaveGroup(app, ben.headers, { groupId })
     ).rejects.toMatchObject({ code: "groupNotFound" })
@@ -313,6 +319,7 @@ describe("deleting an account", () => {
 
     expect(await getGame(app, anna.headers, { gameId })).toEqual({
       ...before,
+      serverTime: expect.any(Date),
       participants: before.participants.map((p) =>
         p.playerId === ids.Ben ? { ...p, name: "Ehemaliger Spieler 1" } : p
       ),

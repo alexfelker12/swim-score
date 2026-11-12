@@ -165,6 +165,7 @@ describe("Game changed notifications", () => {
     const { app, anna, gameId, ids } = await runningGame({
       notifier: {
         gameChanged: () => Promise.reject(new Error("Pusher is down")),
+        scorekeeperPresenceChanged: () => Promise.resolve(),
       },
     })
 
@@ -221,6 +222,8 @@ describe("the Spectator link", () => {
       version: 1,
       scorekeeper: "Anna",
       scorekeeperParticipantId: ids[0],
+      scorekeeperOfflineSince: null,
+      serverTime: expect.any(Date),
       participants: [
         { id: ids[0], name: "Anna" },
         { id: ids[1], name: "Ben" },

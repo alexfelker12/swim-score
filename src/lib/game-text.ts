@@ -1,5 +1,6 @@
 import { preview, replay } from "@/rules-engine"
 import type { Effects, GameEvent, GameState, RuleSet } from "@/rules-engine"
+import type { TakeoverView } from "@/server/games"
 
 // The German texts for Events, the same wherever an Event is shown (bottom
 // bar, history, live view).
@@ -60,16 +61,53 @@ function tiebreakOthers(event: Extract<GameEvent, { type: "lost" }>) {
 
 /** One Round in the Game's history ("Spielverlauf"). */
 export type HistoryEntry = {
-  /** The Round's number. */
-  round: number
+  /** The Round's number; null for a takeover. */
+  round: number | null
   /** "Ben verliert ein Leben", "Anna wirft eine Bombe", "Extra-Runde" … */
   text: string
   /** "Dealer Anna", "Dealer Emil, es gab schon einen Schwimmer" … */
   meta: string
   bomb: boolean
   extraRound: boolean
+  /** Someone took over as Scorekeeper; no Event. */
+  takeover: boolean
   /** The Event that ended the Game. */
   end: boolean
+}
+
+/**
+ * The Game's history with its takeovers: "Carla übernimmt das Zählen" between
+ * the Events, with "Ben war offline" when the warning was confirmed.
+ */
+export function withTakeovers(
+  entries: ReadonlyArray<HistoryEntry>,
+  takeovers: ReadonlyArray<TakeoverView>,
+  name: Names
+): Array<HistoryEntry> {
+  const result: Array<HistoryEntry> = []
+  const insertTakeoversAt = (index: number) =>
+    takeovers
+      .filter((t) => Math.min(t.afterEvents, entries.length) === index)
+      .forEach((t) =>
+        result.push({
+          round: null,
+          text: `${name(t.by)} übernimmt das Zählen`,
+          meta:
+            t.from !== null && t.fromWasOffline
+              ? `${name(t.from)} war offline`
+              : "",
+          bomb: false,
+          extraRound: false,
+          takeover: true,
+          end: false,
+        })
+      )
+  entries.forEach((entry, index) => {
+    insertTakeoversAt(index)
+    result.push(entry)
+  })
+  insertTakeoversAt(entries.length)
+  return result
 }
 
 /** The Game Round by Round, from its Events. */
@@ -116,6 +154,7 @@ export function describeHistory(
       meta: meta.join(", "),
       bomb: event.type === "bomb",
       extraRound: event.type === "extraRound",
+      takeover: false,
       end: result.state.finished,
     })
     afterExtraRound = event.type === "extraRound"
