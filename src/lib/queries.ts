@@ -6,6 +6,7 @@ import {
   getGroupManagementFn,
   getInviteFn,
   getInviteLinkFn,
+  getLeaderboardFn,
   getNewGameFn,
   getProfileFn,
   getSpectatorGameFn,
@@ -24,6 +25,9 @@ export const queryKeys = {
   group: (groupId: string) => ["group", groupId] as const,
   groupView: (groupId: string) => ["group", groupId, "view"] as const,
   groupGames: (groupId: string) => ["group", groupId, "games"] as const,
+  /** Every metric at once, for one period; `""` for an open end. */
+  groupLeaderboard: (groupId: string, from = "", to = "") =>
+    ["group", groupId, "leaderboard", from, to] as const,
   groupManagement: (groupId: string) =>
     ["group", groupId, "management"] as const,
   newGame: (groupId: string) => ["group", groupId, "newGame"] as const,
@@ -70,6 +74,24 @@ export function groupGamesQuery(groupId: string) {
   return queryOptions({
     queryKey: queryKeys.groupGames(groupId),
     queryFn: () => listGamesFn({ data: { groupId } }),
+  })
+}
+
+/**
+ * The Group Leaderboard over the Group's completed Games, all of them or those
+ * started between `from` and `to` (`YYYY-MM-DD`); null when the viewer may
+ * not see it. Below the Group's key, so a finished Game reloads it.
+ */
+export function groupLeaderboardQuery(
+  groupId: string,
+  period: { from?: string; to?: string } = {}
+) {
+  return queryOptions({
+    queryKey: queryKeys.groupLeaderboard(groupId, period.from, period.to),
+    queryFn: () =>
+      getLeaderboardFn({
+        data: { groupId, from: period.from, to: period.to },
+      }),
   })
 }
 

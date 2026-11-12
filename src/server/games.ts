@@ -179,6 +179,7 @@ export async function startGame(
       groupId: input.groupId,
       ruleSet,
       scorekeeperId: me.id,
+      startedAt: app.now(),
     })
     await tx.insert(participant).values(
       input.playerIds.map((playerId, seat) => ({
