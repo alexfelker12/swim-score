@@ -1,3 +1,4 @@
+import { useEffect, useRef, useSyncExternalStore } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { preview, replay } from "@/rules-engine"
 import {
@@ -9,15 +10,18 @@ import {
 import {
   addTiebreakFn,
   cancelGameFn,
+  getGameFn,
   recordEventFn,
   takeOverFn,
   undoEventFn,
 } from "@/server/functions"
 import type { GameEvent } from "@/rules-engine"
 import type { GameView } from "@/server/games"
+import { emptyQueue, stepQueue } from "./-step-queue"
+import type { QueueState, QueuedStep, Refusal, SendResult } from "./-step-queue"
 
-/** Identifies the Scorekeeper's steps on one Game, including cancelling. */
-export const stepsKey = mutationKeys.gameSteps
+/** Identifies cancelling a Game; the steps themselves go through `stepQueue`. */
+export const cancelKey = mutationKeys.cancelGame
 
 /** The server refused a step; `code` says why. */
 export class StepRefused extends Error {
@@ -26,129 +30,121 @@ export class StepRefused extends Error {
   }
 }
 
-/**
- * One step of the Scorekeeper: record an Event, undo the last one, or add the
- * Tiebreak to the last loss.
- */
-type StepInput = (
-  | { kind: "record"; event: GameEvent }
-  | { kind: "undo" }
-  | { kind: "tiebreak"; tiebreak: Array<string> }
-) & {
-  optimistic: boolean
+/** The Scorekeeper's queue of one Game, for showing it. */
+export function useStepQueue(gameId: string, viewerId: string): QueueState {
+  const queue = stepQueue(gameId, viewerId)
+  return useSyncExternalStore(queue.subscribe, queue.get, () => emptyQueue)
 }
 
-type Step = StepInput & { expectedVersion: number }
+/**
+ * The Game as shown: what the server has, plus the steps not sent yet
+ * (ADR 0007), applied through the rules engine. Steps the server already
+ * has (it is past the queue's base) are not applied twice.
+ */
+export function withQueuedSteps(game: GameView, queue: QueueState): GameView {
+  const taken = Math.max(0, game.version - queue.baseVersion)
+  return queue.steps
+    .slice(taken)
+    .filter((step) => step.optimistic)
+    .reduce(applyStep, game)
+}
 
 /**
  * The Scorekeeper's steps on one Game: recording Events, undoing them and
  * adding a Tiebreak to the last loss.
- * A step shows at once ("optimistic"), and the steps reach the server one
- * after another in the order tapped, each on top of the version the one
- * before it produced. When one is refused, the ones after it are too, and
- * once the last has come back the Game is loaded again, so the screen shows
+ * A step shows at once and waits in the Game's queue (`stepQueue`), which
+ * survives a reload and sends the steps one after another in the order
+ * tapped, each on top of the version the one before produced; without a
+ * connection it keeps them and tries again. Undoing a step not sent yet
+ * just drops it. When the server refuses one, it and all after it are
+ * dropped (`onRefused`), and the Game is loaded again, so the screen shows
  * what the server has.
  *
  * `{ optimistic: false }` waits for the server instead; used for the Event
  * that ends the Game and for undoing that end, which change the screen.
- * `cancel` cancels the Game after the steps still on their way.
+ * `cancel` cancels the Game once the queue is sent.
  */
 export function useGameSteps(
   gameId: string,
-  {
-    onRefused,
-  }: {
-    /** `kind` says what was refused: an Event, an undo or a Tiebreak. */
-    onRefused: (code: string, kind: StepInput["kind"]) => void
-  }
+  viewerId: string,
+  { onRefused }: { onRefused: (refusal: Refusal) => void }
 ) {
   const queryClient = useQueryClient()
   const { queryKey } = gameQuery(gameId)
-  const mutationKey = stepsKey(gameId)
-  // Same scope: one step at a time, in the order they were made; cancelling
-  // waits for them too.
-  const scope = { id: mutationKey.join(":") }
+  const queue = stepQueue(gameId, viewerId)
+  const state = useStepQueue(gameId, viewerId)
+  // The handlers read the latest callback without attaching again.
+  const latest = useRef(onRefused)
+  latest.current = onRefused
 
-  async function reload() {
-    const groupId = queryClient.getQueryData(queryKey)?.groupId
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey }),
-      // Round, Winner and Swimmer in the Game list and the next
-      // preselection; they load when shown next.
-      groupId === undefined
-        ? null
-        : groupChanged(queryClient, groupId, { later: true }),
-    ])
-  }
-
-  const steps = useMutation({
-    mutationKey,
-    scope,
-    mutationFn: async (step: Step) => {
-      const { expectedVersion } = step
-      const result =
-        step.kind === "record"
-          ? await recordEventFn({
-              data: { gameId, expectedVersion, event: step.event },
-            })
-          : step.kind === "tiebreak"
-            ? await addTiebreakFn({
-                data: { gameId, expectedVersion, tiebreak: step.tiebreak },
-              })
-            : await undoEventFn({ data: { gameId, expectedVersion } })
-      if (!result.ok) throw new StepRefused(result.code)
-      return result.value
-    },
-    onMutate: async (step) => {
-      if (!step.optimistic) return
-      // A fetch still on its way would overwrite the step shown here.
-      await queryClient.cancelQueries({ queryKey })
-      queryClient.setQueryData(queryKey, (game) =>
-        game ? applyStep(game, step) : game
-      )
-    },
-    onError: (error, step) => {
-      onRefused(
-        error instanceof StepRefused ? error.code : "network",
-        step.kind
-      )
-    },
-    onSettled: async () => {
-      // Load again only after the last step, or the screen would jump back
-      // to a state without the steps still on their way.
-      if (queryClient.isMutating({ mutationKey }) === 1) {
-        await reload()
-      }
-    },
-  })
+  useEffect(() => {
+    const reload = () => {
+      const groupId = queryClient.getQueryData(queryKey)?.groupId
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey }),
+        // Round, Winner and Swimmer in the Game list and the next
+        // preselection; they load when shown next.
+        groupId === undefined
+          ? null
+          : groupChanged(queryClient, groupId, { later: true }),
+      ])
+    }
+    return queue.attach({
+      send: (step, expectedVersion) => sendStep(gameId, step, expectedVersion),
+      read: async () => {
+        const result = await getGameFn({ data: { gameId } })
+        return result ?? null
+      },
+      confirmed: (step, expectedVersion, version) => {
+        // What the server has now, so the rest of the queue shows on top
+        // of it; a fetch still on its way would show an older state.
+        void queryClient.cancelQueries({ queryKey })
+        if (!step.optimistic) return
+        queryClient.setQueryData(queryKey, (game) => {
+          if (game?.version !== expectedVersion) return game
+          const next = applyStep(game, step)
+          return next === game ? game : { ...next, version }
+        })
+      },
+      refused: (refusal) => latest.current(refusal),
+      drained: () => void reload(),
+    })
+    // queryKey is the same as long as gameId is.
+  }, [queue, gameId, queryClient])
 
   const cancelling = useMutation({
-    mutationKey,
-    scope,
+    mutationKey: cancelKey(gameId),
+    // Not paused without a connection: it says so instead.
+    networkMode: "always",
     mutationFn: async () => {
+      // Cancelling comes after everything counted so far.
+      if (!(await queue.sent())) throw new StepRefused("offline")
       const result = await cancelGameFn({ data: { gameId } })
       if (!result.ok) throw new StepRefused(result.code)
     },
-    onSettled: reload,
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
   })
 
-  function run(step: StepInput) {
-    // The version as shown, including steps still on their way.
-    const shown = queryClient.getQueryData(queryKey)
-    if (!shown) return Promise.resolve()
-    return steps.mutateAsync({ ...step, expectedVersion: shown.version }).then(
-      () => undefined,
-      () => undefined
-    )
+  /** The server's version a step goes on top of when nothing is queued. */
+  function serverVersion() {
+    // A fetch landing now would show a state without the new step.
+    void queryClient.cancelQueries({ queryKey })
+    return queryClient.getQueryData(queryKey)?.version ?? 0
   }
 
   return {
     record: (event: GameEvent, { optimistic = true } = {}) =>
-      run({ kind: "record", event, optimistic }),
-    undo: ({ optimistic = true } = {}) => run({ kind: "undo", optimistic }),
+      queue.push({ kind: "record", event, optimistic }, serverVersion()),
+    undo: ({ optimistic = true } = {}) =>
+      queue.undo(serverVersion(), optimistic),
     /** Adds the Tiebreak, the loser included, to the last loss. */
     addTiebreak: (tiebreak: Array<string>) =>
-      run({ kind: "tiebreak", tiebreak, optimistic: true }),
+      queue.push(
+        { kind: "tiebreak", tiebreak, optimistic: true },
+        serverVersion()
+      ),
+    /** Takes back the end of the Game if it has not left this device. */
+    dropUnsentEnd: () => queue.dropUnsentEnd(),
     /** Resolves with the reason when the server refuses, or nothing. */
     cancel: () =>
       cancelling.mutateAsync().then(
@@ -156,13 +152,38 @@ export function useGameSteps(
         (error: unknown) =>
           error instanceof StepRefused ? error.code : "network"
       ),
-    /** True while a step that changes the screen is on its way. */
-    waiting: steps.isPending && steps.variables.optimistic === false,
+    /** True while a step that changes the screen waits for the server. */
+    waiting: state.steps.some((step) => !step.optimistic),
+    /** The Events not taken by the server yet, while there is no connection. */
+    unsentRounds: state.offline
+      ? state.steps.filter((step) => step.kind === "record").length
+      : null,
   }
 }
 
+/** One step to the server; throws when it cannot be reached. */
+async function sendStep(
+  gameId: string,
+  step: QueuedStep,
+  expectedVersion: number
+): Promise<SendResult> {
+  const result =
+    step.kind === "record"
+      ? await recordEventFn({
+          data: { gameId, expectedVersion, event: step.event },
+        })
+      : step.kind === "tiebreak"
+        ? await addTiebreakFn({
+            data: { gameId, expectedVersion, tiebreak: step.tiebreak },
+          })
+        : await undoEventFn({ data: { gameId, expectedVersion } })
+  return result.ok
+    ? { ok: true, version: result.value.version }
+    : { ok: false, code: result.code }
+}
+
 /** The Game as it will be once the server has taken the step. */
-function applyStep(game: GameView, step: Step): GameView {
+function applyStep(game: GameView, step: QueuedStep): GameView {
   if (step.kind === "undo") {
     if (game.events.length === 0) return game
     const events = game.events.slice(0, -1)
@@ -209,6 +230,8 @@ function applyStep(game: GameView, step: Step): GameView {
 export function useTakeOver(gameId: string, groupId: string) {
   const queryClient = useQueryClient()
   const takeOver = useMutation({
+    // Not paused without a connection: it says so instead.
+    networkMode: "always",
     mutationFn: async (confirmOffline: boolean) => {
       const result = await takeOverFn({ data: { gameId, confirmOffline } })
       if (!result.ok) throw new StepRefused(result.code)

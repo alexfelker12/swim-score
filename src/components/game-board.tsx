@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react"
-import { Circle, Eye, Waves } from "lucide-react"
+import { Circle, CloudOff, Eye, Waves } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { DealerBadge } from "@/components/dealer-badge"
 import {
@@ -176,7 +176,9 @@ export function SwimmerLabel() {
  * The line under the header saying who keeps score: "Du zählst · alle sehen
  * live mit" for the Scorekeeper, "Ben zählt" for the other Participants,
  * "Du schaust zu, Ben zählt" for Spectators. While the Scorekeeper is
- * offline: "Anna ist seit 0:40 offline". With `onTakeOver`, the viewer may
+ * offline: "Anna ist seit 0:40 offline". The Scorekeeper's own device without
+ * a connection: "Offline, 3 Runden nicht gesendet" (ADR 0003), inverted.
+ * With `onTakeOver`, the viewer may
  * take over (ADR 0003): at once, or after a countdown while the Scorekeeper
  * has only just gone offline.
  */
@@ -187,6 +189,7 @@ export function ScorekeeperStatus({
   serverTime,
   onTakeOver,
   takingOver = false,
+  unsentRounds = null,
 }: {
   viewer: "scorekeeper" | "participant" | "spectator"
   /** Display Name; null once the account is deleted. */
@@ -197,8 +200,25 @@ export function ScorekeeperStatus({
   serverTime?: Date
   onTakeOver?: () => void
   takingOver?: boolean
+  /** The Scorekeeper's Rounds not sent yet, while offline; null when online. */
+  unsentRounds?: number | null
 }) {
   const now = useServerNow(serverTime ?? new Date(), offlineSince !== null)
+  if (viewer === "scorekeeper" && unsentRounds !== null) {
+    return (
+      <div className="shrink-0 px-4 pb-2" role="status">
+        <div className="flex min-h-10 items-center gap-2.5 rounded-xl bg-foreground px-3.5 text-sm font-semibold text-background">
+          <CloudOff className="size-4.5 shrink-0" aria-hidden="true" />
+          Offline,{" "}
+          {unsentRounds === 0
+            ? "Änderungen nicht gesendet"
+            : unsentRounds === 1
+              ? "1 Runde nicht gesendet"
+              : `${unsentRounds} Runden nicht gesendet`}
+        </div>
+      </div>
+    )
+  }
   const offlineFor = offlineSince ? now.getTime() - offlineSince.getTime() : 0
   const opensIn = offlineSince
     ? takeoverOpensAt(offlineSince).getTime() - now.getTime()

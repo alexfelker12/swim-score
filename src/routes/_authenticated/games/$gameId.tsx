@@ -46,7 +46,14 @@ import { useShareLink } from "@/lib/use-share-link"
 import { cn } from "@/lib/utils"
 import { preview } from "@/rules-engine"
 import { gameChanged, gameQuery } from "@/lib/queries"
-import { stepsKey, useGameSteps, useTakeOver } from "./-game-data"
+import {
+  cancelKey,
+  useGameSteps,
+  useStepQueue,
+  useTakeOver,
+  withQueuedSteps,
+} from "./-game-data"
+import { stepQueue } from "./-step-queue"
 import { useHideOut } from "./-hide-out"
 import type { ComponentProps } from "react"
 import type { GameEvent } from "@/rules-engine"
@@ -62,10 +69,13 @@ export const Route = createFileRoute("/_authenticated/games/$gameId")({
 
 function GamePage() {
   const { gameId } = Route.useParams()
+  const { viewer } = Route.useRouteContext()
   const queryClient = useQueryClient()
   // The Scorekeeper's steps still on their way load the Game again when done.
   const isBusy = () =>
-    queryClient.isMutating({ mutationKey: stepsKey(gameId) }) > 0
+    stepQueue(gameId, viewer.id).get().steps.length > 0 ||
+    queryClient.isMutating({ mutationKey: cancelKey(gameId) }) > 0
+  const queue = useStepQueue(gameId, viewer.id)
   const { data: game } = useSuspenseQuery({
     ...gameQuery(gameId),
     // Coming back to the app shows the latest state.
@@ -83,9 +93,13 @@ function GamePage() {
     present: Boolean(game && (game.isScorekeeper || game.canTakeOver)),
   })
   if (!game) return null
-  if (game.status === "finished") return <GameEnd game={game} />
-  if (game.status === "cancelled") return <Cancelled game={game} />
-  return <GameTable game={game} />
+  if (game.status === "finished") {
+    return <GameEnd game={game} viewerId={viewer.id} />
+  }
+  if (game.status === "cancelled") {
+    return <Cancelled game={game} viewerId={viewer.id} />
+  }
+  return <GameTable game={withQueuedSteps(game, queue)} viewerId={viewer.id} />
 }
 
 type Sheet =
@@ -96,6 +110,7 @@ type Sheet =
   | { kind: "spectators"; token: string }
   | { kind: "takeOver" }
   | { kind: "replaced"; by: string; offline: boolean; discarded: number }
+  | { kind: "discarded"; reason: string; discarded: number }
   | { kind: "cancel" }
 
 const stepErrors: Partial<Record<string, string>> = {
@@ -111,9 +126,21 @@ const stepErrors: Partial<Record<string, string>> = {
     "Gerade erst offline gegangen. Übernehmen geht nach Ablauf der Zeit.",
   alreadyScorekeeper: "Du zählst schon.",
   notParticipant: "Übernehmen können nur Teilnehmer mit Konto.",
+  serverError:
+    "Der Server hat einen Fehler gemeldet. Der Stand ist neu geladen, tipp bitte noch einmal.",
+  offline:
+    "Ohne Verbindung geht das nicht. Erst müssen die gezählten Runden gesendet sein.",
 }
 
-function GameTable({ game }: { game: GameView }) {
+/** Why the server dropped Rounds counted on this device, for the sheet. */
+const discardReasons: Partial<Record<string, string>> = {
+  versionConflict: "Der Stand auf dem Server hatte sich inzwischen geändert.",
+  gameNotRunning: "Das Spiel läuft nicht mehr.",
+  gameNotFound: "Das Spiel gibt es nicht mehr.",
+  serverError: "Der Server hat einen Fehler gemeldet.",
+}
+
+function GameTable({ game, viewerId }: { game: GameView; viewerId: string }) {
   const [bombMode, setBombMode] = useState(false)
   const [sheet, setSheet] = useState<Sheet | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -121,19 +148,39 @@ function GameTable({ game }: { game: GameView }) {
   // Rounds refused because someone else took over: told in one sheet,
   // also when they come back after it opened.
   const discarded = useRef(0)
-  const { record, undo, addTiebreak, cancel, waiting } = useGameSteps(game.id, {
-    onRefused: (code, kind) => {
+  const {
+    record,
+    undo,
+    addTiebreak,
+    dropUnsentEnd,
+    cancel,
+    waiting,
+    unsentRounds,
+  } = useGameSteps(game.id, viewerId, {
+    onRefused: ({ code, discardedRounds: rounds, afterOffline }) => {
       if (code === "notScorekeeper") {
-        if (kind !== "record") return
+        // Told by the sheet once the Game shows who keeps score now.
         if (sheet?.kind === "replaced") {
           setSheet((open) =>
             open?.kind === "replaced"
-              ? { ...open, discarded: open.discarded + 1 }
+              ? { ...open, discarded: open.discarded + rounds }
               : open
           )
         } else {
-          discarded.current++
+          discarded.current += rounds
         }
+        return
+      }
+      setBombMode(false)
+      // More than the one step just tapped is lost: say so plainly.
+      if (afterOffline || rounds > 1) {
+        setError(null)
+        setSheet({
+          kind: "discarded",
+          reason:
+            discardReasons[code] ?? "Der Server hat sie nicht angenommen.",
+          discarded: rounds,
+        })
         return
       }
       setSheet(null)
@@ -255,6 +302,7 @@ function GameTable({ game }: { game: GameView }) {
 
       <ScorekeeperStatus
         viewer={isScorekeeper ? "scorekeeper" : "participant"}
+        unsentRounds={isScorekeeper ? unsentRounds : null}
         scorekeeper={game.scorekeeper}
         offlineSince={game.scorekeeperOfflineSince}
         serverTime={game.serverTime}
@@ -415,6 +463,10 @@ function GameTable({ game }: { game: GameView }) {
         <ReplacedSheet {...sheet} onClose={() => setSheet(null)} />
       ) : null}
 
+      {sheet?.kind === "discarded" ? (
+        <DiscardedSheet {...sheet} onClose={() => setSheet(null)} />
+      ) : null}
+
       {sheet?.kind === "cancel" ? (
         <ConfirmSheet
           title="Spiel abbrechen?"
@@ -491,20 +543,31 @@ function GameTable({ game }: { game: GameView }) {
               </span>
             </>
           }
-          description={sheet.text}
-          onDismiss={() => setSheet(null)}
+          description={
+            waiting && unsentRounds !== null
+              ? "Das Spiel endet, sobald wieder Verbindung da ist."
+              : sheet.text
+          }
+          onDismiss={() => {
+            dropUnsentEnd()
+            setSheet(null)
+          }}
         >
           <div className="flex flex-col gap-2.5">
             <PrimaryButton
               type="button"
               disabled={waiting}
-              onClick={() => void record(sheet.event, { optimistic: false })}
+              onClick={() => record(sheet.event, { optimistic: false })}
             >
               Spiel beenden
             </PrimaryButton>
             <SecondaryButton
               type="button"
-              onClick={() => setSheet(null)}
+              onClick={() => {
+                // An end not sent yet is taken back with it.
+                dropUnsentEnd()
+                setSheet(null)
+              }}
               className="h-13 rounded-[14px] bg-transparent text-base"
             >
               Zurück, falsch getippt
@@ -619,13 +682,13 @@ function TiebreakSheet({
   )
 }
 
-function GameEnd({ game }: { game: GameView }) {
+function GameEnd({ game, viewerId }: { game: GameView; viewerId: string }) {
   const { state } = game
   const name = nameOf(game.participants)
   const meta = describeGameLength(game.events, state, game.participants.length)
   const [error, setError] = useState<string | null>(null)
-  const { undo, waiting } = useGameSteps(game.id, {
-    onRefused: (code) =>
+  const { undo, waiting } = useGameSteps(game.id, viewerId, {
+    onRefused: ({ code }) =>
       setError(stepErrors[code] ?? "Das ließ sich nicht zurücknehmen."),
   })
   const minutesLeft = useMinutesLeft(game.undoableUntil)
@@ -869,6 +932,48 @@ function TakeOverSheet({
   )
 }
 
+/**
+ * Rounds counted on this device that the server refused (after being
+ * offline, say), told plainly: what happened, that they are gone, and to
+ * check the table. "Carla zählt jetzt" covers a takeover.
+ */
+function DiscardedSheet({
+  reason,
+  discarded,
+  onClose,
+}: {
+  reason: string
+  discarded: number
+  onClose: () => void
+}) {
+  return (
+    <BottomSheet
+      title={
+        <span className="flex items-center gap-2.5">
+          <TriangleAlert
+            className="size-6 shrink-0 text-bomb"
+            aria-hidden="true"
+          />
+          Runden nicht gespeichert
+        </span>
+      }
+      description={`${reason} ${describeDiscarded(discarded)} Gleicht den Stand am Tisch ab, angezeigt wird jetzt der gespeicherte Stand.`}
+      onDismiss={onClose}
+    >
+      <PrimaryButton type="button" onClick={onClose}>
+        Verstanden
+      </PrimaryButton>
+    </BottomSheet>
+  )
+}
+
+/** "Deine 2 nicht gesendeten Runden wurden verworfen." */
+function describeDiscarded(rounds: number) {
+  if (rounds === 0) return "Deine nicht gesendeten Änderungen wurden verworfen."
+  if (rounds === 1) return "Deine nicht gesendete Runde wurde verworfen."
+  return `Deine ${rounds} nicht gesendeten Runden wurden verworfen.`
+}
+
 /** "Carla zählt jetzt": told once on the device someone took over from. */
 function ReplacedSheet({
   by,
@@ -887,7 +992,7 @@ function ReplacedSheet({
   const lost =
     discarded === 0
       ? " Du kannst das Zählen jederzeit wieder übernehmen."
-      : ` ${discarded === 1 ? "Deine nicht gesendete Runde wurde" : `Deine ${discarded} nicht gesendeten Runden wurden`} verworfen. Gleicht den Stand am Tisch ab, angezeigt wird jetzt der gespeicherte Stand.`
+      : ` ${describeDiscarded(discarded)} Gleicht den Stand am Tisch ab, angezeigt wird jetzt der gespeicherte Stand.`
   return (
     <BottomSheet
       title={
@@ -1061,7 +1166,9 @@ function ranking(participants: Array<GameParticipant>) {
     }))
 }
 
-function Cancelled({ game }: { game: GameView }) {
+function Cancelled({ game, viewerId }: { game: GameView; viewerId: string }) {
+  // Steps still queued for a cancelled Game can never be taken.
+  useEffect(() => stepQueue(game.id, viewerId).clear(), [game.id, viewerId])
   return (
     <div className="flex min-h-svh flex-col">
       <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
