@@ -5,23 +5,54 @@ import { ChevronLeft, Settings, UserPlus } from "lucide-react"
 import { SegmentedTabs } from "@/components/segmented-tabs"
 import {
   groupGamesQuery,
+  groupLeaderboardQuery,
   groupManagementQuery,
   groupQuery,
 } from "@/lib/queries"
+import { isCalendarDay } from "@/lib/dates"
 import { GamesTab } from "./-games-tab"
+import { LeaderboardTab } from "./-leaderboard-tab"
+import type { Period } from "@/server/leaderboard"
 import { PlayersTab } from "./-players-tab"
 
 const TABS = ["games", "leaderboard", "players"] as const
 type Tab = (typeof TABS)[number]
 
+type GroupSearch = {
+  tab?: Tab
+  /** The Leaderboard's metric. */
+  metric?: string
+  /** The Leaderboard's period, `YYYY-MM-DD`; both or neither. */
+  from?: string
+  to?: string
+}
+
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
-  validateSearch: (search: Record<string, unknown>): { tab?: Tab } =>
-    TABS.includes(search.tab as Tab) ? { tab: search.tab as Tab } : {},
-  loader: async ({ context, params }) => {
+  validateSearch: (search: Record<string, unknown>): GroupSearch => ({
+    ...(TABS.includes(search.tab as Tab) ? { tab: search.tab as Tab } : {}),
+    ...(typeof search.metric === "string" ? { metric: search.metric } : {}),
+    ...(isCalendarDay(search.from) && isCalendarDay(search.to)
+      ? { from: search.from, to: search.to }
+      : {}),
+  }),
+  loaderDeps: ({ search }) => ({
+    leaderboard: search.tab === "leaderboard",
+    from: search.from,
+    to: search.to,
+  }),
+  loader: async ({ context, params, deps }) => {
     const { queryClient } = context
     const [group] = await Promise.all([
       queryClient.query(groupQuery(params.groupId)),
       queryClient.query(groupGamesQuery(params.groupId)),
+      deps.leaderboard
+        ? queryClient.query(
+            groupLeaderboardQuery(params.groupId, {
+              from: deps.from,
+              to: deps.to,
+            })
+          )
+        : null,
     ])
     if (!group) throw notFound()
     // Open Claims; only the Group Admin gets them.
@@ -34,7 +65,8 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
 
 function GroupPage() {
   const { groupId } = Route.useParams()
-  const { tab = "games" } = Route.useSearch()
+  const search = Route.useSearch()
+  const { tab = "games" } = search
   const navigate = Route.useNavigate()
   const group = useSuspenseQuery(groupQuery(groupId)).data
   const { data: games } = useSuspenseQuery(groupGamesQuery(groupId))
@@ -83,7 +115,12 @@ function GroupPage() {
       <SegmentedTabs
         label="Bereiche der Gruppe"
         value={tab}
-        onChange={(next) => navigate({ search: { tab: next }, replace: true })}
+        onChange={(next) =>
+          navigate({
+            search: (previous) => ({ ...previous, tab: next }),
+            replace: true,
+          })
+        }
         options={[
           { value: "games", label: "Spiele" },
           { value: "leaderboard", label: "Rangliste" },
@@ -97,10 +134,46 @@ function GroupPage() {
       ) : null}
       {tab === "games" ? <GamesTab groupId={group.id} games={games} /> : null}
       {tab === "leaderboard" ? (
-        <div role="tabpanel" className="px-5 py-6 text-muted-foreground">
-          Die Rangliste erscheint, sobald ihr ein Spiel beendet habt.
-        </div>
+        <GroupLeaderboard
+          groupId={group.id}
+          metricId={search.metric}
+          period={{ from: search.from, to: search.to }}
+        />
       ) : null}
     </div>
+  )
+}
+
+function GroupLeaderboard({
+  groupId,
+  metricId,
+  period,
+}: {
+  groupId: string
+  metricId: string | undefined
+  period: Period
+}) {
+  const navigate = Route.useNavigate()
+  const { data: leaderboard } = useSuspenseQuery(
+    groupLeaderboardQuery(groupId, period)
+  )
+  return (
+    <LeaderboardTab
+      leaderboard={leaderboard}
+      metricId={metricId}
+      period={period}
+      onMetricChange={(metric) =>
+        navigate({
+          search: (previous) => ({ ...previous, metric }),
+          replace: true,
+        })
+      }
+      onPeriodChange={({ from, to }) =>
+        navigate({
+          search: (previous) => ({ ...previous, from, to }),
+          replace: true,
+        })
+      }
+    />
   )
 }

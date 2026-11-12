@@ -122,6 +122,14 @@ _Avoid_: Handover, Switch
 The ranking of a Group's Players, Guests included, over that Group's completed Games; visible only to the Group's Players.
 _Avoid_: Global leaderboard
 
+**Metric** (Kennzahl):
+One statistic players are ranked by, such as wins or the share of Games won, computed over completed Games and therefore valid retroactively. A rate can require a minimum number of Games; players below it are listed apart as not yet ranked.
+_Avoid_: Stat, Category
+
+**Period** (Zeitraum):
+The completed Games a statistic covers, by the day they started (German time): all of them, one calendar year, or a custom range from one day to another.
+_Avoid_: Season, Range
+
 **Personal Stats** (Persönliche Statistik):
 One account holder's statistics across all Groups they play in, in total and per Group, shown on their Player Profile.
 

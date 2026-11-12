@@ -77,3 +77,67 @@ export function formatLongDay(date: Date): string {
 export function formatTime(date: Date): string {
   return time.format(date)
 }
+
+/** "März 2024" */
+export function formatMonthYear(date: Date): string {
+  return monthYear.format(date)
+}
+
+/** The year of a date in German time. */
+export function yearOf(date: Date): number {
+  return Number(year.format(date))
+}
+
+// Calendar days (`YYYY-MM-DD`) have no time of day: shown as written, in UTC.
+const dayMonth = new Intl.DateTimeFormat("de", {
+  timeZone: "UTC",
+  day: "numeric",
+  month: "long",
+})
+const dayMonthYear = new Intl.DateTimeFormat("de", {
+  timeZone: "UTC",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+})
+
+function calendarDay(key: string): Date {
+  return new Date(`${key}T00:00:00Z`)
+}
+
+/**
+ * "1. März bis 30. Juni 2026", or "1. Dezember 2025 bis 31. Januar 2026"
+ * across years; for two calendar days `YYYY-MM-DD`.
+ */
+export function formatDayRange(from: string, to: string): string {
+  const end = dayMonthYear.format(calendarDay(to))
+  if (from === to) return end
+  const start =
+    from.slice(0, 4) === to.slice(0, 4)
+      ? dayMonth.format(calendarDay(from))
+      : dayMonthYear.format(calendarDay(from))
+  return `${start} bis ${end}`
+}
+
+/** "1.3.–30.6.2026", or "1.12.2025–31.1.2026" across years. */
+export function formatShortDayRange(from: string, to: string): string {
+  const [fy, fm, fd] = from.split("-").map(Number)
+  const [ty, tm, td] = to.split("-").map(Number)
+  const end = `${td}.${tm}.${ty}`
+  if (from === to) return end
+  const start = fy === ty ? `${fd}.${fm}.` : `${fd}.${fm}.${fy}`
+  return `${start}\u2013${end}`
+}
+
+/** A real calendar day written as `YYYY-MM-DD` (no 30 February). */
+export function isCalendarDay(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false
+  }
+  return calendarDay(value).toISOString().slice(0, 10) === value
+}
+
+/** Today in German time, as `YYYY-MM-DD`. */
+export function todayKey(now = new Date()): string {
+  return dayKey.format(now)
+}

@@ -24,6 +24,7 @@ import {
   undoEvent,
 } from "./games"
 import { getApp } from "./instance"
+import { getLeaderboard } from "./leaderboard"
 import {
   confirmClaim,
   getGroupManagement,
@@ -223,6 +224,20 @@ export const listGamesFn = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const result = await outcome(() => listGames(getApp(), headers(), data))
     return result.ok ? result.value : []
+  })
+
+/**
+ * The Group Leaderboard for a period (`YYYY-MM-DD`, both ends included; all
+ * completed Games without one), or null when the viewer is not the Group's
+ * Player or the period is not one.
+ */
+export const getLeaderboardFn = createServerFn({ method: "GET" })
+  .validator((input: { groupId: string; from?: string; to?: string }) => input)
+  .handler(async ({ data }) => {
+    const result = await outcome(() =>
+      getLeaderboard(getApp(), headers(), data)
+    )
+    return result.ok ? result.value : null
   })
 
 /** The Group's Invite token, or null for anyone but its Group Admin. */
