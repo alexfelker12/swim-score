@@ -150,4 +150,5 @@ Spec: `issues/03-fundament.md` › „Nachtrag: Profilbild zuschneiden“.
 - Am Spielende bleibt „Rückgängig“ mit Text, weil der Hinweis daneben ihn erklärt.
 
 ## Nicht entschieden oder nicht entworfen
+- **Übernahme bestätigen lassen (zurückgestellt, #29):** Heute übernimmt jeder Teilnehmer mit Konto sofort, solange der Zähler verbunden ist (die 2-Minuten-Sperre schützt nur offline gezählte Runden, ADR 0003). Ob der verbundene Zähler die Übernahme künftig bestätigen muss, ist offen und wird erst entschieden, wenn das sofortige Übernehmen zu Problemen führt. Ablauf-Entwurf und offene Punkte stehen in #29.
 - Weitere kosmetische Anpassungen will der Nutzer später nachreichen. Für die Entwicklung sind sie nicht nötig.
