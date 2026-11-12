@@ -1,8 +1,14 @@
 import { useLayoutEffect, useRef, useState } from "react"
-import { Eye, Waves } from "lucide-react"
+import { Circle, Eye, Waves } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { DealerBadge } from "@/components/dealer-badge"
+import {
+  formatCountdown,
+  formatOfflineFor,
+  takeoverOpensAt,
+} from "@/lib/takeover"
 import { liveUpdates } from "@/lib/use-live-game"
+import { useServerNow } from "@/lib/use-server-now"
 import { cn } from "@/lib/utils"
 import type { ReactNode } from "react"
 import type { ParticipantState } from "@/rules-engine"
@@ -169,49 +175,107 @@ export function SwimmerLabel() {
 /**
  * The line under the header saying who keeps score: "Du zählst · alle sehen
  * live mit" for the Scorekeeper, "Ben zählt" for the other Participants,
- * "Du schaust zu, Ben zählt" for Spectators.
+ * "Du schaust zu, Ben zählt" for Spectators. While the Scorekeeper is
+ * offline: "Anna ist seit 0:40 offline". With `onTakeOver`, the viewer may
+ * take over (ADR 0003): at once, or after a countdown while the Scorekeeper
+ * has only just gone offline.
  */
 export function ScorekeeperStatus({
   viewer,
   scorekeeper,
+  offlineSince = null,
+  serverTime,
+  onTakeOver,
+  takingOver = false,
 }: {
   viewer: "scorekeeper" | "participant" | "spectator"
   /** Display Name; null once the account is deleted. */
   scorekeeper: string | null
+  /** Since when the Scorekeeper's device is offline. */
+  offlineSince?: Date | null
+  /** The server's clock when the Game was loaded. */
+  serverTime?: Date
+  onTakeOver?: () => void
+  takingOver?: boolean
 }) {
-  const who = scorekeeper ? (
+  const now = useServerNow(serverTime ?? new Date(), offlineSince !== null)
+  const offlineFor = offlineSince ? now.getTime() - offlineSince.getTime() : 0
+  const opensIn = offlineSince
+    ? takeoverOpensAt(offlineSince).getTime() - now.getTime()
+    : 0
+  const who = !scorekeeper ? (
+    "niemand zählt"
+  ) : offlineSince ? (
+    <>
+      <span className="font-semibold">{scorekeeper}</span> ist seit{" "}
+      {/* The clock differs between server and browser by a moment. */}
+      <span className="tabular-nums" suppressHydrationWarning>
+        {formatOfflineFor(offlineFor)}
+      </span>{" "}
+      offline
+    </>
+  ) : (
     <>
       <span className="font-semibold">{scorekeeper}</span> zählt
     </>
-  ) : (
-    // Taking over a Game without a Scorekeeper comes with #9.
-    "niemand zählt"
   )
   return (
     <div className="shrink-0 px-4 pb-2">
-      <div className="flex h-10 items-center gap-2.5 rounded-xl bg-muted px-3.5 text-sm">
+      <div
+        className={cn(
+          "flex items-center gap-2.5 rounded-xl bg-muted pr-1 pl-3.5 text-sm",
+          onTakeOver ? "min-h-12 py-1" : "min-h-10"
+        )}
+      >
         {viewer === "scorekeeper" ? (
           <>
             <span
               aria-hidden="true"
-              className="size-2 rounded-full bg-primary"
+              className="size-2 shrink-0 rounded-full bg-primary"
             />
             <span className="font-semibold">Du zählst</span>
             {liveUpdates ? (
-              <span className="ml-auto truncate text-muted-foreground">
+              <span className="ml-auto truncate pr-2.5 text-muted-foreground">
                 alle sehen live mit
               </span>
             ) : null}
           </>
-        ) : viewer === "participant" ? (
-          <span className="first-letter:uppercase">{who}</span>
         ) : (
           <>
-            <Eye
-              className="size-4.5 shrink-0 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <span>Du schaust zu, {who}</span>
+            {offlineSince ? (
+              <Circle
+                className="size-2.5 shrink-0 text-muted-foreground"
+                strokeWidth={3}
+                aria-hidden="true"
+              />
+            ) : viewer === "spectator" ? (
+              <Eye
+                className="size-4.5 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
+            ) : null}
+            <span className="min-w-0 flex-1 truncate first-letter:uppercase">
+              {viewer === "spectator" ? <>Du schaust zu, {who}</> : who}
+            </span>
+            {onTakeOver ? (
+              opensIn > 0 ? (
+                <span
+                  className="shrink-0 pr-2.5 text-muted-foreground tabular-nums"
+                  suppressHydrationWarning
+                >
+                  Übernehmen in {formatCountdown(opensIn)}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onTakeOver}
+                  disabled={takingOver}
+                  className="h-9 shrink-0 rounded-[10px] bg-primary-muted px-3.5 text-sm font-semibold text-primary disabled:opacity-40"
+                >
+                  Übernehmen
+                </button>
+              )
+            ) : null}
           </>
         )}
       </div>

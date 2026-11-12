@@ -112,6 +112,10 @@ _Avoid_: Share link, Watch link
 The one Participant with an account who records Events for a Game; any other Participant with an account can take over, except during a short grace period while the current Scorekeeper is offline.
 _Avoid_: Admin, Host
 
+**Takeover** (Übernahme):
+A Participant with an account becoming the Scorekeeper. Immediate while the Scorekeeper's device is connected, nothing is known about it, or their account is deleted; blocked for about 2 minutes after it went offline, then only after confirming that Events it has not sent yet are lost. It moves the Game's version on, so the former Scorekeeper's steps are refused, and it shows in the Game's history.
+_Avoid_: Handover, Switch
+
 ### Statistics
 
 **Group Leaderboard** (Gruppen-Rangliste):

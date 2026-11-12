@@ -70,7 +70,12 @@ function LiveGame({ game }: { game: SpectatorView }) {
           </span>
         </div>
       </header>
-      <ScorekeeperStatus viewer="spectator" scorekeeper={game.scorekeeper} />
+      <ScorekeeperStatus
+        viewer="spectator"
+        scorekeeper={game.scorekeeper}
+        offlineSince={game.scorekeeperOfflineSince}
+        serverTime={game.serverTime}
+      />
       <ParticipantRows
         participants={game.participants}
         states={state.participants}

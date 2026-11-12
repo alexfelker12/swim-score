@@ -19,6 +19,7 @@ Gebaut wird mit Nitro (`nitro/vite` in `vite.config.ts`). Auf Vercel erkennt Nit
 - **DATABASE_URL:** die gepoolte Neon-Verbindung (Host mit `-pooler`).
 - **Google:** In der Google Cloud Console `<BETTER_AUTH_URL>/api/auth/callback/google` als Redirect-URI eintragen.
 - **Pusher:** `VITE_PUSHER_KEY` und `VITE_PUSHER_CLUSTER` werden beim Build in die Seite eingebaut. Nach einer Änderung neu deployen.
+- **Pusher-Webhook** (für „Zähler ist offline“ und das Übernehmen): im Pusher-Dashboard unter „Webhooks“ einen Webhook auf `https://<deine-domain>/api/pusher/webhook` mit dem Event-Typ **Presence** anlegen. Ohne ihn weiß der Server nichts über den Zähler, und Übernehmen geht immer sofort. Lokal kommt Pusher nicht an den Webhook heran.
 - **Migrationen** laufen nicht automatisch. Vor dem Deploy ausführen: `DATABASE_URL=… pnpm db:migrate`.
 - **Region der Functions** möglichst nah an der Neon-Region, z. B. `fra1` bei `aws-eu-central-1`.
 

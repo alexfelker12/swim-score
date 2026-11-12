@@ -702,7 +702,10 @@ describe("undoing after the end of a Game", () => {
     await expect(
       undoEvent(app, anna.headers, { gameId, expectedVersion: 6 })
     ).rejects.toMatchObject({ code: "undoExpired" })
-    expect(await getGame(app, anna.headers, { gameId })).toEqual(before)
+    expect(await getGame(app, anna.headers, { gameId })).toEqual({
+      ...before,
+      serverTime: expect.any(Date),
+    })
   })
 
   it("is only for the Scorekeeper", async () => {

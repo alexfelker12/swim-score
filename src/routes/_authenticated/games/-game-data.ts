@@ -1,10 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { preview, replay } from "@/rules-engine"
-import { gameQuery, groupChanged, mutationKeys } from "@/lib/queries"
+import {
+  gameChanged,
+  gameQuery,
+  groupChanged,
+  mutationKeys,
+} from "@/lib/queries"
 import {
   addTiebreakFn,
   cancelGameFn,
   recordEventFn,
+  takeOverFn,
   undoEventFn,
 } from "@/server/functions"
 import type { GameEvent } from "@/rules-engine"
@@ -49,7 +55,12 @@ type Step = StepInput & { expectedVersion: number }
  */
 export function useGameSteps(
   gameId: string,
-  { onRefused }: { onRefused: (code: string) => void }
+  {
+    onRefused,
+  }: {
+    /** `kind` says what was refused: an Event, an undo or a Tiebreak. */
+    onRefused: (code: string, kind: StepInput["kind"]) => void
+  }
 ) {
   const queryClient = useQueryClient()
   const { queryKey } = gameQuery(gameId)
@@ -96,8 +107,11 @@ export function useGameSteps(
         game ? applyStep(game, step) : game
       )
     },
-    onError: (error) => {
-      onRefused(error instanceof StepRefused ? error.code : "network")
+    onError: (error, step) => {
+      onRefused(
+        error instanceof StepRefused ? error.code : "network",
+        step.kind
+      )
     },
     onSettled: async () => {
       // Load again only after the last step, or the screen would jump back
@@ -184,5 +198,30 @@ function applyStep(game: GameView, step: Step): GameView {
     version: game.version + 1,
     events: [...game.events, step.event],
     state: result.state,
+  }
+}
+
+/**
+ * Taking over as Scorekeeper. Resolves with the reason when the server
+ * refuses (`takeoverNeedsConfirmation`: confirm the warning first), or
+ * nothing; either way the Game is loaded again.
+ */
+export function useTakeOver(gameId: string, groupId: string) {
+  const queryClient = useQueryClient()
+  const takeOver = useMutation({
+    mutationFn: async (confirmOffline: boolean) => {
+      const result = await takeOverFn({ data: { gameId, confirmOffline } })
+      if (!result.ok) throw new StepRefused(result.code)
+    },
+    onSettled: () => gameChanged(queryClient, gameId, groupId),
+  })
+  return {
+    takeOver: ({ confirmOffline = false } = {}) =>
+      takeOver.mutateAsync(confirmOffline).then(
+        () => undefined,
+        (error: unknown) =>
+          error instanceof StepRefused ? error.code : "network"
+      ),
+    takingOver: takeOver.isPending,
   }
 }

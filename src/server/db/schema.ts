@@ -296,6 +296,13 @@ export const participant = pgTable(
     livesLost: integer("lives_lost"),
     /** 1 for the first to go Out; those Out in the same Round share it. Null for the Winner. */
     outPosition: integer("out_position"),
+    /**
+     * Whether a device of this Participant's account has the Game open, as
+     * Pusher last reported it; null while nothing is known.
+     */
+    connected: boolean("connected"),
+    /** When `connected` last changed, by Pusher's clock. */
+    presenceAt: timestamp("presence_at"),
   },
   (table) => [
     uniqueIndex("participant_game_seat_idx").on(table.gameId, table.seat),
@@ -319,6 +326,38 @@ export const gameEvent = pgTable(
       onDelete: "set null",
     }),
     recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.gameId, table.version] })]
+)
+
+/**
+ * A Participant taking over as Scorekeeper, kept for the Game's history.
+ * The Game's version moved on with it, which places it between its Events.
+ */
+export const takeover = pgTable(
+  "takeover",
+  {
+    gameId: text("game_id")
+      .notNull()
+      .references(() => game.id, { onDelete: "cascade" }),
+    /** The Game's version the takeover produced. */
+    version: integer("version").notNull(),
+    /**
+     * How many Events came before it, for its place in the history; undoing
+     * one of them moves it along.
+     */
+    afterEvents: integer("after_events").notNull(),
+    participantId: text("participant_id")
+      .notNull()
+      .references(() => participant.id, { onDelete: "cascade" }),
+    /** Who kept score before; null when their account was deleted. */
+    previousParticipantId: text("previous_participant_id").references(
+      () => participant.id,
+      { onDelete: "cascade" }
+    ),
+    /** The one replaced was offline (the warning was confirmed). */
+    previousOffline: boolean("previous_offline").notNull(),
+    at: timestamp("at").defaultNow().notNull(),
   },
   (table) => [primaryKey({ columns: [table.gameId, table.version] })]
 )
@@ -351,6 +390,11 @@ export const gameRelations = relations(game, ({ one, many }) => ({
   }),
   participants: many(participant),
   events: many(gameEvent),
+  takeovers: many(takeover),
+}))
+
+export const takeoverRelations = relations(takeover, ({ one }) => ({
+  game: one(game, { fields: [takeover.gameId], references: [game.id] }),
 }))
 
 export const participantRelations = relations(participant, ({ one }) => ({

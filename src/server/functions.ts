@@ -14,6 +14,7 @@ import {
 import {
   addTiebreak,
   cancelGame,
+  takeOver,
   getGame,
   getNewGame,
   getSpectatorGame,
@@ -199,6 +200,10 @@ export const addTiebreakFn = createServerFn({ method: "POST" })
     }) => input
   )
   .handler(({ data }) => outcome(() => addTiebreak(getApp(), headers(), data)))
+
+export const takeOverFn = createServerFn({ method: "POST" })
+  .validator((input: { gameId: string; confirmOffline?: boolean }) => input)
+  .handler(({ data }) => outcome(() => takeOver(getApp(), headers(), data)))
 
 export const cancelGameFn = createServerFn({ method: "POST" })
   .validator((input: { gameId: string }) => input)

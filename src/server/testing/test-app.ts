@@ -15,7 +15,9 @@ export type GoogleProfile = {
 
 /** A test application that also keeps every Game-changed notification it sent. */
 export type TestApp = App & {
-  notifications: Array<{ gameId: string; version: number }>
+  notifications: Array<
+    { gameId: string; version: number } | { gameId: string; presence: true }
+  >
 }
 
 /**
@@ -65,6 +67,9 @@ export async function createTestApp({
     notifier: notifier ?? {
       gameChanged: async (gameId, version) => {
         notifications.push({ gameId, version })
+      },
+      scorekeeperPresenceChanged: async (gameId) => {
+        notifications.push({ gameId, presence: true })
       },
     },
     notifications,

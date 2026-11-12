@@ -7,6 +7,8 @@ import type { Database } from "./db"
  */
 export type Notifier = {
   gameChanged: (gameId: string, version: number) => Promise<void>
+  /** The Scorekeeper's device connected or went offline. */
+  scorekeeperPresenceChanged: (gameId: string) => Promise<void>
 }
 
 /**

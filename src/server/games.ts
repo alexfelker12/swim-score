@@ -1,4 +1,15 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm"
+import {
+  and,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNull,
+  lte,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import {
   preview,
@@ -6,7 +17,7 @@ import {
   standardRuleSet,
   validateSeatingOrder,
 } from "@/rules-engine"
-import { game, gameEvent, participant, player } from "./db/schema"
+import { game, gameEvent, participant, player, takeover } from "./db/schema"
 import { CommandError } from "./errors"
 import {
   isCurrentPlayer,
@@ -16,6 +27,7 @@ import {
   requirePlayer,
 } from "./groups"
 import { requireUser } from "./session"
+import { takeoverOpensAt } from "@/lib/takeover"
 import type { GameEvent, GameState, RuleSet } from "@/rules-engine"
 import type { App } from "./app"
 import type { GameStatus } from "./db/schema"
@@ -57,6 +69,17 @@ export type GameView = {
   scorekeeperParticipantId: string | null
   isScorekeeper: boolean
   /**
+   * Since when the Scorekeeper's device is offline, while the Game runs;
+   * null while connected or nothing is known (ADR 0003).
+   */
+  scorekeeperOfflineSince: Date | null
+  /** The server's clock when this was loaded, to count down from. */
+  serverTime: Date
+  /** The viewer is a Participant with an account who does not keep score, and the Game runs. */
+  canTakeOver: boolean
+  /** In the order they happened. */
+  takeovers: Array<TakeoverView>
+  /**
    * The secret of the Game's Spectator link, for every Player of the Group
    * while the Game runs; null once it is over.
    */
@@ -73,6 +96,18 @@ export type GameView = {
    * Game; null for a running or cancelled one.
    */
   undoableUntil: Date | null
+}
+
+/** A Participant taking over as Scorekeeper, for the Game's history. */
+export type TakeoverView = {
+  /** How many of the Game's Events came before it. */
+  afterEvents: number
+  /** The Participant who took over. */
+  by: string
+  /** The one replaced; null when their account was deleted. */
+  from: string | null
+  /** The one replaced was offline. */
+  fromWasOffline: boolean
 }
 
 /** How long after the end of a Game its last step can still be undone. */
@@ -194,6 +229,18 @@ export async function getGame(
     scorekeeper: row.scorekeeper?.name ?? null,
     scorekeeperParticipantId: scorekeeperParticipant(row),
     isScorekeeper: row.scorekeeperId === me.id,
+    scorekeeperOfflineSince: scorekeeperOfflineSince(row),
+    serverTime: app.now(),
+    canTakeOver:
+      row.status === "running" &&
+      row.scorekeeperId !== me.id &&
+      row.participants.some((p) => p.player.userId === me.id),
+    takeovers: row.takeovers.map((t) => ({
+      afterEvents: Math.min(t.afterEvents, row.events.length),
+      by: t.participantId,
+      from: t.previousParticipantId,
+      fromWasOffline: t.previousOffline,
+    })),
     spectatorToken: row.status === "running" ? row.spectatorToken : null,
     participants,
     events,
@@ -251,6 +298,7 @@ export async function recordEvent(
       }
     }
   })
+  await markConnected(app, input.gameId, me.id)
   await notifyGameChanged(app, input.gameId, version)
   return { version }
 }
@@ -298,6 +346,7 @@ export async function addTiebreak(
         )
       )
   })
+  await markConnected(app, input.gameId, me.id)
   await notifyGameChanged(app, input.gameId, version)
   return { version }
 }
@@ -353,6 +402,17 @@ export async function undoEvent(
           eq(gameEvent.version, last.version)
         )
       )
+    // A takeover after the undone Event now comes after the one before it,
+    // and before anything recorded next.
+    await tx
+      .update(takeover)
+      .set({ afterEvents: last.version - 1 })
+      .where(
+        and(
+          eq(takeover.gameId, input.gameId),
+          gt(takeover.afterEvents, last.version - 1)
+        )
+      )
     if (finished) {
       // The summary was written for the end that is now undone.
       await tx
@@ -367,6 +427,7 @@ export async function undoEvent(
         .where(eq(participant.gameId, input.gameId))
     }
   })
+  await markConnected(app, input.gameId, me.id)
   await notifyGameChanged(app, input.gameId, version)
   return { version }
 }
@@ -397,6 +458,143 @@ export async function cancelGame(
   await notifyGameChanged(app, input.gameId, cancelled[0].version)
 }
 
+/**
+ * Makes the viewer the Scorekeeper (ADR 0003), if they are a Participant with
+ * an account. While the Scorekeeper's device is connected (or nothing is
+ * known about it), or their account is deleted, at once; for a short grace
+ * period after it went offline not at all (a dead zone at the bar); after
+ * that only with `confirmOffline`, the warning that Events their device has
+ * not sent yet will be refused. The Game's version moves on, so the former
+ * Scorekeeper's steps are refused.
+ */
+export async function takeOver(
+  app: App,
+  headers: Headers,
+  input: { gameId: string; confirmOffline?: boolean }
+): Promise<{ version: number }> {
+  const me = await requireUser(app, headers)
+  const row = await app.db.query.game.findFirst({
+    where: eq(game.id, input.gameId),
+    columns: {
+      groupId: true,
+      status: true,
+      version: true,
+      scorekeeperId: true,
+    },
+    with: {
+      participants: {
+        columns: { id: true, connected: true, presenceAt: true },
+        with: { player: { columns: { userId: true } } },
+      },
+      events: { columns: { version: true } },
+    },
+  })
+  if (!row) throw new CommandError("gameNotFound")
+  await requirePlayer(app, row.groupId, me.id, "gameNotFound")
+  const mine = row.participants.find((p) => p.player.userId === me.id)
+  if (!mine) throw new CommandError("notParticipant")
+  if (row.status !== "running") throw new CommandError("gameNotRunning")
+  if (row.scorekeeperId === me.id) throw new CommandError("alreadyScorekeeper")
+  const previous = row.participants.find(
+    (p) => row.scorekeeperId !== null && p.player.userId === row.scorekeeperId
+  )
+  const offlineSince = previous ? offlineSinceOf(previous) : null
+  if (offlineSince) {
+    if (app.now() < takeoverOpensAt(offlineSince)) {
+      throw new CommandError("scorekeeperJustWentOffline")
+    }
+    if (!input.confirmOffline) {
+      throw new CommandError("takeoverNeedsConfirmation")
+    }
+  }
+  const version = row.version + 1
+  await app.db.transaction(async (tx) => {
+    await advanceRunningGame(tx, input.gameId, row.version, {
+      scorekeeperId: me.id,
+    })
+    await tx.insert(takeover).values({
+      gameId: input.gameId,
+      version,
+      afterEvents: row.events.length,
+      participantId: mine.id,
+      previousParticipantId: previous?.id ?? null,
+      previousOffline: offlineSince !== null,
+    })
+  })
+  await markConnected(app, input.gameId, me.id)
+  await notifyGameChanged(app, input.gameId, version)
+  return { version }
+}
+
+/**
+ * What Pusher reported about the devices of `userId` on a Game's presence
+ * channel (from its webhook): one connected, or the last one gone. Older
+ * reports than the one known are ignored, as are unknown Games and
+ * accounts. Devices are told when it was the Scorekeeper's.
+ */
+export async function recordPresence(
+  app: App,
+  input: { gameId: string; userId: string; connected: boolean; at: Date }
+): Promise<void> {
+  const changed = await app.db
+    .update(participant)
+    .set({ connected: input.connected, presenceAt: input.at })
+    .where(
+      and(
+        participantOf(app, input.gameId, input.userId),
+        or(
+          isNull(participant.presenceAt),
+          lte(participant.presenceAt, input.at)
+        ),
+        or(
+          isNull(participant.connected),
+          ne(participant.connected, input.connected)
+        )
+      )
+    )
+    .returning({ id: participant.id })
+  if (changed.length === 0) return
+  const row = await app.db.query.game.findFirst({
+    where: eq(game.id, input.gameId),
+    columns: { scorekeeperId: true, status: true },
+  })
+  if (row?.status !== "running" || row.scorekeeperId !== input.userId) return
+  try {
+    await app.notifier.scorekeeperPresenceChanged(input.gameId)
+  } catch (error) {
+    console.error(`Game ${input.gameId}: presence notification failed`, error)
+  }
+}
+
+/**
+ * Who the viewer is on the Game's presence channel: any Participant with an
+ * account may join, as their account, so the server learns via Pusher
+ * whether the Scorekeeper is connected.
+ */
+export async function authorizePresence(
+  app: App,
+  headers: Headers,
+  input: { gameId: string }
+): Promise<{ userId: string }> {
+  const me = await requireUser(app, headers)
+  const row = await app.db.query.game.findFirst({
+    where: eq(game.id, input.gameId),
+    columns: { groupId: true },
+    with: {
+      participants: {
+        columns: { id: true },
+        with: { player: { columns: { userId: true } } },
+      },
+    },
+  })
+  if (!row) throw new CommandError("gameNotFound")
+  await requirePlayer(app, row.groupId, me.id, "gameNotFound")
+  if (!row.participants.some((p) => p.player.userId === me.id)) {
+    throw new CommandError("notParticipant")
+  }
+  return { userId: me.id }
+}
+
 /** A running Game as Spectators see it: no Players' or accounts' ids. */
 export type SpectatorView = {
   id: string
@@ -406,6 +604,9 @@ export type SpectatorView = {
   /** Display Name of the Scorekeeper; null once their account is deleted. */
   scorekeeper: string | null
   scorekeeperParticipantId: string | null
+  /** As in `GameView`. */
+  scorekeeperOfflineSince: Date | null
+  serverTime: Date
   /** In Seating Order. */
   participants: Array<{ id: string; name: string }>
   events: Array<GameEvent>
@@ -431,6 +632,8 @@ export async function getSpectatorGame(
     version: row.version,
     scorekeeper: row.scorekeeper?.name ?? null,
     scorekeeperParticipantId: scorekeeperParticipant(row),
+    scorekeeperOfflineSince: scorekeeperOfflineSince(row),
+    serverTime: app.now(),
     participants: row.participants.map((p) => ({
       id: p.id,
       name: playerName(p.player),
@@ -543,6 +746,7 @@ function loadGame(app: App, where: SQL) {
         },
       },
       events: { orderBy: (e, { asc }) => asc(e.version) },
+      takeovers: { orderBy: (t, { asc }) => asc(t.version) },
     },
   })
 }
@@ -556,6 +760,60 @@ function scorekeeperParticipant(row: {
   return (
     row.participants.find((p) => p.player.userId === row.scorekeeperId)?.id ??
     null
+  )
+}
+
+/** Since when a Participant's devices are all offline; null if connected or unknown. */
+function offlineSinceOf(p: {
+  connected: boolean | null
+  presenceAt: Date | null
+}): Date | null {
+  return p.connected === false ? p.presenceAt : null
+}
+
+/** Since when the Scorekeeper is offline, while the Game runs. */
+function scorekeeperOfflineSince(row: {
+  status: GameStatus
+  scorekeeperId: string | null
+  participants: ReadonlyArray<{
+    connected: boolean | null
+    presenceAt: Date | null
+    player: { userId: string | null }
+  }>
+}): Date | null {
+  if (row.status !== "running" || row.scorekeeperId === null) return null
+  const keeper = row.participants.find(
+    (p) => p.player.userId === row.scorekeeperId
+  )
+  return keeper ? offlineSinceOf(keeper) : null
+}
+
+/**
+ * Whoever records something or takes over has their device online, whatever
+ * Pusher last reported (a webhook can get lost). Pusher's time of that report
+ * stays: it orders Pusher's reports, by Pusher's clock, and a later one that
+ * says offline again still counts.
+ */
+async function markConnected(app: App, gameId: string, userId: string) {
+  await app.db
+    .update(participant)
+    .set({ connected: true })
+    .where(
+      and(participantOf(app, gameId, userId), eq(participant.connected, false))
+    )
+}
+
+/** The Participant row of `userId`'s account in the Game. */
+function participantOf(app: App, gameId: string, userId: string) {
+  return and(
+    eq(participant.gameId, gameId),
+    inArray(
+      participant.playerId,
+      app.db
+        .select({ id: player.id })
+        .from(player)
+        .where(eq(player.userId, userId))
+    )
   )
 }
 
@@ -584,11 +842,13 @@ type Transaction = Parameters<Parameters<App["db"]["transaction"]>[0]>[0]
 async function advanceRunningGame(
   tx: Transaction,
   gameId: string,
-  expectedVersion: number
+  expectedVersion: number,
+  /** What else changes with it. */
+  changes: { scorekeeperId?: string } = {}
 ) {
   const moved = await tx
     .update(game)
-    .set({ version: expectedVersion + 1 })
+    .set({ ...changes, version: expectedVersion + 1 })
     .where(
       and(
         eq(game.id, gameId),
