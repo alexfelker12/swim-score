@@ -6,3 +6,4 @@ Bars often have poor reception. The Scorekeeper's device queues Events locally w
 
 - When a former Scorekeeper reconnects after a takeover, the server rejects their queued Events and their device shows why.
 - Scorekeeper connectivity must be visible to the server (presence), not just inferred from the last Event.
+- How the queue on the device works: ADR 0007.

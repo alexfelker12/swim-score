@@ -39,10 +39,10 @@ export const queryKeys = {
 /** Mutation keys, so pending mutations can be found again. */
 export const mutationKeys = {
   /**
-   * The Scorekeeper's steps on one Game (recording, undoing, cancelling);
-   * they also run one after another in a scope of this name.
+   * Cancelling a Game. The Scorekeeper's other steps wait in the Game's
+   * queue on the device instead (ADR 0007).
    */
-  gameSteps: (gameId: string) => ["gameSteps", gameId] as const,
+  cancelGame: (gameId: string) => ["cancelGame", gameId] as const,
 }
 
 // Routes load these in their loader with `queryClient.query(...)`, which
