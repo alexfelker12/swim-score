@@ -7,7 +7,6 @@ import {
   getGroup,
   handOverAdmin,
   leaveGroup,
-  listMyGroups,
   removePlayer,
   renameGroup,
 } from "./groups"
@@ -24,6 +23,7 @@ import {
   undoEvent,
 } from "./games"
 import { getApp } from "./instance"
+import { getHome } from "./home"
 import { getLeaderboard } from "./leaderboard"
 import { getPlayerProfile } from "./player-profile"
 import {
@@ -158,13 +158,17 @@ export const addGuestFn = createServerFn({ method: "POST" })
   .validator((input: { groupId: string; name: string }) => input)
   .handler(({ data }) => outcome(() => addGuest(getApp(), headers(), data)))
 
-export const listMyGroupsFn = createServerFn({ method: "GET" }).handler(() =>
-  listMyGroups(getApp(), headers())
+/** The start page of the signed-in account. */
+export const getHomeFn = createServerFn({ method: "GET" }).handler(() =>
+  getHome(getApp(), headers())
 )
 
-/** "Spiel starten": the Group's Players and the last Seating Order, or null. */
+/**
+ * "Spiel starten": the Group's Players and a Seating Order to start from, that
+ * of `fromGame` or of the last Game; or null.
+ */
 export const getNewGameFn = createServerFn({ method: "GET" })
-  .validator((input: { groupId: string }) => input)
+  .validator((input: { groupId: string; fromGame?: string }) => input)
   .handler(async ({ data }) => {
     const result = await outcome(() => getNewGame(getApp(), headers(), data))
     return result.ok ? result.value : null

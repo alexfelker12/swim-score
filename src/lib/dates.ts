@@ -141,3 +141,49 @@ export function isCalendarDay(value: unknown): value is string {
 export function todayKey(now = new Date()): string {
   return dayKey.format(now)
 }
+
+const weekday = new Intl.DateTimeFormat("de", {
+  timeZone: TIME_ZONE,
+  weekday: "long",
+})
+const dayMonthBerlin = new Intl.DateTimeFormat("de", {
+  timeZone: TIME_ZONE,
+  day: "numeric",
+  month: "long",
+})
+const dayMonthYearBerlin = new Intl.DateTimeFormat("de", {
+  timeZone: TIME_ZONE,
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+})
+
+/** Whole calendar days (German time) from `date` to `now`. */
+function daysBetween(date: Date, now: Date): number {
+  const midnight = (d: Date) => calendarDay(dayKey.format(d)).getTime()
+  return Math.round((midnight(now) - midnight(date)) / 86_400_000)
+}
+
+/**
+ * When something happened, to follow "zuletzt" or "gespielt,": "heute",
+ * "gestern", "am Donnerstag" within the week, "am 12. Oktober", or
+ * "am 12. Oktober 2025" in an earlier year.
+ */
+export function formatWhen(date: Date, now = new Date()): string {
+  const days = daysBetween(date, now)
+  if (days <= 0) return "heute"
+  if (days === 1) return "gestern"
+  if (days < 7) return `am ${weekday.format(date)}`
+  return year.format(date) === year.format(now)
+    ? `am ${dayMonthBerlin.format(date)}`
+    : `am ${dayMonthYearBerlin.format(date)}`
+}
+
+/** "gerade eben", "vor 2 Min.", "vor 3 Std.", or else as `formatWhen`. */
+export function formatAgo(date: Date, now = new Date()): string {
+  const minutes = Math.floor((now.getTime() - date.getTime()) / 60_000)
+  if (minutes < 1) return "gerade eben"
+  if (minutes < 60) return `vor ${minutes} Min.`
+  if (minutes < 24 * 60) return `vor ${Math.floor(minutes / 60)} Std.`
+  return formatWhen(date, now)
+}

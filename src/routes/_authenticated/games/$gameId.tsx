@@ -20,6 +20,7 @@ import {
   PrimaryButton,
   SecondaryButton,
   largeSecondaryButtonClass,
+  primaryButtonClass,
 } from "@/components/buttons"
 import { ConfirmSheet } from "@/components/confirm-sheet"
 import {
@@ -792,6 +793,13 @@ function GameEnd({ game, viewerId }: { game: GameView; viewerId: string }) {
             {error}
           </p>
         ) : null}
+        <Link
+          to="/games/new"
+          search={{ groupId: game.groupId, fromGame: game.id }}
+          className={primaryButtonClass}
+        >
+          Nochmal mit denselben Teilnehmern
+        </Link>
         <Link
           to="/groups/$groupId"
           params={{ groupId: game.groupId }}
