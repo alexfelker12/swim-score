@@ -39,6 +39,17 @@ export function getApp(): App {
   return app
 }
 
+/**
+ * Whether e-mails reach anyone: with Resend configured, or in development,
+ * where they go to the log. Without it "Passwort vergessen" is hidden.
+ */
+export function canSendEmail(): boolean {
+  return (
+    Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM) ||
+    process.env.NODE_ENV !== "production"
+  )
+}
+
 let pusher: Pusher | null | undefined
 
 /**
@@ -68,7 +79,7 @@ function createMailer() {
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.EMAIL_FROM
   if (apiKey && from) return resendMailer({ apiKey, from })
-  if (process.env.NODE_ENV === "production") {
+  if (!canSendEmail()) {
     console.error("Resend is not configured: no e-mails are sent.")
     return unconfiguredMailer
   }

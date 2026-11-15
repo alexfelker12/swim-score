@@ -15,6 +15,7 @@ import { Notice } from "@/components/notice"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
 import { safeRedirect } from "@/lib/safe-redirect"
+import { getPasswordResetAvailableFn } from "@/server/functions"
 
 type Search = {
   redirect?: string
@@ -32,11 +33,16 @@ export const Route = createFileRoute("/sign-in")({
   beforeLoad: ({ context, search }) => {
     if (context.viewer) throw redirect({ href: safeRedirect(search.redirect) })
   },
+  // Without e-mail there is no way to reset a password: no link to offer.
+  loader: async () => ({
+    passwordReset: await getPasswordResetAvailableFn(),
+  }),
   component: SignIn,
 })
 
 function SignIn() {
   const search = Route.useSearch()
+  const { passwordReset } = Route.useLoaderData()
   const router = useRouter()
   const queryClient = useQueryClient()
   const [username, setUsername] = useState("")
@@ -104,12 +110,14 @@ function SignIn() {
             />
           )}
         </Field>
-        <Link
-          to="/forgot-password"
-          className="-mt-1 self-end py-1 text-[17px] font-semibold text-primary"
-        >
-          Passwort vergessen?
-        </Link>
+        {passwordReset ? (
+          <Link
+            to="/forgot-password"
+            className="-mt-1 self-end py-1 text-[17px] font-semibold text-primary"
+          >
+            Passwort vergessen?
+          </Link>
+        ) : null}
         <PrimaryButton type="submit" disabled={pending} className="mt-1">
           Anmelden
         </PrimaryButton>

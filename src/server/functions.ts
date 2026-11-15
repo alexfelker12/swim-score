@@ -22,7 +22,7 @@ import {
   startGame,
   undoEvent,
 } from "./games"
-import { getApp } from "./instance"
+import { canSendEmail, getApp } from "./instance"
 import { getHome } from "./home"
 import { getLeaderboard } from "./leaderboard"
 import { getPasswordResetAccount } from "./password-reset"
@@ -336,3 +336,11 @@ export const deleteAccountFn = createServerFn({ method: "POST" }).handler(() =>
 export const getPasswordResetAccountFn = createServerFn({ method: "GET" })
   .validator((input: { token: string }) => input)
   .handler(({ data }) => getPasswordResetAccount(getApp(), data))
+
+/**
+ * Whether "Passwort vergessen" is offered: only when e-mails can be sent
+ * (Resend configured, or in development).
+ */
+export const getPasswordResetAvailableFn = createServerFn({
+  method: "GET",
+}).handler(() => canSendEmail())

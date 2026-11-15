@@ -14,6 +14,6 @@ better-auth waits for the e-mail to be sent before answering "Passwort vergessen
 
 - `createAuth` takes a `mailer` and an optional `runInBackground`; tests leave the latter out, so the e-mail is in `app.outbox` once the request returns.
 - A failed send is logged and never changes the answer.
-- Without `RESEND_API_KEY` and `EMAIL_FROM`, e-mails go to the server log in development, links included, so the flow can be tried locally. In production they go nowhere and nothing of them is logged: a logged reset link would hand the account to anyone who can read the logs.
+- Without `RESEND_API_KEY` and `EMAIL_FROM`, e-mails go to the server log in development, links included, so the flow can be tried locally. In production they go nowhere and nothing of them is logged: a logged reset link would hand the account to anyone who can read the logs. "Passwort vergessen" is then hidden on the sign-in page (`canSendEmail`), since it could not work.
 - The sender must be on a domain verified in Resend.
 - #36 (confirming a changed e-mail address) uses the same `Mailer`.

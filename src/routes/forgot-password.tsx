@@ -7,13 +7,33 @@ import { Field, TextInput } from "@/components/form-field"
 import { Notice } from "@/components/notice"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
+import { getPasswordResetAvailableFn } from "@/server/functions"
 
 /** "Passwort vergessen": asks for the account's address and mails a link. */
 export const Route = createFileRoute("/forgot-password")({
+  loader: async () => ({ available: await getPasswordResetAvailableFn() }),
   component: ForgotPassword,
 })
 
 function ForgotPassword() {
+  const { available } = Route.useLoaderData()
+  if (!available) return <NotAvailable />
+  return <ForgotPasswordForm />
+}
+
+/** Opened by its address while no e-mail can be sent (no link leads here then). */
+function NotAvailable() {
+  return (
+    <AuthPage title="Passwort vergessen" back="/sign-in">
+      <p className="text-lg text-pretty text-muted-foreground">
+        Zurücksetzen per E-Mail ist noch nicht eingerichtet. Melde dich mit
+        Google an, falls dein Konto damit verbunden ist.
+      </p>
+    </AuthPage>
+  )
+}
+
+function ForgotPasswordForm() {
   const [email, setEmail] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
