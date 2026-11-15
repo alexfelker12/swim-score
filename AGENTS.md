@@ -15,3 +15,7 @@ Single-context: ein `CONTEXT.md` und `docs/adr/` im Repo-Root. See `docs/agents/
 ### Workflow
 
 Ein Ticket = ein Branch = ein PR; Agents committen und pushen nicht. See `docs/agents/workflow.md`.
+
+### UI
+
+UI aus shadcn/ui auf Base UI (`src/components/ui`), Looks als Varianten, an Aufrufstellen nur Layout-Tailwind; Datum und Auswahl nativ. See `docs/adr/0009-ui-from-shadcn-on-base-ui.md` und `docs/design/README.md` › Bausteine.

@@ -181,6 +181,8 @@
     }
   body {
     @apply bg-background text-foreground;
+    /* Pressed states come from the components (active:), not the browser's grey flash. */
+    -webkit-tap-highlight-color: transparent;
     font-variant-numeric: tabular-nums;
     }
   :where(button, a, input, [role="tab"]):focus-visible {

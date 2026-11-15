@@ -14,6 +14,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as UiPreviewRouteImport } from './routes/ui-preview'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as ZTokenRouteImport } from './routes/z/$token'
@@ -53,6 +54,11 @@ const SignInRoute = SignInRouteImport.update({
 const SignUpRoute = SignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UiPreviewRoute = UiPreviewRouteImport.update({
+  id: '/ui-preview',
+  path: '/ui-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/ui-preview': typeof UiPreviewRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/z/$token': typeof ZTokenRoute
   '/games/$gameId': typeof AuthenticatedGamesGameIdRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/ui-preview': typeof UiPreviewRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/z/$token': typeof ZTokenRoute
   '/': typeof AuthenticatedIndexRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/ui-preview': typeof UiPreviewRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/z/$token': typeof ZTokenRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/ui-preview'
     | '/profile'
     | '/z/$token'
     | '/games/$gameId'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/ui-preview'
     | '/profile'
     | '/z/$token'
     | '/'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/ui-preview'
     | '/_authenticated/profile'
     | '/z/$token'
     | '/_authenticated/'
@@ -287,6 +299,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  UiPreviewRoute: typeof UiPreviewRoute
   ZTokenRoute: typeof ZTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAvatarUserIdRoute: typeof ApiAvatarUserIdRoute
@@ -329,6 +342,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-up'
       fullPath: '/sign-up'
       preLoaderRoute: typeof SignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ui-preview': {
+      id: '/ui-preview'
+      path: '/ui-preview'
+      fullPath: '/ui-preview'
+      preLoaderRoute: typeof UiPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -485,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  UiPreviewRoute: UiPreviewRoute,
   ZTokenRoute: ZTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAvatarUserIdRoute: ApiAvatarUserIdRoute,

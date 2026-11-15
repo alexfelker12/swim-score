@@ -45,33 +45,47 @@ Anpassungen nach der Abnahme. Im Canvas stehen sie auf der Seite „Nachträglic
 
 ## Bausteine (überall gleich bauen)
 
-Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild.
+Gebaut wird aus den shadcn/ui-Komponenten auf Base UI in `src/components/ui` (ADR 0009). Die Maße unten stecken dort als Varianten und Größen. An der Aufrufstelle stehen nur `variant`, `size` und Layout-Klassen (Abstand, Breite, Platzierung), keine Farben, Schriftgrößen, Radien, Ränder oder Höhen. Gibt es für etwas noch keine Komponente, zuerst in shadcn suchen (shadcn-MCP oder `pnpm dlx shadcn@latest add <name>`) und den Look als Variante ergänzen.
 
-- **Kopf** 56 px: Zurück (44 × 44 px, `chevron-left`), Titel zentriert 17–20 px / 600, darunter optional eine Unterzeile 13 px gedämpft, rechts Icon-Buttons (44 × 44 px). (`i05-start-spiel`)
-- **Statuszeile im Spiel** 40 px (mit „Übernehmen“ 48 px), Fläche `muted`, Radius 12 px, Innenabstand 14 px, Text 14 px, Punkt 8 px in `primary`. Offline invertiert. (`i05-runde-1`, `i10-offline-zaehlen`)
-- **Spielerzeile** (`i05-schwimmer`):
+Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die Komponente.
+
+- **Kopf** 56 px: Zurück (44 × 44 px, `chevron-left`), Titel zentriert 17–20 px / 600, darunter optional eine Unterzeile 13 px gedämpft, rechts Icon-Buttons (44 × 44 px). (`i05-start-spiel`) → Icon-Buttons `Button variant="ghost" size="icon"`.
+- **Statuszeile im Spiel** 40 px (mit „Übernehmen“ 48 px), Fläche `muted`, Radius 12 px, Innenabstand 14 px, Text 14 px, Punkt 8 px in `primary`. Offline invertiert. (`i05-runde-1`, `i10-offline-zaehlen`) → fachliche Komponente, „Übernehmen“ als `Button variant="soft" size="xs"`.
+- **Spielerzeile** (`i05-schwimmer`) → fachliche Komponente aus shadcn-Teilen, Zustände als Varianten:
   - Höhe 52–88 px, Radius 14 px, Rand 1,5 px `border`, Fläche `card`. Name 18–20 px / 600.
   - Leben als 3 Balken (84 × 10 px). Varianten:
     - Schwimmer: Rand `swimmer`.
     - Bomben-Modus: Rand `bomb`.
     - Ausgeschieden: gestrichelt, Deckkraft 0,5.
-- **Dealer-Badge:** Pill 20 px hoch, `primary` auf `primary-muted` über `card`, Ring 2 px in `background`, sitzt bei `left: -6px; bottom: -7px` der Zeile. Beim Spielstart steht es im Fluss neben dem Namen. (`i05-runde-1`, `i05-start-spiel`)
-- **Buttons:**
-  - Primär: 52–56 px, Radius 14 px, `primary` / `primary-foreground`, 16 px / 600.
-  - Sekundär: Rand 1,5 px `border`, transparent.
-  - Gefährlich: `destructive` gefüllt.
-  - Bombe: Rand und Text `bomb` auf `bomb-muted`.
-  - Deaktiviert: Deckkraft 0,4.
-- **Bottom Sheet** (`i05-bombe-konflikt`, `i06-menue`):
+- **Dealer-Badge:** Pill 20 px hoch, `primary` auf `primary-muted` über `card`, Ring 2 px in `background`, sitzt bei `left: -6px; bottom: -7px` der Zeile. Beim Spielstart steht es im Fluss neben dem Namen. (`i05-runde-1`, `i05-start-spiel`) → `Badge variant="dealer"`.
+- **Buttons** → `Button`:
+  - Primär: 52–56 px, Radius 14 px, `primary` / `primary-foreground`, 16 px / 600. → `variant="default"`, `size="xl"` (56 px) bzw. `"lg"` (52 px).
+  - Sekundär: Rand 1,5 px `border`, transparent. → `variant="secondary"`; auf Karten-Fläche `"outline"`.
+  - Gefährlich: `destructive` gefüllt. → `variant="destructive"`; als Text („Spiel abbrechen“) `"destructive-ghost"`.
+  - Bombe: Rand und Text `bomb` auf `bomb-muted`. → `variant="bomb"`.
+  - Leise Primär-Aktion („Übernehmen“, Hinzufügen): `variant="soft"`. Textaktion: `"link"` oder `"ghost"`.
+  - Google: `variant="google"` (Richtlinien in `decisions.md` › Konto).
+  - Größen: `xl` 56, `lg` 52, `default` 48 (Leisten, Sheets), `sm` 44, `xs` 36, `icon` 44 × 44, `icon-lg` 52 × 52.
+  - Deaktiviert: Deckkraft 0,4 (in `Button` eingebaut).
+  - Link als Button: `<Button nativeButton={false} render={<Link … />}>`.
+- **Bottom Sheet** (`i05-bombe-konflikt`, `i06-menue`) → `Drawer`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter`:
   - Hintergrund `scrim`, Fläche `card`, Radius 24 px oben, Rand oben 1 px, Griff 40 × 4 px, Innenabstand 10 / 20 / 24 px, Abstand 14–16 px.
   - Titel 22 px / 600. Aktionen untereinander oder nebeneinander, Haupt-Aktion zuerst bzw. rechts.
-- **Segmented Tabs:** Fläche `muted`, Innenabstand 4 px, Radius 14 px. Aktiver Tab `card` mit 600, inaktive `muted-foreground`. Höhe 40 px. (`i04-spieler`, `i03-profil`)
-- **Listenzeile:** mindestens 56 px, Trennlinie 1 px `border` unten, rechts `chevron-right` oder Icon-Buttons. (`i12-verwaltung`, `i13-rangliste`)
-- **Badges:** Pill, 12–13 px / 500–600. „Verwalter“ in `primary` auf `primary-muted`, „Gast“ in `muted-foreground` auf `muted`. „zählt“ ebenfalls gedämpft.
-- **Eingabe:** 52 px, Radius 12 px, Rand 1,5 px `border` (Fokus `primary`), Fläche `card`. Label 14 px / 500 darüber, Hinweis 13 px gedämpft darunter, Fehler in `destructive`. Passwortfelder mit `eye` / `eye-off`.
-- **Warn-Sheet und Fehlerseite:** Icon links neben der Überschrift, alles linksbündig. (`i09-uebernahme-warnung`, `i08-link-abgelaufen`)
-- **Vollbild-Dialog** (nur der Profilbild-Editor, `i03-profilbild-neu`): Kopf 56 px mit zentriertem Titel. Fußleiste mit Trennlinie oben, Innenabstand 12 / 16 / 24 px, zwei Buttons nebeneinander.
-- **Fokus:** `outline: 2px solid primary; outline-offset: 2px` auf Buttons, Links und Eingaben.
+  - Gewinner: `DrawerHeader align="center"`.
+- **Segmented Tabs:** Fläche `muted`, Innenabstand 4 px, Radius 14 px. Aktiver Tab `card` mit 600, inaktive `muted-foreground`. Höhe 40 px. (`i04-spieler`, `i03-profil`) → `Tabs`, `TabsList` (Standard-Variante `segmented`), `TabsTrigger`, `TabsContent`.
+- **Aktionen in Zeilen und Feldern** (Listenzeile, Spielerzeile, Link zum Kopieren, Passwortfeld): so kompakt wie möglich, weil am Handy wenig Platz ist. Gibt es ein allgemein bekanntes Icon (kopieren, entfernen, bearbeiten, teilen, Sichtbarkeit), ist es ein Icon-Button (`size="icon"`, im Feld `InputGroupButton size="icon"`) mit `aria-label`. Text nur, wo es kein solches Icon gibt („Übernehmen“). Das Icon endet 16 px vor dem Rand des Felds.
+- **Rückmeldung beim Tippen:** Touch-Geräte zeigen kein `hover:`. Buttons, Tabs, Radio-Karten und antippbare Zeilen reagieren deshalb auf `active:` (Fläche wie bei Hover, Buttons schrumpfen kurz auf 97 %, Icon-Buttons auf 90 %, abgeschaltet bei reduzierter Bewegung). Das ist in den Komponenten eingebaut.
+- **Listenzeile:** mindestens 56 px, Trennlinie 1 px `border` unten, rechts `chevron-right` oder Icon-Buttons. (`i12-verwaltung`, `i13-rangliste`) → `Item variant="row" size="list"` mit `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription`, `ItemActions`. Als Karte: `variant="card"`.
+- **Badges:** Pill, 12–13 px / 500–600. „Verwalter“ in `primary` auf `primary-muted`, „Gast“ in `muted-foreground` auf `muted`. „zählt“ ebenfalls gedämpft. → `Badge variant="primary"` bzw. `"muted"`.
+- **Avatar** → `Avatar` mit `AvatarImage` und `AvatarFallback` (Anfangsbuchstabe in `primary` auf `muted`). Größen: `default` 36, `md` 44, `lg` 56, `xl` 64.
+- **Eingabe:** 52 px, Radius 12 px, Rand 1,5 px `border` (Fokus `primary`), Fläche `card`. Label 14 px / 500 darüber, Hinweis 13 px gedämpft darunter, Fehler in `destructive`. Passwortfelder mit `eye` / `eye-off`. → `Field`, `FieldLabel`, `Input`, `FieldDescription`, `FieldError`. Passwort und Link zum Kopieren: `InputGroup` mit `InputGroupInput` und `InputGroupButton size="icon"` (`eye`/`eye-off`, `copy`, danach `check`). Nur lesbarer Wert: `Input readOnly` (gedämpft, ohne Rand).
+- **Datum und Auswahl:** nativ. Datum → `DateInput` (natives `type="date"` mit eigenem `calendar`-Icon, weil Browser unterschiedliche Indikatoren zeigen), Auswahl → `NativeSelect` mit `NativeSelectOption`.
+- **Einzelauswahl als Karten** („Wer bist du?“) → `RadioGroup` mit `RadioCard`, `RadioCardTitle`, `RadioCardDescription`.
+- **Hinweis** („Link unterwegs“) → `Alert` mit Icon; Fehler-Box → `Alert variant="destructive"`.
+- **Tabelle** am Spielende → `Table`. **Trenner** „oder“ → `Separator`. **Laden** → `Skeleton`.
+- **Warn-Sheet und Fehlerseite:** Icon links neben der Überschrift, alles linksbündig. (`i09-uebernahme-warnung`, `i08-link-abgelaufen`) → Icon als erstes Kind von `DrawerTitle`.
+- **Vollbild-Dialog** (nur der Profilbild-Editor, `i03-profilbild-neu`): Kopf 56 px mit zentriertem Titel. Fußleiste mit Trennlinie oben, Innenabstand 12 / 16 / 24 px, zwei Buttons nebeneinander. → `Dialog`, `DialogContent variant="fullscreen"`, `DialogHeader`, `DialogTitle`, `DialogFooter`.
+- **Fokus:** `outline: 2px solid primary; outline-offset: 2px` auf Buttons, Links, Tabs und Radios; Eingaben zeigen den Fokus als Rand in `primary` (beides in den Komponenten eingebaut).
 
 ## Inhalt dieses Ordners
 
