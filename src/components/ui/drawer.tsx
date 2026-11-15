@@ -190,12 +190,27 @@ function DrawerHeader({
   )
 }
 
-/** Actions under each other, the main action first. */
-function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
+const drawerFooterVariants = cva("flex shrink-0 gap-2.5", {
+  variants: {
+    orientation: {
+      /** Under each other, the main action first. */
+      vertical: "flex-col",
+      /** Side by side, sharing the width, the main action on the right. */
+      horizontal: "flex-row *:flex-1",
+    },
+  },
+  defaultVariants: { orientation: "vertical" },
+})
+
+function DrawerFooter({
+  className,
+  orientation,
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof drawerFooterVariants>) {
   return (
     <div
       data-slot="drawer-footer"
-      className={cn("flex shrink-0 flex-col gap-2.5", className)}
+      className={cn(drawerFooterVariants({ orientation }), className)}
       {...props}
     />
   )

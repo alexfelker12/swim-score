@@ -131,12 +131,13 @@ function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/** 16 px / 600; in list rows (`size="list"`) 17 px / 500. */
 function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-title"
       className={cn(
-        "line-clamp-1 flex w-fit items-center gap-2 text-base leading-snug font-semibold underline-offset-4",
+        "line-clamp-1 flex w-fit min-w-0 items-center gap-2 text-base leading-snug font-semibold underline-offset-4 group-data-[size=list]/item:text-[17px] group-data-[size=list]/item:font-medium",
         className
       )}
       {...props}

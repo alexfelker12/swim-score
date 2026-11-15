@@ -24,6 +24,9 @@ const badgeVariants = cva(
         /** "Gast", "du", "zählt": muted pill. */
         muted:
           "h-auto rounded-full bg-muted px-2.25 py-0.75 text-[13px] text-muted-foreground",
+        /** A plain note beside a name ("du", "Gast, von Ben angelegt"): 13 px muted, no pill. */
+        plain:
+          "h-auto truncate rounded-none px-0 py-0 text-[13px] font-normal text-muted-foreground",
         /** The Dealer's pill: 20 px, `primary` on `primary-muted` over `card`, 2 px ring in `background`. */
         dealer:
           "rounded-full bg-card bg-[image:linear-gradient(var(--primary-muted),var(--primary-muted))] px-2 leading-none font-semibold text-primary ring-2 ring-background",

@@ -1,9 +1,16 @@
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
-import { X } from "lucide-react"
-import { PrimaryButton } from "@/components/buttons"
-import { Field, TextInput } from "@/components/form-field"
+import { PageFooter } from "@/components/page-footer"
+import {
+  PageHeader,
+  PageHeaderBack,
+  PageHeaderTitle,
+} from "@/components/page-header"
+import { Button } from "@/components/ui/button"
+import { Card, CardDescription, CardTitle } from "@/components/ui/card"
+import { Field, FieldLabel, FieldNote } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { groupChanged } from "@/lib/queries"
 import { createGroupFn } from "@/server/functions"
 
@@ -42,58 +49,59 @@ function NewGroupPage() {
 
   return (
     <form onSubmit={submit} noValidate className="flex min-h-svh flex-col">
-      <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
-        <Link
-          to="/"
-          aria-label="Schließen"
-          className="flex size-11 items-center justify-center justify-self-center rounded-xl"
-        >
-          <X className="size-6" aria-hidden="true" />
-        </Link>
-        <h1 className="text-center text-[17px] font-semibold">Neue Gruppe</h1>
-      </header>
+      <PageHeader>
+        <PageHeaderBack
+          icon="close"
+          render={<Link to="/" />}
+          label="Schließen"
+        />
+        <PageHeaderTitle>Neue Gruppe</PageHeaderTitle>
+      </PageHeader>
 
       <div className="flex flex-1 flex-col gap-6 px-5 pt-6">
-        <Field
-          label="Name der Gruppe"
-          hint="Zum Beispiel wo oder wann ihr spielt."
-          error={error}
-        >
-          {(field) => (
-            <TextInput
-              {...field}
-              value={name}
-              maxLength={40}
-              autoFocus
-              onChange={(e) => setName(e.target.value)}
-            />
-          )}
+        <Field data-invalid={error ? true : undefined}>
+          <FieldLabel htmlFor="group-name">Name der Gruppe</FieldLabel>
+          <Input
+            id="group-name"
+            value={name}
+            maxLength={40}
+            autoFocus
+            onChange={(e) => setName(e.target.value)}
+            aria-invalid={error ? true : undefined}
+            aria-describedby="group-name-note"
+          />
+          <FieldNote id="group-name-note" error={error}>
+            Zum Beispiel wo oder wann ihr spielt.
+          </FieldNote>
         </Field>
 
-        <section
-          aria-labelledby="next-steps"
-          className="flex flex-col gap-2 rounded-[14px] bg-muted p-4"
+        <Card
+          variant="muted"
+          render={<section aria-labelledby="next-steps" />}
+          className="gap-2"
         >
-          <h2 id="next-steps" className="text-base font-semibold">
-            So geht es weiter
-          </h2>
-          <ol className="flex list-decimal flex-col gap-1.5 pl-5 text-muted-foreground marker:text-muted-foreground">
-            <li>Du bist Verwalter der Gruppe.</li>
-            <li>Leute ohne Konto legst du als Gäste an.</li>
-            <li>Alle anderen holst du per Link oder QR-Code dazu.</li>
-          </ol>
-        </section>
+          <CardTitle>
+            <h2 id="next-steps">So geht es weiter</h2>
+          </CardTitle>
+          <CardDescription>
+            <ol>
+              <li>Du bist Verwalter der Gruppe.</li>
+              <li>Leute ohne Konto legst du als Gäste an.</li>
+              <li>Alle anderen holst du per Link oder QR-Code dazu.</li>
+            </ol>
+          </CardDescription>
+        </Card>
       </div>
 
-      <div className="px-4 pt-4 pb-6">
-        <PrimaryButton
+      <PageFooter>
+        <Button
           type="submit"
+          size="xl"
           disabled={pending || name.trim() === ""}
-          className="w-full"
         >
           Gruppe anlegen
-        </PrimaryButton>
-      </div>
+        </Button>
+      </PageFooter>
     </form>
   )
 }

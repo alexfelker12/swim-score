@@ -1,9 +1,26 @@
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { BottomSheet } from "@/components/bottom-sheet"
-import { PrimaryButton, SecondaryButton } from "@/components/buttons"
-import { ChoiceCard } from "@/components/choice-card"
+import { Info } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
+import { FieldError } from "@/components/ui/field"
+import {
+  RadioCard,
+  RadioCardDescription,
+  RadioCardTitle,
+  RadioGroup,
+} from "@/components/ui/radio-group"
 import { gameCount } from "@/lib/plural"
+import { useSheet } from "@/lib/use-sheet"
 import { groupChanged } from "@/lib/queries"
 import { linkGuestFn } from "@/server/functions"
 import type { GroupPlayer, GroupView } from "@/server/groups"
@@ -30,8 +47,12 @@ function linkEffect(guest: string, games: number): string {
   return `${moved} mit diesem Spieler zusammengeführt, der Gast verschwindet aus der Liste.`
 }
 
-export /** "Emil mit Konto verknüpfen": the Group Admin picks the Player with an account the Guest is. */
-function LinkGuestSheet({
+/**
+ * "Emil mit Konto verknüpfen": the Group Admin picks the Player with an
+ * account the Guest is. Opens when mounted; `onClose` runs once it has
+ * closed.
+ */
+export function LinkGuestSheet({
   group,
   management,
   guest,
@@ -43,91 +64,86 @@ function LinkGuestSheet({
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
+  const sheet = useSheet(onClose)
   const [choice, setChoice] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const details = (id: string) => management.players.find((p) => p.id === id)
   // The Group Admin links and is never the one linked.
   const accounts = group.players.filter((p) => !p.guest && !p.admin)
 
-  async function merge(event: React.FormEvent) {
-    event.preventDefault()
-    if (!choice) return
-    setPending(true)
-    setError(null)
+  async function merge(playerId: string) {
     const result = await linkGuestFn({
-      data: { groupId: group.id, guestId: guest.id, playerId: choice },
+      data: { groupId: group.id, guestId: guest.id, playerId },
     })
-    if (!result.ok) {
-      setPending(false)
-      setError(mergeErrors[result.code] ?? "Das hat nicht geklappt.")
-      return
-    }
+    if (!result.ok) return mergeErrors[result.code] ?? "Das hat nicht geklappt."
     // The Guest's name in their past Games changes too.
     await groupChanged(queryClient, group.id, { games: true })
-    onClose()
   }
 
   return (
-    <BottomSheet
-      title={`${guest.name} mit Konto verknüpfen`}
-      description={`Wähle, wer ${guest.name} ist. ${linkEffect(guest.name, details(guest.id)?.games ?? 0)} Das lässt sich nicht rückgängig machen.`}
-      onDismiss={onClose}
-    >
-      <form onSubmit={merge} className="flex min-h-0 flex-col gap-4">
-        {accounts.length === 0 ? (
-          <p className="rounded-xl bg-muted p-4 text-sm text-pretty text-muted-foreground">
-            Noch ist außer dir niemand mit Konto in der Gruppe. Sobald{" "}
-            {guest.name} über die Einladung beigetreten ist, kannst du hier
-            verknüpfen.
-          </p>
-        ) : (
-          <fieldset className="flex max-h-[40svh] flex-col gap-2 overflow-auto">
-            <legend className="sr-only">Spieler mit Konto</legend>
-            {accounts.map((p) => {
-              const info = details(p.id)
-              // Someone who just joined is told apart by their Username.
-              const fresh = info?.username && info.games === 0
-              return (
-                <ChoiceCard
-                  key={p.id}
-                  name="account"
-                  value={p.id}
-                  selected={choice}
-                  onSelect={setChoice}
-                  label={p.name}
-                  note={
-                    fresh
-                      ? `${info.username}, ${gameCount(0)}`
-                      : "Spieler mit Konto"
-                  }
-                />
-              )
-            })}
-          </fieldset>
-        )}
-        {error ? (
-          <p role="alert" className="text-sm text-pretty text-destructive">
-            {error}
-          </p>
-        ) : null}
-        <div className="flex gap-2.5">
-          <SecondaryButton
-            type="button"
-            onClick={onClose}
-            className="h-13 flex-1 rounded-[14px] bg-transparent text-base"
-          >
-            Abbrechen
-          </SecondaryButton>
-          <PrimaryButton
-            type="submit"
-            disabled={pending || !choice}
-            className="h-13 flex-1"
-          >
-            Zusammenführen
-          </PrimaryButton>
-        </div>
-      </form>
-    </BottomSheet>
+    <Drawer {...sheet.drawer}>
+      <DrawerContent>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (choice) void sheet.run(() => merge(choice))
+          }}
+          className="flex flex-col gap-4"
+        >
+          <DrawerHeader>
+            <DrawerTitle>{guest.name} mit Konto verknüpfen</DrawerTitle>
+            <DrawerDescription>
+              Wähle, wer {guest.name} ist.{" "}
+              {linkEffect(guest.name, details(guest.id)?.games ?? 0)} Das lässt
+              sich nicht rückgängig machen.
+            </DrawerDescription>
+          </DrawerHeader>
+          {accounts.length === 0 ? (
+            <Alert>
+              <Info />
+              <AlertDescription>
+                Noch ist außer dir niemand mit Konto in der Gruppe. Sobald{" "}
+                {guest.name} über die Einladung beigetreten ist, kannst du hier
+                verknüpfen.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <RadioGroup
+              aria-label="Spieler mit Konto"
+              value={choice}
+              onValueChange={(value) => setChoice(value as string)}
+              className="gap-2"
+            >
+              {accounts.map((p) => {
+                const info = details(p.id)
+                // Someone who just joined is told apart by their Username.
+                const fresh = info?.username && info.games === 0
+                return (
+                  <RadioCard key={p.id} value={p.id}>
+                    <RadioCardTitle>{p.name}</RadioCardTitle>
+                    <RadioCardDescription>
+                      {fresh
+                        ? `${info.username}, ${gameCount(0)}`
+                        : "Spieler mit Konto"}
+                    </RadioCardDescription>
+                  </RadioCard>
+                )
+              })}
+            </RadioGroup>
+          )}
+          <FieldError>{sheet.error}</FieldError>
+          <DrawerFooter orientation="horizontal">
+            <DrawerClose
+              render={<Button variant="secondary" size="lg" />}
+              disabled={sheet.pending}
+            >
+              Abbrechen
+            </DrawerClose>
+            <Button type="submit" size="lg" disabled={sheet.pending || !choice}>
+              Zusammenführen
+            </Button>
+          </DrawerFooter>
+        </form>
+      </DrawerContent>
+    </Drawer>
   )
 }

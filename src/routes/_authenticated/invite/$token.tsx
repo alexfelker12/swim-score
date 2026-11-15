@@ -6,8 +6,6 @@ import {
   redirect,
   useNavigate,
 } from "@tanstack/react-router"
-import { PrimaryButton } from "@/components/buttons"
-import { ChoiceCard } from "@/components/choice-card"
 import {
   LinkGone,
   LinkGoneContent,
@@ -15,8 +13,17 @@ import {
   LinkGoneFooter,
   LinkGoneTitle,
 } from "@/components/link-gone"
-import { Logo } from "@/components/logo"
+import { PageFooter } from "@/components/page-footer"
+import { PageHeader } from "@/components/page-header"
+import { Section, SectionDescription, SectionTitle } from "@/components/section"
 import { Button } from "@/components/ui/button"
+import { FieldDescription, FieldError } from "@/components/ui/field"
+import {
+  RadioCard,
+  RadioCardDescription,
+  RadioCardTitle,
+  RadioGroup,
+} from "@/components/ui/radio-group"
 import { gameCount } from "@/lib/plural"
 import { inviteQuery, joined, queryKeys } from "@/lib/queries"
 import { joinGroupFn } from "@/server/functions"
@@ -87,47 +94,47 @@ function AcceptInvite({ invite }: { invite: InviteView }) {
 
   return (
     <form onSubmit={join} className="flex h-svh flex-col">
-      <header className="flex h-16 shrink-0 items-center px-5">
-        <Logo />
-      </header>
+      <PageHeader variant="brand" />
       <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto px-5 pt-4 pb-4">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[15px] text-muted-foreground">
+        <Section className="gap-1.5">
+          <SectionDescription>
             Einladung von {invite.invitedBy}
-          </span>
-          <h1 className="text-[30px] leading-[1.15] font-bold wrap-break-word">
+          </SectionDescription>
+          <SectionTitle variant="page" as="h1">
             {invite.groupName}
-          </h1>
-          <span className="text-[15px] text-muted-foreground">
+          </SectionTitle>
+          <SectionDescription>
             {invite.playerCount} Spieler, {gameCount(invite.gameCount)}
-          </span>
-        </div>
+          </SectionDescription>
+        </Section>
 
         {invite.guests.length > 0 ? (
-          <fieldset className="flex flex-col gap-2">
-            <legend className="pb-2 text-[17px] font-semibold">
+          <Section aria-labelledby="who">
+            <SectionTitle id="who" className="pb-2">
               Wer bist du?
-            </legend>
-            <ChoiceCard
-              name="who"
-              value={NEW_PLAYER}
-              selected={choice}
-              onSelect={setChoice}
-              label="Ich bin neu hier"
-              note="Als neuer Spieler beitreten"
-            />
-            {invite.guests.map((g) => (
-              <ChoiceCard
-                name="who"
-                key={g.id}
-                value={g.id}
-                selected={choice}
-                onSelect={setChoice}
-                label={`Ich bin ${g.name}`}
-                note={`Gast, ${gameCount(g.games)}`}
-              />
-            ))}
-          </fieldset>
+            </SectionTitle>
+            <RadioGroup
+              aria-labelledby="who"
+              value={choice}
+              onValueChange={(value) => setChoice(value as string)}
+              className="gap-2"
+            >
+              <RadioCard value={NEW_PLAYER}>
+                <RadioCardTitle>Ich bin neu hier</RadioCardTitle>
+                <RadioCardDescription>
+                  Als neuer Spieler beitreten
+                </RadioCardDescription>
+              </RadioCard>
+              {invite.guests.map((g) => (
+                <RadioCard key={g.id} value={g.id}>
+                  <RadioCardTitle>Ich bin {g.name}</RadioCardTitle>
+                  <RadioCardDescription>
+                    Gast, {gameCount(g.games)}
+                  </RadioCardDescription>
+                </RadioCard>
+              ))}
+            </RadioGroup>
+          </Section>
         ) : (
           <p className="text-pretty">
             Du trittst als neuer Spieler bei. Alle in der Gruppe sehen deinen
@@ -135,22 +142,20 @@ function AcceptInvite({ invite }: { invite: InviteView }) {
           </p>
         )}
       </main>
-      <div className="flex shrink-0 flex-col gap-2.5 border-t border-border px-4 pt-4 pb-6">
+      <PageFooter variant="bordered">
         {error ? (
-          <p role="alert" className="text-sm text-pretty text-destructive">
-            {error}
-          </p>
+          <FieldError>{error}</FieldError>
         ) : (
-          <p className="text-sm text-pretty text-muted-foreground">
+          <FieldDescription>
             {guest
               ? `${invite.invitedBy} bestätigt das. Danach gehören dir die bisherigen Spiele von ${guest.name}. Bis dahin bist du schon dabei.`
               : "Du bist sofort Spieler der Gruppe und siehst Spiele und Rangliste."}
-          </p>
+          </FieldDescription>
         )}
-        <PrimaryButton type="submit" disabled={pending}>
+        <Button type="submit" size="xl" disabled={pending}>
           {guest ? "Anfrage senden und beitreten" : "Beitreten"}
-        </PrimaryButton>
-      </div>
+        </Button>
+      </PageFooter>
     </form>
   )
 }

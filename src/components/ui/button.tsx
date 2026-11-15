@@ -39,6 +39,12 @@ const buttonVariants = cva(
           "font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive-muted",
         /** The bomb: border and text `bomb` on `bomb-muted`. */
         bomb: "border-bomb bg-bomb-muted font-semibold text-bomb hover:bg-bomb-muted/70 active:bg-bomb-muted/70",
+        /** An icon action in a row in the primary colour (link a Guest). */
+        "primary-ghost":
+          "font-semibold text-primary hover:bg-primary-muted active:bg-primary-muted",
+        /** A quiet text action ("2 ehemalige Spieler"). */
+        muted:
+          "font-normal text-muted-foreground hover:bg-muted active:bg-muted",
         /** Icon buttons in headers and rows, text buttons without a frame. */
         ghost: "font-medium hover:bg-muted active:bg-muted",
         /** Inline text action in the primary colour. */

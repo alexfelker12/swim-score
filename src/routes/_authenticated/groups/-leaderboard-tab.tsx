@@ -59,7 +59,7 @@ export function LeaderboardTab({
   const [sheet, setSheet] = useState<"metric" | "period" | null>(null)
   if (!leaderboard || leaderboard.since === null) {
     return (
-      <div role="tabpanel" className="px-5 py-6 text-muted-foreground">
+      <div className="px-5 py-6 text-muted-foreground">
         {leaderboard
           ? "Die Rangliste erscheint, sobald ihr ein Spiel beendet habt."
           : "Die Rangliste lässt sich gerade nicht laden."}
@@ -69,7 +69,7 @@ export function LeaderboardTab({
   const metric =
     leaderboard.metrics.find((m) => m.id === metricId) ?? leaderboard.metrics[0]
   return (
-    <div role="tabpanel" className="flex flex-1 flex-col px-4 pb-6">
+    <div className="flex flex-1 flex-col px-4 pb-6">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2.5">
         <button
           type="button"

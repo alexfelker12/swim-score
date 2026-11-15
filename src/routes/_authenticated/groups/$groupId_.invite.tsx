@@ -1,10 +1,17 @@
 import { useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
-import { X } from "lucide-react"
-import { PrimaryButton } from "@/components/buttons"
 import { LinkField } from "@/components/link-field"
-import { QrCode } from "@/components/qr-code"
+import { PageFooter } from "@/components/page-footer"
+import {
+  PageHeader,
+  PageHeaderBack,
+  PageHeaderTitle,
+} from "@/components/page-header"
+import { QrCard, QrCode } from "@/components/qr-code"
+import { Section, SectionDescription, SectionTitle } from "@/components/section"
+import { Button } from "@/components/ui/button"
+import { FieldDescription, FieldError } from "@/components/ui/field"
 import { groupQuery, inviteLinkQuery } from "@/lib/queries"
 import { useShareLink } from "@/lib/use-share-link"
 import { renewInviteFn } from "@/server/functions"
@@ -64,63 +71,57 @@ function InviteLink({
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
-        <Link
-          to="/groups/$groupId"
-          params={{ groupId }}
-          search={{ tab: "players" }}
-          aria-label="Schließen"
-          className="flex size-11 items-center justify-center justify-self-center rounded-xl"
-        >
-          <X className="size-6" aria-hidden="true" />
-        </Link>
-        <h1 className="text-center text-[17px] font-semibold">
-          In die Gruppe einladen
-        </h1>
-      </header>
-
-      <main className="flex flex-1 flex-col gap-4.5 px-5 pt-3">
-        <p className="text-center text-pretty text-muted-foreground">
-          Am Tisch: Code scannen lassen. Sonst den Link schicken. Wer als Gast
-          mitgespielt hat, kann sich darüber seinen Gast holen.
-        </p>
-        <div className="size-62 self-center rounded-[20px] bg-white p-4">
-          {link.url ? (
-            <QrCode
-              text={link.url}
-              label={`QR-Code der Einladung in die Gruppe ${groupName}`}
+      <PageHeader>
+        <PageHeaderBack
+          icon="close"
+          render={
+            <Link
+              to="/groups/$groupId"
+              params={{ groupId }}
+              search={{ tab: "players" }}
             />
-          ) : null}
-        </div>
-        <div className="text-center text-xl font-bold wrap-break-word">
-          {groupName}
-        </div>
-        <LinkField
-          shownUrl={link.shownUrl}
-          copied={link.copied}
-          onCopy={link.copy}
+          }
+          label="Schließen"
         />
-        <p role="status" className="text-center text-sm text-destructive">
-          {error ?? link.error}
-        </p>
+        <PageHeaderTitle>In die Gruppe einladen</PageHeaderTitle>
+      </PageHeader>
+
+      <main className="flex flex-1 flex-col px-5 pt-3">
+        <Section align="center" className="gap-4.5">
+          <SectionDescription>
+            Am Tisch: Code scannen lassen. Sonst den Link schicken. Wer als Gast
+            mitgespielt hat, kann sich darüber seinen Gast holen.
+          </SectionDescription>
+          <QrCard>
+            {link.url ? (
+              <QrCode
+                text={link.url}
+                label={`QR-Code der Einladung in die Gruppe ${groupName}`}
+              />
+            ) : null}
+          </QrCard>
+          <SectionTitle variant="lg">{groupName}</SectionTitle>
+          <LinkField
+            label="Einladungslink"
+            shownUrl={link.shownUrl}
+            copied={link.copied}
+            onCopy={link.copy}
+          />
+          <FieldError>{error ?? link.error}</FieldError>
+        </Section>
       </main>
 
-      <div className="flex flex-col gap-2.5 px-4 pt-4 pb-6">
-        <PrimaryButton type="button" onClick={link.share} disabled={!link.url}>
+      <PageFooter align="center">
+        <Button size="xl" onClick={link.share} disabled={!link.url}>
           Link teilen
-        </PrimaryButton>
-        <button
-          type="button"
-          onClick={renew}
-          disabled={renewing}
-          className="h-12 rounded-[14px] text-[15px] font-medium disabled:opacity-40"
-        >
+        </Button>
+        <Button variant="ghost" onClick={renew} disabled={renewing}>
           Link erneuern
-        </button>
-        <span className="text-center text-[13px] text-pretty text-muted-foreground">
+        </Button>
+        <FieldDescription>
           Erneuern macht den alten Link und den alten Code ungültig.
-        </span>
-      </div>
+        </FieldDescription>
+      </PageFooter>
     </div>
   )
 }

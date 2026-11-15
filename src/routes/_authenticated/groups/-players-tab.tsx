@@ -1,12 +1,27 @@
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { ProfileLink } from "@/components/profile-link"
 import { Link } from "@tanstack/react-router"
 import { Plus } from "lucide-react"
-import { Badge } from "@/components/badge"
-import { PrimaryButton, SecondaryButton } from "@/components/buttons"
-import { TextInput } from "@/components/form-field"
-import { UserAvatar } from "@/components/user-avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardLabel,
+  CardTitle,
+} from "@/components/ui/card"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import {
+  Item,
+  ItemContent,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item"
+import { initialOf } from "@/lib/initial"
 import { groupChanged } from "@/lib/queries"
 import { addGuestFn, confirmClaimFn, rejectClaimFn } from "@/server/functions"
 import { mergeErrors } from "./-link-guest-sheet"
@@ -52,7 +67,7 @@ export function PlayersTab({
   const details = (id: string) => management?.players.find((p) => p.id === id)
 
   return (
-    <div role="tabpanel" className="flex flex-col gap-3.5 px-4 pb-5">
+    <div className="flex flex-col gap-3.5 px-4 pb-5">
       {management?.claims.map((claim) => {
         const guest = player(claim.guestId)
         const username = details(claim.playerId)?.username
@@ -69,55 +84,59 @@ export function PlayersTab({
         )
       })}
 
-      <form onSubmit={add} noValidate className="flex flex-col gap-1.5">
-        <div className="flex gap-2">
-          <label htmlFor="guest-name" className="sr-only">
+      <form onSubmit={add} noValidate>
+        <Field data-invalid={error ? true : undefined}>
+          <FieldLabel htmlFor="guest-name" className="sr-only">
             Name des Gastes
-          </label>
-          <TextInput
-            id="guest-name"
-            value={name}
-            maxLength={30}
-            placeholder="Gast hinzufügen, z. B. Lena"
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? "guest-error" : undefined}
-            onChange={(e) => setName(e.target.value)}
-            className="min-w-0 flex-1"
-          />
-          <button
-            type="submit"
-            aria-label="Gast hinzufügen"
-            disabled={pending || name.trim() === ""}
-            className="flex size-13 shrink-0 items-center justify-center rounded-xl bg-primary-muted text-primary disabled:opacity-40"
-          >
-            <Plus className="size-5.5" strokeWidth={2.2} aria-hidden="true" />
-          </button>
-        </div>
-        {error ? (
-          <span id="guest-error" className="text-[13px] text-destructive">
-            {error}
-          </span>
-        ) : null}
+          </FieldLabel>
+          <div className="flex gap-2">
+            <Input
+              id="guest-name"
+              value={name}
+              maxLength={30}
+              placeholder="Gast hinzufügen, z. B. Lena"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "guest-error" : undefined}
+              onChange={(e) => setName(e.target.value)}
+              className="flex-1"
+            />
+            <Button
+              type="submit"
+              variant="soft"
+              size="icon-lg"
+              aria-label="Gast hinzufügen"
+              disabled={pending || name.trim() === ""}
+            >
+              <Plus />
+            </Button>
+          </div>
+          <FieldError id="guest-error">{error}</FieldError>
+        </Field>
       </form>
 
-      <ul className="flex flex-col">
+      <ItemGroup className="gap-0">
         {group.players.map((p) => (
-          <li key={p.id} className="border-b border-border">
-            <PlayerRow player={p} />
-          </li>
+          <PlayerRow key={p.id} player={p} />
         ))}
-      </ul>
+      </ItemGroup>
 
       {group.formerPlayers.length > 0 ? (
-        <Link
-          to="/groups/$groupId/settings"
-          params={{ groupId: group.id }}
-          className="self-start py-1 text-[15px] text-muted-foreground"
+        <Button
+          variant="muted"
+          size="sm"
+          nativeButton={false}
+          render={
+            <Link
+              to="/groups/$groupId/settings"
+              params={{ groupId: group.id }}
+            />
+          }
+          className="-ml-3.5 self-start"
         >
           {group.formerPlayers.length === 1
             ? "1 ehemaliger Spieler"
             : `${group.formerPlayers.length} ehemalige Spieler`}
-        </Link>
+        </Button>
       ) : null}
     </div>
   )
@@ -165,84 +184,65 @@ function ClaimCard({
   }
 
   return (
-    <section
-      aria-labelledby={`claim-${claimId}`}
-      className="flex flex-col gap-3 rounded-[14px] border-[1.5px] border-primary bg-card p-4"
+    <Card
+      variant="primary"
+      render={<section aria-labelledby={`claim-${claimId}`} />}
     >
-      <h2
-        id={`claim-${claimId}`}
-        className="text-sm font-semibold text-primary"
-      >
-        Offene Anfrage
-      </h2>
-      <p className="text-[17px] text-pretty wrap-break-word">
-        <span className="font-semibold">{username}</span> sagt: „Ich bin {guest}
-        “
-      </p>
-      <p className="text-sm text-pretty text-muted-foreground">
+      <CardLabel>
+        <h2 id={`claim-${claimId}`}>Offene Anfrage</h2>
+      </CardLabel>
+      <CardTitle>
+        {username} sagt: „Ich bin {guest}“
+      </CardTitle>
+      <CardDescription>
         {claimEffect(guest, games)} Prüf kurz am Tisch, ob es wirklich {guest}{" "}
         ist.
-      </p>
-      {error ? (
-        <p role="alert" className="text-sm text-pretty text-destructive">
-          {error}
-        </p>
-      ) : null}
-      <div className="flex gap-2.5">
-        <SecondaryButton
-          type="button"
+      </CardDescription>
+      <FieldError>{error}</FieldError>
+      <CardFooter>
+        <Button
+          variant="secondary"
           disabled={pending}
           onClick={() => decide(rejectClaimFn)}
-          className="h-12 flex-1 bg-transparent text-base"
         >
           Ablehnen
-        </SecondaryButton>
-        <PrimaryButton
-          type="button"
-          disabled={pending}
-          onClick={() => decide(confirmClaimFn)}
-          className="h-12 flex-1 rounded-xl"
-        >
+        </Button>
+        <Button disabled={pending} onClick={() => decide(confirmClaimFn)}>
           Bestätigen
-        </PrimaryButton>
-      </div>
-    </section>
+        </Button>
+      </CardFooter>
+    </Card>
   )
 }
 
 /** A Player; with an account, the row opens their Player Profile. Guests are not tappable. */
 function PlayerRow({ player }: { player: GroupPlayer }) {
-  const className = "flex min-h-14 items-center gap-3"
-  const content = (
-    <>
-      {player.guest ? (
-        <span
-          aria-hidden="true"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-life-off text-[15px] font-semibold text-muted-foreground"
-        >
-          {player.name.charAt(0).toUpperCase()}
-        </span>
-      ) : (
-        <UserAvatar
-          name={player.name}
-          image={player.image}
-          size={36}
-          className="border-[1.5px] border-life-off"
-        />
-      )}
-      <span className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="truncate text-[17px] font-medium">{player.name}</span>
-        {player.me ? (
-          <span className="text-[13px] text-muted-foreground">du</span>
-        ) : null}
-      </span>
-      {player.admin ? <Badge tone="primary">Verwalter</Badge> : null}
-      {player.guest ? <Badge tone="muted">Gast</Badge> : null}
-    </>
-  )
   return (
-    <ProfileLink userId={player.userId} className={className}>
-      {content}
-    </ProfileLink>
+    <div role="listitem">
+      <Item
+        variant="row"
+        size="list"
+        render={
+          player.userId ? (
+            <Link to="/players/$userId" params={{ userId: player.userId }} />
+          ) : undefined
+        }
+      >
+        <ItemMedia>
+          <Avatar variant={player.guest ? "guest" : "account"}>
+            {player.image ? <AvatarImage src={player.image} alt="" /> : null}
+            <AvatarFallback>{initialOf(player.name)}</AvatarFallback>
+          </Avatar>
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle>
+            <span className="truncate">{player.name}</span>
+            {player.me ? <Badge variant="plain">du</Badge> : null}
+          </ItemTitle>
+        </ItemContent>
+        {player.admin ? <Badge variant="primary">Verwalter</Badge> : null}
+        {player.guest ? <Badge variant="muted">Gast</Badge> : null}
+      </Item>
+    </div>
   )
 }

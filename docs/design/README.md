@@ -49,7 +49,7 @@ Gebaut wird aus den shadcn/ui-Komponenten auf Base UI in `src/components/ui` (AD
 
 Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die Komponente.
 
-- **Kopf** 56 px: Zurück (44 × 44 px, `chevron-left`), Titel zentriert 17–20 px / 600, darunter optional eine Unterzeile 13 px gedämpft, rechts Icon-Buttons (44 × 44 px). (`i05-start-spiel`) → `PageHeader` mit `PageHeaderBack` (Zurück als Link über `render`) und `PageHeaderTitle`; weitere Icon-Buttons `Button variant="ghost" size="icon"`.
+- **Kopf** 56 px: Zurück (44 × 44 px, `chevron-left`), Titel zentriert 17–20 px / 600, darunter optional eine Unterzeile 13 px gedämpft, rechts Icon-Buttons (44 × 44 px). (`i05-start-spiel`) → `PageHeader` mit `PageHeaderBack` (Zurück als Link über `render`, `icon="close"` für ✕) und `PageHeaderTitle`; Icon-Buttons rechts `PageHeaderActions` mit `PageHeaderAction`. Gruppenseite (Titel links mit Unterzeile, 60 px): `PageHeader variant="start"` mit `PageHeaderContent`, `PageHeaderTitle`, `PageHeaderDescription`. Nur Logo (Einladung öffnen): `PageHeader variant="brand"`.
 - **Profil-Kopf** (Avatar neben Name und Unterzeile, `i03-profil`) → `ProfileHeading` mit `Avatar`, `ProfileHeadingContent`, `ProfileHeadingTitle`, `ProfileHeadingDescription`.
 - **Statuszeile im Spiel** 40 px (mit „Übernehmen“ 48 px), Fläche `muted`, Radius 12 px, Innenabstand 14 px, Text 14 px, Punkt 8 px in `primary`. Offline invertiert. (`i05-runde-1`, `i10-offline-zaehlen`) → fachliche Komponente, „Übernehmen“ als `Button variant="soft" size="xs"`.
 - **Spielerzeile** (`i05-schwimmer`) → fachliche Komponente aus shadcn-Teilen, Zustände als Varianten:
@@ -62,23 +62,29 @@ Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die
 - **Buttons** → `Button`:
   - Primär: 52–56 px, Radius 14 px, `primary` / `primary-foreground`, 16 px / 600. → `variant="default"`, `size="xl"` (56 px) bzw. `"lg"` (52 px).
   - Sekundär: Rand 1,5 px `border`, transparent. → `variant="secondary"`; auf Karten-Fläche `"outline"`.
-  - Gefährlich: `destructive` gefüllt. → `variant="destructive"`; als Text („Spiel abbrechen“) `"destructive-ghost"`; mit Rand neben `outline`-Buttons („Entfernen“ im Profilbild-Editor) `"destructive-outline"`.
+  - Gefährlich: `destructive` gefüllt. → `variant="destructive"`; als Text („Spiel abbrechen“) `"destructive-ghost"`; mit Rand (gefährliche Aktion als eigener Button: „Konto löschen“, „Gruppe verlassen“, „Entfernen“ im Profilbild-Editor) `"destructive-outline"`.
   - Bombe: Rand und Text `bomb` auf `bomb-muted`. → `variant="bomb"`.
-  - Leise Primär-Aktion („Übernehmen“, Hinzufügen): `variant="soft"`. Textaktion: `"link"` oder `"ghost"`.
+  - Leise Primär-Aktion („Übernehmen“, Hinzufügen): `variant="soft"`. Textaktion: `"link"` oder `"ghost"`; gedämpft („2 ehemalige Spieler“) `"muted"`.
+  - Icon-Aktion in Zeilen: Verknüpfen `variant="primary-ghost"`, Entfernen `"destructive-ghost"`, jeweils `size="icon"`.
   - Google: `variant="google"` (Richtlinien in `decisions.md` › Konto).
   - Größen: `xl` 56, `lg` 52, `default` 48 (Leisten, Sheets), `sm` 44, `xs` 36, `icon` 44 × 44, `icon-lg` 52 × 52.
   - Deaktiviert: Deckkraft 0,4 (in `Button` eingebaut).
   - Link als Button: `<Button nativeButton={false} render={<Link … />}>`.
 - **Bottom Sheet** (`i05-bombe-konflikt`, `i06-menue`) → `Drawer`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter`:
   - Hintergrund `scrim`, Fläche `card`, Radius 24 px oben, Rand oben 1 px, Griff 40 × 4 px, Innenabstand 10 / 20 / 24 px, Abstand 14–16 px.
-  - Titel 22 px / 600. Aktionen untereinander oder nebeneinander, Haupt-Aktion zuerst bzw. rechts.
+  - Titel 22 px / 600. Aktionen untereinander (`DrawerFooter`) oder nebeneinander (`DrawerFooter orientation="horizontal"`), Haupt-Aktion zuerst bzw. rechts.
   - Gewinner: `DrawerHeader align="center"`.
 - **Segmented Tabs:** Fläche `muted`, Innenabstand 4 px, Radius 14 px. Aktiver Tab `card` mit 600, inaktive `muted-foreground`. Höhe 40 px. (`i04-spieler`, `i03-profil`) → `Tabs`, `TabsList` (Standard-Variante `segmented`), `TabsTrigger`, `TabsContent`.
 - **Aktionen in Zeilen und Feldern** (Listenzeile, Spielerzeile, Link zum Kopieren, Passwortfeld): so kompakt wie möglich, weil am Handy wenig Platz ist. Gibt es ein allgemein bekanntes Icon (kopieren, entfernen, bearbeiten, teilen, Sichtbarkeit), ist es ein Icon-Button (`size="icon"`, im Feld `InputGroupButton size="icon"`) mit `aria-label`. Text nur, wo es kein solches Icon gibt („Übernehmen“). Das Icon endet 16 px vor dem Rand des Felds.
 - **Rückmeldung beim Tippen:** Touch-Geräte zeigen kein `hover:`. Buttons, Tabs, Radio-Karten und antippbare Zeilen reagieren deshalb auf `active:` (Fläche wie bei Hover, Buttons schrumpfen kurz auf 97 %, Icon-Buttons auf 90 %, abgeschaltet bei reduzierter Bewegung). Das ist in den Komponenten eingebaut.
+- **Spielerzeile in der Verwaltung** (`i12-verwaltung`, abweichend vom Design): Avatar, Name in Zeile 1, Zusatz („Gast, von Ben angelegt“, „du, Verwalter“) als `ItemDescription` in Zeile 2, Icon-Buttons vertikal zentriert. Ehemalige Spieler genauso, ohne Avatar. So bricht nichts um, auch bei langen Namen.
 - **Listenzeile:** mindestens 56 px, Trennlinie 1 px `border` unten, rechts `chevron-right` oder Icon-Buttons. (`i12-verwaltung`, `i13-rangliste`) → `Item variant="row" size="list"` mit `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription`, `ItemActions`. Als Karte: `variant="card"`.
-- **Badges:** Pill, 12–13 px / 500–600. „Verwalter“ in `primary` auf `primary-muted`, „Gast“ in `muted-foreground` auf `muted`. „zählt“ ebenfalls gedämpft. → `Badge variant="primary"` bzw. `"muted"`.
-- **Avatar** → `Avatar` mit `AvatarImage` und `AvatarFallback` (Anfangsbuchstabe in `primary` auf `muted`). Größen: `default` 36, `md` 44, `lg` 56, `xl` 64, `2xl` 160 (Profilbild-Editor ohne Bild).
+- **Badges:** Pill, 12–13 px / 500–600. „Verwalter“ in `primary` auf `primary-muted`, „Gast“ in `muted-foreground` auf `muted`. „zählt“ ebenfalls gedämpft. → `Badge variant="primary"` bzw. `"muted"`. Notiz neben einem Namen ohne Pill („du“, „Gast, von Ben angelegt“): `"plain"`.
+- **Karten** → `Card` mit `CardHeader`, `CardLabel`, `CardTitle`, `CardAction`, `CardDescription`, `CardFooter`; Varianten `default`, `primary` (läuft/wartet), `dashed` (zählt nicht), `muted` (Hinweis ohne Rand); Größe `sm` für Listeneinträge. Als Link über `render`. Spiele in der Gruppe: `GameCard status="running|finished|cancelled"` mit `GameCardHeader`, `GameCardStatus`, `GameCardTitle`, `GameCardDate`, `GameCardDescription`, `GameCardSwimmer`.
+- **Abschnitt** mit Überschrift („Spieler“, „Verwalter“, „Wer bist du?“, Monat über den Spielen) → `Section`, `SectionTitle` (`default` 17 px, `muted` 15 px gedämpft, `lg` 20 px, `page` 30 px), `SectionDescription`.
+- **Aktionen am Seitenende** → `PageFooter` (`default`, `sticky` mit Linie und Hintergrund, `bordered` unter einem scrollenden Bereich).
+- **QR-Code** → `QrCard` (weiße Karte, `size="default"` 248 px, `"sm"` 212 px) mit `QrCode`. Link zum Kopieren → `LinkField`.
+- **Avatar** → `Avatar` mit `AvatarImage` und `AvatarFallback` (Anfangsbuchstabe in `primary` auf `muted`). Größen: `default` 36, `md` 44, `lg` 56, `xl` 64, `2xl` 160 (Profilbild-Editor ohne Bild). In Spielerlisten Konten mit Ring `variant="account"`, Gäste gestrichelt `variant="guest"`.
 - **Eingabe:** 52 px, Radius 12 px, Rand 1,5 px `border` (Fokus `primary`), Fläche `card`. Label 14 px / 500 darüber, Hinweis 13 px gedämpft darunter, Fehler in `destructive`. Passwortfelder mit `eye` / `eye-off`. → `Field`, `FieldLabel`, `Input`, `FieldDescription`, `FieldError`; Hinweis, der bei einem Fehler durch die Meldung ersetzt wird: `FieldNote`. Passwortfeld fertig: `PasswordInput`. Passwort und Link zum Kopieren: `InputGroup` mit `InputGroupInput` und `InputGroupButton size="icon"` (`eye`/`eye-off`, `copy`, danach `check`). Nur lesbarer Wert: `Input readOnly` (gedämpft, ohne Rand).
 - **Datum und Auswahl:** nativ. Datum → `DateInput` (natives `type="date"` mit eigenem `calendar`-Icon, weil Browser unterschiedliche Indikatoren zeigen), Auswahl → `NativeSelect` mit `NativeSelectOption`.
 - **Einstellung mit wenigen kurzen Optionen** (Darstellung: System / Hell / Dunkel), sieht aus wie die Segmented Tabs → `RadioGroup variant="segmented"` mit `RadioSegment` (Icon optional vor dem Text).
