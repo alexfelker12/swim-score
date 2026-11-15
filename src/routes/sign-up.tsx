@@ -6,10 +6,22 @@ import {
   redirect,
   useRouter,
 } from "@tanstack/react-router"
-import { AuthPage, GoogleSignIn } from "@/components/auth-page"
-import { PrimaryButton } from "@/components/buttons"
-import { Field, PasswordInput, TextInput } from "@/components/form-field"
-import { OrDivider } from "@/components/google-button"
+import {
+  AuthPage,
+  AuthPageFooter,
+  AuthPageTitle,
+  GoogleSignIn,
+} from "@/components/auth-page"
+import { PasswordInput } from "@/components/password-input"
+import { Button } from "@/components/ui/button"
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldNote,
+  FieldSeparator,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
 import { safeRedirect } from "@/lib/safe-redirect"
@@ -75,84 +87,87 @@ function SignUp() {
   }
 
   return (
-    <AuthPage title="Konto anlegen">
+    <AuthPage>
+      <AuthPageTitle>Konto anlegen</AuthPageTitle>
       <GoogleSignIn label="Mit Google registrieren" redirect={target} />
-      <OrDivider />
+      <FieldSeparator>oder</FieldSeparator>
       <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        <Field
-          label="Benutzername"
-          hint="Damit meldest du dich an. Deinen Anzeigenamen änderst du später im Profil."
-          error={errors.username}
-        >
-          {(field) => (
-            <TextInput
-              {...field}
-              autoComplete="username"
-              autoCapitalize="none"
-              placeholder="z. B. emil_k"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          )}
+        <Field data-invalid={errors.username ? true : undefined}>
+          <FieldLabel htmlFor="sign-up-username">Benutzername</FieldLabel>
+          <Input
+            id="sign-up-username"
+            autoComplete="username"
+            autoCapitalize="none"
+            placeholder="z. B. emil_k"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            aria-invalid={errors.username ? true : undefined}
+            aria-describedby="sign-up-username-note"
+          />
+          <FieldNote id="sign-up-username-note" error={errors.username}>
+            Damit meldest du dich an. Deinen Anzeigenamen änderst du später im
+            Profil.
+          </FieldNote>
         </Field>
-        <Field
-          label="E-Mail"
-          hint="Nur für das Zurücksetzen des Passworts. Niemand in deinen Gruppen sieht sie."
-          error={errors.email}
-        >
-          {(field) => (
-            <TextInput
-              {...field}
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          )}
+        <Field data-invalid={errors.email ? true : undefined}>
+          <FieldLabel htmlFor="sign-up-email">E-Mail</FieldLabel>
+          <Input
+            id="sign-up-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby="sign-up-email-note"
+          />
+          <FieldNote id="sign-up-email-note" error={errors.email}>
+            Nur für das Zurücksetzen des Passworts. Niemand in deinen Gruppen
+            sieht sie.
+          </FieldNote>
         </Field>
-        <Field
-          label="Passwort"
-          hint="Mindestens 8 Zeichen."
-          error={errors.password}
-        >
-          {(field) => (
-            <PasswordInput
-              {...field}
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          )}
+        <Field data-invalid={errors.password ? true : undefined}>
+          <FieldLabel htmlFor="sign-up-password">Passwort</FieldLabel>
+          <PasswordInput
+            id="sign-up-password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            aria-invalid={errors.password ? true : undefined}
+            aria-describedby="sign-up-password-note"
+          />
+          <FieldNote id="sign-up-password-note" error={errors.password}>
+            Mindestens 8 Zeichen.
+          </FieldNote>
         </Field>
-        <Field label="Passwort bestätigen" error={errors.confirm}>
-          {(field) => (
-            <PasswordInput
-              {...field}
-              autoComplete="new-password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-            />
-          )}
+        <Field data-invalid={errors.confirm ? true : undefined}>
+          <FieldLabel htmlFor="sign-up-confirm">Passwort bestätigen</FieldLabel>
+          <PasswordInput
+            id="sign-up-confirm"
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            aria-invalid={errors.confirm ? true : undefined}
+            aria-describedby={
+              errors.confirm ? "sign-up-confirm-error" : undefined
+            }
+          />
+          <FieldError id="sign-up-confirm-error">{errors.confirm}</FieldError>
         </Field>
-        {errors.form ? (
-          <p role="alert" className="text-[13px] text-destructive">
-            {errors.form}
-          </p>
-        ) : null}
-        <PrimaryButton type="submit" disabled={pending}>
+        <FieldError>{errors.form}</FieldError>
+        <Button type="submit" size="xl" disabled={pending}>
           Konto anlegen
-        </PrimaryButton>
+        </Button>
       </form>
-      <p className="pt-1 text-center text-[15px] text-muted-foreground">
+      <AuthPageFooter>
         Schon ein Konto?{" "}
-        <Link
-          to="/sign-in"
-          search={search}
-          className="font-semibold text-primary"
+        <Button
+          variant="link"
+          nativeButton={false}
+          render={<Link to="/sign-in" search={search} />}
         >
           Anmelden
-        </Link>
-      </p>
+        </Button>
+      </AuthPageFooter>
     </AuthPage>
   )
 }

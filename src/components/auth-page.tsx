@@ -1,50 +1,105 @@
 import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { ChevronLeft } from "lucide-react"
+import { GoogleIcon } from "@/components/icons/google-icon"
+import { Button } from "@/components/ui/button"
+import { FieldError } from "@/components/ui/field"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
-import { GoogleButton } from "./google-button"
+import { cn } from "@/lib/utils"
 import { Logo } from "./logo"
-import type { ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 
 /**
  * Frame of the account pages (sign-in, sign-up, password reset): logo
- * header, title, content. With `back`, a way back left of the logo.
+ * header, then the page's parts. With `back`, a way back left of the logo.
+ *
+ * ```tsx
+ * <AuthPage back="/sign-in">
+ *   <AuthPageTitle>Passwort vergessen</AuthPageTitle>
+ *   <AuthPageDescription>…</AuthPageDescription>
+ *   <form>…</form>
+ *   <AuthPageFooter>…</AuthPageFooter>
+ * </AuthPage>
+ * ```
  */
 export function AuthPage({
-  title,
   back,
   children,
 }: {
-  title: string
   back?: "/sign-in"
   children: ReactNode
 }) {
   return (
     <div className="flex min-h-svh flex-col">
       <header
-        className={
-          back
-            ? "flex h-18 shrink-0 items-center gap-3 px-3"
-            : "flex h-18 shrink-0 items-center px-6"
-        }
+        className={cn(
+          "flex h-18 shrink-0 items-center",
+          back ? "gap-3 px-3" : "px-6"
+        )}
       >
         {back ? (
-          <Link
-            to={back}
+          <Button
+            variant="ghost"
+            size="icon"
+            nativeButton={false}
+            render={<Link to={back} />}
             aria-label="Zurück zur Anmeldung"
-            className="flex size-11 items-center justify-center rounded-xl"
           >
-            <ChevronLeft className="size-6" aria-hidden="true" />
-          </Link>
+            <ChevronLeft className="size-6" />
+          </Button>
         ) : null}
         <Logo />
       </header>
       <main className="flex flex-1 flex-col gap-5 px-6 pt-3 pb-7">
-        <h1 className="text-[30px] font-bold tracking-[-0.01em]">{title}</h1>
         {children}
       </main>
     </div>
+  )
+}
+
+/** The page heading, 30 px bold. */
+export function AuthPageTitle({ className, ...props }: ComponentProps<"h1">) {
+  return (
+    <h1
+      data-slot="auth-page-title"
+      className={cn("text-[30px] font-bold tracking-[-0.01em]", className)}
+      {...props}
+    />
+  )
+}
+
+/** Lead text under the heading; `<strong>` inside stands out (the account name). */
+export function AuthPageDescription({
+  className,
+  ...props
+}: ComponentProps<"p">) {
+  return (
+    <p
+      data-slot="auth-page-description"
+      className={cn(
+        "text-lg text-pretty text-muted-foreground [&_strong]:font-semibold [&_strong]:text-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * The way to the other account page ("Noch kein Konto? Registrieren"),
+ * centred at the foot of the page.
+ */
+export function AuthPageFooter({ className, ...props }: ComponentProps<"p">) {
+  return (
+    <p
+      data-slot="auth-page-footer"
+      className={cn(
+        "mt-auto text-center text-[15px] text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
   )
 }
 
@@ -65,7 +120,8 @@ export function GoogleSignIn({
   )
   return (
     <>
-      <GoogleButton
+      <Button
+        variant="google"
         disabled={pending}
         onClick={async () => {
           setPending(true)
@@ -81,13 +137,10 @@ export function GoogleSignIn({
           }
         }}
       >
+        <GoogleIcon />
         {label}
-      </GoogleButton>
-      {error ? (
-        <p role="alert" className="-mt-2 text-[13px] text-destructive">
-          {error}
-        </p>
-      ) : null}
+      </Button>
+      <FieldError className="-mt-2">{error}</FieldError>
     </>
   )
 }

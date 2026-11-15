@@ -1,9 +1,21 @@
 import { useState } from "react"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { AuthPage } from "@/components/auth-page"
-import { PrimaryButton } from "@/components/buttons"
-import { Field, PasswordInput } from "@/components/form-field"
-import { LinkGone } from "@/components/link-gone"
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
+import {
+  AuthPage,
+  AuthPageDescription,
+  AuthPageTitle,
+} from "@/components/auth-page"
+import {
+  LinkGone,
+  LinkGoneContent,
+  LinkGoneDescription,
+  LinkGoneFooter,
+  LinkGoneTitle,
+} from "@/components/link-gone"
+import { PasswordInput } from "@/components/password-input"
+import { Button } from "@/components/ui/button"
+import { Field, FieldError, FieldLabel, FieldNote } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
 import { getPasswordResetAccountFn } from "@/server/functions"
@@ -84,15 +96,15 @@ function NewPasswordForm({
   }
 
   return (
-    <AuthPage title="Neues Passwort" back="/sign-in">
-      <p className="text-lg text-pretty text-muted-foreground">
-        Für das Konto{" "}
-        <strong className="font-semibold text-foreground">{username}</strong>.
-        Danach meldest du dich damit an.
-      </p>
+    <AuthPage back="/sign-in">
+      <AuthPageTitle>Neues Passwort</AuthPageTitle>
+      <AuthPageDescription>
+        Für das Konto <strong>{username}</strong>. Danach meldest du dich damit
+        an.
+      </AuthPageDescription>
       <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
         {/* For password managers: which account the new password is for. */}
-        <input
+        <Input
           type="text"
           name="username"
           autoComplete="username"
@@ -100,33 +112,41 @@ function NewPasswordForm({
           readOnly
           hidden
         />
-        <Field
-          label="Neues Passwort"
-          hint="Mindestens 8 Zeichen."
-          error={errors.password}
-        >
-          {(field) => (
-            <PasswordInput
-              {...field}
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          )}
+        <Field data-invalid={errors.password ? true : undefined}>
+          <FieldLabel htmlFor="reset-password-new">Neues Passwort</FieldLabel>
+          <PasswordInput
+            id="reset-password-new"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            aria-invalid={errors.password ? true : undefined}
+            aria-describedby="reset-password-new-note"
+          />
+          <FieldNote id="reset-password-new-note" error={errors.password}>
+            Mindestens 8 Zeichen.
+          </FieldNote>
         </Field>
-        <Field label="Passwort bestätigen" error={errors.confirmation}>
-          {(field) => (
-            <PasswordInput
-              {...field}
-              autoComplete="new-password"
-              value={confirmation}
-              onChange={(e) => setConfirmation(e.target.value)}
-            />
-          )}
+        <Field data-invalid={errors.confirmation ? true : undefined}>
+          <FieldLabel htmlFor="reset-password-confirm">
+            Passwort bestätigen
+          </FieldLabel>
+          <PasswordInput
+            id="reset-password-confirm"
+            autoComplete="new-password"
+            value={confirmation}
+            onChange={(e) => setConfirmation(e.target.value)}
+            aria-invalid={errors.confirmation ? true : undefined}
+            aria-describedby={
+              errors.confirmation ? "reset-password-confirm-error" : undefined
+            }
+          />
+          <FieldError id="reset-password-confirm-error">
+            {errors.confirmation}
+          </FieldError>
         </Field>
-        <PrimaryButton type="submit" disabled={pending} className="mt-1">
+        <Button type="submit" size="xl" disabled={pending} className="mt-1">
           Passwort speichern
-        </PrimaryButton>
+        </Button>
       </form>
     </AuthPage>
   )
@@ -134,13 +154,23 @@ function NewPasswordForm({
 
 function LinkExpired() {
   return (
-    <LinkGone
-      title="Dieser Link gilt nicht mehr"
-      action="Neuen Link anfordern"
-      to="/forgot-password"
-    >
-      Ein Link zum Zurücksetzen gilt eine Stunde und nur einmal. Fordere einfach
-      einen neuen an.
+    <LinkGone>
+      <LinkGoneContent>
+        <LinkGoneTitle>Dieser Link gilt nicht mehr</LinkGoneTitle>
+        <LinkGoneDescription>
+          Ein Link zum Zurücksetzen gilt eine Stunde und nur einmal. Fordere
+          einfach einen neuen an.
+        </LinkGoneDescription>
+      </LinkGoneContent>
+      <LinkGoneFooter>
+        <Button
+          size="xl"
+          nativeButton={false}
+          render={<Link to="/forgot-password" />}
+        >
+          Neuen Link anfordern
+        </Button>
+      </LinkGoneFooter>
     </LinkGone>
   )
 }

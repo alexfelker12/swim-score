@@ -224,8 +224,28 @@ function FieldError({
   )
 }
 
+/**
+ * The line under an input: the hint, or the error in its place while there
+ * is one (as in the design's input pattern). Give the input
+ * `aria-describedby={id}` so either is read with it.
+ */
+function FieldNote({
+  error,
+  children,
+  ...props
+}: {
+  id?: string
+  className?: string
+  error?: string | null
+  children: React.ReactNode
+}) {
+  if (error) return <FieldError {...props}>{error}</FieldError>
+  return <FieldDescription {...props}>{children}</FieldDescription>
+}
+
 export {
   Field,
+  FieldNote,
   FieldLabel,
   FieldDescription,
   FieldError,

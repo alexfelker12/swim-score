@@ -1,10 +1,22 @@
 import { useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
+import {
+  Link,
+  createFileRoute,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router"
 import { PrimaryButton } from "@/components/buttons"
 import { ChoiceCard } from "@/components/choice-card"
-import { LinkGone } from "@/components/link-gone"
+import {
+  LinkGone,
+  LinkGoneContent,
+  LinkGoneDescription,
+  LinkGoneFooter,
+  LinkGoneTitle,
+} from "@/components/link-gone"
 import { Logo } from "@/components/logo"
+import { Button } from "@/components/ui/button"
 import { gameCount } from "@/lib/plural"
 import { inviteQuery, joined, queryKeys } from "@/lib/queries"
 import { joinGroupFn } from "@/server/functions"
@@ -145,9 +157,19 @@ function AcceptInvite({ invite }: { invite: InviteView }) {
 
 function InvalidInvite() {
   return (
-    <LinkGone title="Diese Einladung gilt nicht mehr" action="Zur Startseite">
-      Der Verwalter der Gruppe hat den Einladungslink erneuert. Bitte ihn um den
-      aktuellen Link oder QR-Code.
+    <LinkGone>
+      <LinkGoneContent>
+        <LinkGoneTitle>Diese Einladung gilt nicht mehr</LinkGoneTitle>
+        <LinkGoneDescription>
+          Der Verwalter der Gruppe hat den Einladungslink erneuert. Bitte ihn um
+          den aktuellen Link oder QR-Code.
+        </LinkGoneDescription>
+      </LinkGoneContent>
+      <LinkGoneFooter>
+        <Button size="xl" nativeButton={false} render={<Link to="/" />}>
+          Zur Startseite
+        </Button>
+      </LinkGoneFooter>
     </LinkGone>
   )
 }

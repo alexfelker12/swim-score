@@ -7,11 +7,22 @@ import {
   useRouter,
 } from "@tanstack/react-router"
 import { CircleCheck } from "lucide-react"
-import { AuthPage, GoogleSignIn } from "@/components/auth-page"
-import { PrimaryButton } from "@/components/buttons"
-import { Field, PasswordInput, TextInput } from "@/components/form-field"
-import { OrDivider } from "@/components/google-button"
-import { Notice } from "@/components/notice"
+import {
+  AuthPage,
+  AuthPageFooter,
+  AuthPageTitle,
+  GoogleSignIn,
+} from "@/components/auth-page"
+import { PasswordInput } from "@/components/password-input"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldSeparator,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
 import { safeRedirect } from "@/lib/safe-redirect"
@@ -76,63 +87,77 @@ function SignIn() {
   }
 
   return (
-    <AuthPage title="Anmelden">
+    <AuthPage>
+      <AuthPageTitle>Anmelden</AuthPageTitle>
       {search.reset ? (
-        <Notice icon={CircleCheck}>
-          Dein neues Passwort ist gespeichert. Melde dich jetzt damit an.
-        </Notice>
+        <Alert>
+          <CircleCheck />
+          <AlertDescription>
+            Dein neues Passwort ist gespeichert. Melde dich jetzt damit an.
+          </AlertDescription>
+        </Alert>
       ) : null}
       <GoogleSignIn
         label="Mit Google anmelden"
         redirect={safeRedirect(search.redirect)}
         initialError={search.error}
       />
-      <OrDivider />
+      <FieldSeparator>oder</FieldSeparator>
       <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
-        <Field label="Benutzername" error={errors.username}>
-          {(field) => (
-            <TextInput
-              {...field}
-              autoComplete="username"
-              autoCapitalize="none"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          )}
+        <Field data-invalid={errors.username ? true : undefined}>
+          <FieldLabel htmlFor="sign-in-username">Benutzername</FieldLabel>
+          <Input
+            id="sign-in-username"
+            autoComplete="username"
+            autoCapitalize="none"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            aria-invalid={errors.username ? true : undefined}
+            aria-describedby={
+              errors.username ? "sign-in-username-error" : undefined
+            }
+          />
+          <FieldError id="sign-in-username-error">{errors.username}</FieldError>
         </Field>
-        <Field label="Passwort" error={errors.password}>
-          {(field) => (
-            <PasswordInput
-              {...field}
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          )}
+        <Field data-invalid={errors.password ? true : undefined}>
+          <FieldLabel htmlFor="sign-in-password">Passwort</FieldLabel>
+          <PasswordInput
+            id="sign-in-password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            aria-invalid={errors.password ? true : undefined}
+            aria-describedby={
+              errors.password ? "sign-in-password-error" : undefined
+            }
+          />
+          <FieldError id="sign-in-password-error">{errors.password}</FieldError>
         </Field>
         {passwordReset ? (
-          <Link
-            to="/forgot-password"
-            className="-mt-1 self-end py-1 text-[17px] font-semibold text-primary"
+          <Button
+            variant="link"
+            size="lg"
+            nativeButton={false}
+            render={<Link to="/forgot-password" />}
+            className="-mt-1 self-end"
           >
             Passwort vergessen?
-          </Link>
+          </Button>
         ) : null}
-        <PrimaryButton type="submit" disabled={pending} className="mt-1">
+        <Button type="submit" size="xl" disabled={pending} className="mt-1">
           Anmelden
-        </PrimaryButton>
+        </Button>
       </form>
-      <div className="flex-1" />
-      <p className="text-center text-[15px] text-muted-foreground">
+      <AuthPageFooter>
         Noch kein Konto?{" "}
-        <Link
-          to="/sign-up"
-          search={{ redirect: search.redirect }}
-          className="font-semibold text-primary"
+        <Button
+          variant="link"
+          nativeButton={false}
+          render={<Link to="/sign-up" search={{ redirect: search.redirect }} />}
         >
           Registrieren
-        </Link>
-      </p>
+        </Button>
+      </AuthPageFooter>
     </AuthPage>
   )
 }
