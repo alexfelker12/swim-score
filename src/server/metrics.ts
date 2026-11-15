@@ -6,7 +6,7 @@ import type { SQL } from "drizzle-orm"
 export type MetricUnit = "count" | "percent" | "decimal"
 
 /**
- * A statistic the Group Leaderboard ranks by (and, later, Personal Stats).
+ * A statistic of the Group Leaderboard and of Personal Stats.
  * A new metric is a new entry in `METRICS` (plus its icon in the
  * Leaderboard tab): it applies to every completed Game at once. It counts
  * the summary columns of `participant`, which are derived from the Game's

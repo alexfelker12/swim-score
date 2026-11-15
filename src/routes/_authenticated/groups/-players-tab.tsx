@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import { ProfileLink } from "@/components/profile-link"
 import { Link } from "@tanstack/react-router"
 import { Plus } from "lucide-react"
 import { Badge } from "@/components/badge"
@@ -209,10 +210,11 @@ function ClaimCard({
   )
 }
 
-/** Rows with an account will open the Player Profile once it exists (#14). */
+/** A Player; with an account, the row opens their Player Profile. Guests are not tappable. */
 function PlayerRow({ player }: { player: GroupPlayer }) {
-  return (
-    <div className="flex min-h-14 items-center gap-3">
+  const className = "flex min-h-14 items-center gap-3"
+  const content = (
+    <>
       {player.guest ? (
         <span
           aria-hidden="true"
@@ -236,6 +238,11 @@ function PlayerRow({ player }: { player: GroupPlayer }) {
       </span>
       {player.admin ? <Badge tone="primary">Verwalter</Badge> : null}
       {player.guest ? <Badge tone="muted">Gast</Badge> : null}
-    </div>
+    </>
+  )
+  return (
+    <ProfileLink userId={player.userId} className={className}>
+      {content}
+    </ProfileLink>
   )
 }

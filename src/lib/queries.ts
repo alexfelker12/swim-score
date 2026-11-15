@@ -8,6 +8,7 @@ import {
   getInviteLinkFn,
   getLeaderboardFn,
   getNewGameFn,
+  getPlayerProfileFn,
   getProfileFn,
   getSpectatorGameFn,
   listGamesFn,
@@ -37,6 +38,11 @@ export const queryKeys = {
   games: () => ["game"] as const,
   game: (gameId: string) => ["game", gameId] as const,
   profile: () => ["profile"] as const,
+  /** Prefix of every Player Profile. */
+  playerProfiles: () => ["playerProfile"] as const,
+  /** One account's Player Profile for one period; `""` for an open end. */
+  playerProfile: (userId: string, from = "", to = "") =>
+    ["playerProfile", userId, from, to] as const,
   spectatorGame: (token: string) => ["spectatorGame", token] as const,
 }
 
@@ -135,6 +141,24 @@ export function gameQuery(gameId: string) {
   })
 }
 
+/**
+ * An account's Player Profile with its Personal Stats, over all its Games or
+ * those started between `from` and `to` (`YYYY-MM-DD`); null when the viewer
+ * may not see it.
+ */
+export function playerProfileQuery(
+  userId: string,
+  period: { from?: string; to?: string } = {}
+) {
+  return queryOptions({
+    queryKey: queryKeys.playerProfile(userId, period.from, period.to),
+    queryFn: () =>
+      getPlayerProfileFn({
+        data: { userId, from: period.from, to: period.to },
+      }),
+  })
+}
+
 /** The signed-in account's own profile. */
 export function profileQuery() {
   return queryOptions({
@@ -168,9 +192,10 @@ function invalidate(
 /**
  * Something about a Group changed: its Players (a Guest added, a Player
  * removed, joined or merged, the Group Admin handed over), its name, its
- * Games. Reloads all of the Group and "Meine Gruppen". With `games`, also
- * every Game, because names shown in past Games changed (a Guest merged into
- * an account, the Group renamed).
+ * Games. Reloads all of the Group, "Meine Gruppen" and the Player Profiles,
+ * whose Personal Stats and Group cards may show it. With `games`, also every
+ * Game, because names shown in past Games changed (a Guest merged into an
+ * account, the Group renamed).
  */
 export async function groupChanged(
   queryClient: QueryClient,
@@ -180,6 +205,7 @@ export async function groupChanged(
   await Promise.all([
     invalidate(queryClient, queryKeys.group(groupId), when),
     invalidate(queryClient, queryKeys.myGroups(), when),
+    invalidate(queryClient, queryKeys.playerProfiles(), when),
     games ? invalidate(queryClient, queryKeys.games(), when) : null,
   ])
 }
@@ -223,7 +249,11 @@ export async function joined(
 /** The signed-in account is no longer in the Group: drop what was loaded of it. */
 export async function leftGroup(queryClient: QueryClient, groupId: string) {
   queryClient.removeQueries({ queryKey: queryKeys.group(groupId) })
-  await invalidate(queryClient, queryKeys.myGroups(), { later: true })
+  await Promise.all([
+    invalidate(queryClient, queryKeys.myGroups(), { later: true }),
+    // Who shares a Group with the account, and its Personal Stats, changed.
+    invalidate(queryClient, queryKeys.playerProfiles(), { later: true }),
+  ])
 }
 
 /**

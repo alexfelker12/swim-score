@@ -6,26 +6,53 @@ import { PrimaryButton, SecondaryButton } from "@/components/buttons"
 import { ConfirmSheet } from "@/components/confirm-sheet"
 import { Field, ReadOnlyValue, TextInput } from "@/components/form-field"
 import { AvatarEditor } from "@/components/avatar-editor"
+import { PersonalStats } from "@/components/personal-stats"
 import { SegmentedTabs } from "@/components/segmented-tabs"
 import type { AvatarEditorStart } from "@/components/avatar-editor"
 import { UserAvatar } from "@/components/user-avatar"
 import { authClient } from "@/lib/auth-client"
-import { profileChanged, profileQuery, queryKeys } from "@/lib/queries"
+import { periodFromSearch } from "@/lib/period-search"
+import {
+  playerProfileQuery,
+  profileChanged,
+  profileQuery,
+  queryKeys,
+} from "@/lib/queries"
 import {
   deleteAccountFn,
   setThemeFn,
   updateProfileFn,
 } from "@/server/functions"
 import type { Profile, Theme } from "@/server/profile"
+import type { Period } from "@/server/stats"
+
+type ProfileSearch = Period & { tab?: "stats" }
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  loader: ({ context }) => context.queryClient.query(profileQuery()),
+  validateSearch: (search: Record<string, unknown>): ProfileSearch => ({
+    ...(search.tab === "stats" ? { tab: "stats" as const } : {}),
+    ...periodFromSearch(search),
+  }),
+  loaderDeps: ({ search }) => ({
+    stats: search.tab === "stats",
+    from: search.from,
+    to: search.to,
+  }),
+  loader: async ({ context, deps }) => {
+    const profile = await context.queryClient.query(profileQuery())
+    if (deps.stats) {
+      await context.queryClient.query(
+        playerProfileQuery(profile.id, { from: deps.from, to: deps.to })
+      )
+    }
+  },
   component: ProfilePage,
 })
 
 function ProfilePage() {
   const { data: profile } = useSuspenseQuery(profileQuery())
-  const [tab, setTab] = useState<"details" | "stats">("details")
+  const { tab = "details", from, to } = Route.useSearch()
+  const navigate = Route.useNavigate()
   return (
     <div className="flex min-h-svh flex-col">
       <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
@@ -54,7 +81,15 @@ function ProfilePage() {
       <SegmentedTabs
         label="Profil"
         value={tab}
-        onChange={setTab}
+        onChange={(next) =>
+          navigate({
+            search: (previous) => ({
+              ...previous,
+              tab: next === "stats" ? "stats" : undefined,
+            }),
+            replace: true,
+          })
+        }
         options={[
           { value: "details", label: "Details" },
           { value: "stats", label: "Meine Statistik" },
@@ -65,10 +100,29 @@ function ProfilePage() {
       {tab === "details" ? (
         <Details profile={profile} />
       ) : (
-        <div role="tabpanel" className="px-5 py-6 text-muted-foreground">
-          Deine Statistik erscheint hier, sobald du Spiele gespielt hast.
-        </div>
+        <MyStats userId={profile.id} period={{ from, to }} />
       )}
+    </div>
+  )
+}
+
+/** Tab "Meine Statistik": the own Personal Stats, as on the Player Profile. */
+function MyStats({ userId, period }: { userId: string; period: Period }) {
+  const navigate = Route.useNavigate()
+  const { data: stats } = useSuspenseQuery(playerProfileQuery(userId, period))
+  if (!stats) return null
+  return (
+    <div role="tabpanel">
+      <PersonalStats
+        profile={stats}
+        period={period}
+        onPeriodChange={({ from, to }) =>
+          navigate({
+            search: (previous) => ({ ...previous, from, to }),
+            replace: true,
+          })
+        }
+      />
     </div>
   )
 }
