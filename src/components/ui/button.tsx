@@ -31,6 +31,9 @@ const buttonVariants = cva(
         /** Removes or deletes something: coral fill. */
         destructive:
           "bg-destructive font-semibold text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/90",
+        /** Removes something, beside `outline` buttons ("Entfernen" in the picture editor). */
+        "destructive-outline":
+          "border-border bg-card font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive-muted",
         /** Removes something, as text ("Spiel abbrechen", "Konto löschen"). */
         "destructive-ghost":
           "font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive-muted",
@@ -64,6 +67,8 @@ const buttonVariants = cva(
     compoundVariants: [
       // 12 px inset on the left, 10 px between logo and text, radius as the main buttons.
       { variant: "google", className: "gap-2.5 rounded-[14px] px-3 text-sm/5" },
+      // A text link on its own ("Bild doch behalten") keeps the 44 px tap target.
+      { variant: "link", size: "sm", className: "h-11! px-4!" },
     ],
     defaultVariants: {
       variant: "default",

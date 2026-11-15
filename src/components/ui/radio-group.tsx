@@ -2,14 +2,53 @@
 
 import { Radio as RadioPrimitive } from "@base-ui/react/radio"
 import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group"
+import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 import type * as React from "react"
 
-function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
+const radioGroupVariants = cva("grid w-full", {
+  variants: {
+    variant: {
+      /** Radios or radio cards under each other. */
+      default: "gap-3",
+      /**
+       * A setting with a few short options, looking like the segmented tabs
+       * ("Darstellung": System / Hell / Dunkel). Options are `RadioSegment`s.
+       */
+      segmented: "auto-cols-fr grid-flow-col gap-1 rounded-[14px] bg-muted p-1",
+    },
+  },
+  defaultVariants: { variant: "default" },
+})
+
+function RadioGroup({
+  className,
+  variant = "default",
+  ...props
+}: RadioGroupPrimitive.Props & VariantProps<typeof radioGroupVariants>) {
   return (
     <RadioGroupPrimitive
       data-slot="radio-group"
-      className={cn("grid w-full gap-3", className)}
+      data-variant={variant}
+      className={cn(radioGroupVariants({ variant }), className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * One option of a `RadioGroup variant="segmented"`: 40 px, an optional icon
+ * (16 px) before the label, the checked one as a card with 600, the others
+ * `muted-foreground`.
+ */
+function RadioSegment({ className, ...props }: RadioPrimitive.Root.Props) {
+  return (
+    <RadioPrimitive.Root
+      data-slot="radio-segment"
+      className={cn(
+        "flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] text-[15px] text-muted-foreground transition-[color,background-color,scale] duration-100 outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.97] motion-reduce:active:scale-100 data-checked:bg-card data-checked:font-semibold data-checked:text-foreground data-disabled:pointer-events-none data-disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
       {...props}
     />
   )
@@ -85,6 +124,7 @@ function RadioCardDescription({
 export {
   RadioGroup,
   RadioGroupItem,
+  RadioSegment,
   RadioCard,
   RadioCardTitle,
   RadioCardDescription,

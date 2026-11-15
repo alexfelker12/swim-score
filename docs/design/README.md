@@ -49,7 +49,8 @@ Gebaut wird aus den shadcn/ui-Komponenten auf Base UI in `src/components/ui` (AD
 
 Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die Komponente.
 
-- **Kopf** 56 px: Zurück (44 × 44 px, `chevron-left`), Titel zentriert 17–20 px / 600, darunter optional eine Unterzeile 13 px gedämpft, rechts Icon-Buttons (44 × 44 px). (`i05-start-spiel`) → Icon-Buttons `Button variant="ghost" size="icon"`.
+- **Kopf** 56 px: Zurück (44 × 44 px, `chevron-left`), Titel zentriert 17–20 px / 600, darunter optional eine Unterzeile 13 px gedämpft, rechts Icon-Buttons (44 × 44 px). (`i05-start-spiel`) → `PageHeader` mit `PageHeaderBack` (Zurück als Link über `render`) und `PageHeaderTitle`; weitere Icon-Buttons `Button variant="ghost" size="icon"`.
+- **Profil-Kopf** (Avatar neben Name und Unterzeile, `i03-profil`) → `ProfileHeading` mit `Avatar`, `ProfileHeadingContent`, `ProfileHeadingTitle`, `ProfileHeadingDescription`.
 - **Statuszeile im Spiel** 40 px (mit „Übernehmen“ 48 px), Fläche `muted`, Radius 12 px, Innenabstand 14 px, Text 14 px, Punkt 8 px in `primary`. Offline invertiert. (`i05-runde-1`, `i10-offline-zaehlen`) → fachliche Komponente, „Übernehmen“ als `Button variant="soft" size="xs"`.
 - **Spielerzeile** (`i05-schwimmer`) → fachliche Komponente aus shadcn-Teilen, Zustände als Varianten:
   - Höhe 52–88 px, Radius 14 px, Rand 1,5 px `border`, Fläche `card`. Name 18–20 px / 600.
@@ -61,7 +62,7 @@ Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die
 - **Buttons** → `Button`:
   - Primär: 52–56 px, Radius 14 px, `primary` / `primary-foreground`, 16 px / 600. → `variant="default"`, `size="xl"` (56 px) bzw. `"lg"` (52 px).
   - Sekundär: Rand 1,5 px `border`, transparent. → `variant="secondary"`; auf Karten-Fläche `"outline"`.
-  - Gefährlich: `destructive` gefüllt. → `variant="destructive"`; als Text („Spiel abbrechen“) `"destructive-ghost"`.
+  - Gefährlich: `destructive` gefüllt. → `variant="destructive"`; als Text („Spiel abbrechen“) `"destructive-ghost"`; mit Rand neben `outline`-Buttons („Entfernen“ im Profilbild-Editor) `"destructive-outline"`.
   - Bombe: Rand und Text `bomb` auf `bomb-muted`. → `variant="bomb"`.
   - Leise Primär-Aktion („Übernehmen“, Hinzufügen): `variant="soft"`. Textaktion: `"link"` oder `"ghost"`.
   - Google: `variant="google"` (Richtlinien in `decisions.md` › Konto).
@@ -77,9 +78,10 @@ Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die
 - **Rückmeldung beim Tippen:** Touch-Geräte zeigen kein `hover:`. Buttons, Tabs, Radio-Karten und antippbare Zeilen reagieren deshalb auf `active:` (Fläche wie bei Hover, Buttons schrumpfen kurz auf 97 %, Icon-Buttons auf 90 %, abgeschaltet bei reduzierter Bewegung). Das ist in den Komponenten eingebaut.
 - **Listenzeile:** mindestens 56 px, Trennlinie 1 px `border` unten, rechts `chevron-right` oder Icon-Buttons. (`i12-verwaltung`, `i13-rangliste`) → `Item variant="row" size="list"` mit `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription`, `ItemActions`. Als Karte: `variant="card"`.
 - **Badges:** Pill, 12–13 px / 500–600. „Verwalter“ in `primary` auf `primary-muted`, „Gast“ in `muted-foreground` auf `muted`. „zählt“ ebenfalls gedämpft. → `Badge variant="primary"` bzw. `"muted"`.
-- **Avatar** → `Avatar` mit `AvatarImage` und `AvatarFallback` (Anfangsbuchstabe in `primary` auf `muted`). Größen: `default` 36, `md` 44, `lg` 56, `xl` 64.
-- **Eingabe:** 52 px, Radius 12 px, Rand 1,5 px `border` (Fokus `primary`), Fläche `card`. Label 14 px / 500 darüber, Hinweis 13 px gedämpft darunter, Fehler in `destructive`. Passwortfelder mit `eye` / `eye-off`. → `Field`, `FieldLabel`, `Input`, `FieldDescription`, `FieldError`. Passwort und Link zum Kopieren: `InputGroup` mit `InputGroupInput` und `InputGroupButton size="icon"` (`eye`/`eye-off`, `copy`, danach `check`). Nur lesbarer Wert: `Input readOnly` (gedämpft, ohne Rand).
+- **Avatar** → `Avatar` mit `AvatarImage` und `AvatarFallback` (Anfangsbuchstabe in `primary` auf `muted`). Größen: `default` 36, `md` 44, `lg` 56, `xl` 64, `2xl` 160 (Profilbild-Editor ohne Bild).
+- **Eingabe:** 52 px, Radius 12 px, Rand 1,5 px `border` (Fokus `primary`), Fläche `card`. Label 14 px / 500 darüber, Hinweis 13 px gedämpft darunter, Fehler in `destructive`. Passwortfelder mit `eye` / `eye-off`. → `Field`, `FieldLabel`, `Input`, `FieldDescription`, `FieldError`; Hinweis, der bei einem Fehler durch die Meldung ersetzt wird: `FieldNote`. Passwortfeld fertig: `PasswordInput`. Passwort und Link zum Kopieren: `InputGroup` mit `InputGroupInput` und `InputGroupButton size="icon"` (`eye`/`eye-off`, `copy`, danach `check`). Nur lesbarer Wert: `Input readOnly` (gedämpft, ohne Rand).
 - **Datum und Auswahl:** nativ. Datum → `DateInput` (natives `type="date"` mit eigenem `calendar`-Icon, weil Browser unterschiedliche Indikatoren zeigen), Auswahl → `NativeSelect` mit `NativeSelectOption`.
+- **Einstellung mit wenigen kurzen Optionen** (Darstellung: System / Hell / Dunkel), sieht aus wie die Segmented Tabs → `RadioGroup variant="segmented"` mit `RadioSegment` (Icon optional vor dem Text).
 - **Einzelauswahl als Karten** („Wer bist du?“) → `RadioGroup` mit `RadioCard`, `RadioCardTitle`, `RadioCardDescription`.
 - **Hinweis** („Link unterwegs“) → `Alert` mit Icon; Fehler-Box → `Alert variant="destructive"`.
 - **Tabelle** am Spielende → `Table`. **Trenner** „oder“ → `Separator`. **Laden** → `Skeleton`.
