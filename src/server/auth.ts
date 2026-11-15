@@ -4,8 +4,10 @@ import { username } from "better-auth/plugins"
 import { tanstackStartCookies } from "better-auth/tanstack-start"
 import { eq } from "drizzle-orm"
 import * as schema from "./db/schema"
+import { passwordResetEmail } from "./password-reset"
 import type { GoogleOptions } from "better-auth/social-providers"
 import type { Database } from "./db"
+import type { Mailer } from "./email"
 
 export type AuthConfig = {
   db: Database
@@ -13,9 +15,23 @@ export type AuthConfig = {
   secret: string
   /** Sign-in with Google; left out where no credentials are configured. */
   google?: GoogleOptions
+  /** Sends the "Passwort zurücksetzen" e-mails. */
+  mailer: Mailer
+  /**
+   * Runs work after the response, so sending an e-mail does not delay it
+   * (on Vercel: `waitUntil`). Without one, better-auth waits for the work.
+   */
+  runInBackground?: (task: Promise<unknown>) => void
 }
 
-export function createAuth({ db, baseURL, secret, google }: AuthConfig) {
+export function createAuth({
+  db,
+  baseURL,
+  secret,
+  google,
+  mailer,
+  runInBackground,
+}: AuthConfig) {
   return betterAuth({
     trustedOrigins: [
       "http://192.168.*.*:*/**",
@@ -24,7 +40,37 @@ export function createAuth({ db, baseURL, secret, google }: AuthConfig) {
     baseURL,
     secret,
     database: drizzleAdapter(db, { provider: "pg", schema }),
-    emailAndPassword: { enabled: true, minPasswordLength: 8 },
+    advanced: runInBackground
+      ? {
+          // Answering "Passwort vergessen" before the e-mail is sent keeps
+          // known and unknown addresses equally fast (no hint by timing).
+          backgroundTasks: { handler: runInBackground },
+        }
+      : undefined,
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: 8,
+      // "Passwort vergessen": the link is valid for an hour and works once.
+      resetPasswordTokenExpiresIn: 60 * 60,
+      // Whoever had the old password is signed out on every device.
+      revokeSessionsOnPasswordReset: true,
+      async sendResetPassword({ user, url }) {
+        const account = user as typeof user & { username?: string | null }
+        try {
+          await mailer.send(
+            passwordResetEmail({
+              to: user.email,
+              name: user.name,
+              username: account.username ?? user.email,
+              url,
+            })
+          )
+        } catch (error) {
+          // The answer must not differ from that for an unknown address.
+          console.error("Password reset e-mail not sent:", error)
+        }
+      },
+    },
     socialProviders: google ? { google } : {},
     user: {
       additionalFields: {

@@ -6,20 +6,28 @@ import {
   redirect,
   useRouter,
 } from "@tanstack/react-router"
+import { CircleCheck } from "lucide-react"
 import { AuthPage, GoogleSignIn } from "@/components/auth-page"
 import { PrimaryButton } from "@/components/buttons"
 import { Field, PasswordInput, TextInput } from "@/components/form-field"
 import { OrDivider } from "@/components/google-button"
+import { Notice } from "@/components/notice"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
 import { safeRedirect } from "@/lib/safe-redirect"
 
-type Search = { redirect?: string; error?: string }
+type Search = {
+  redirect?: string
+  error?: string
+  /** Back from "Neues Passwort": the new password is saved. */
+  reset?: true
+}
 
 export const Route = createFileRoute("/sign-in")({
   validateSearch: (search): Search => ({
     ...(typeof search.redirect === "string" && { redirect: search.redirect }),
     ...(typeof search.error === "string" && { error: search.error }),
+    ...(search.reset === true && { reset: true as const }),
   }),
   beforeLoad: ({ context, search }) => {
     if (context.viewer) throw redirect({ href: safeRedirect(search.redirect) })
@@ -63,6 +71,11 @@ function SignIn() {
 
   return (
     <AuthPage title="Anmelden">
+      {search.reset ? (
+        <Notice icon={CircleCheck}>
+          Dein neues Passwort ist gespeichert. Melde dich jetzt damit an.
+        </Notice>
+      ) : null}
       <GoogleSignIn
         label="Mit Google anmelden"
         redirect={safeRedirect(search.redirect)}
@@ -91,7 +104,13 @@ function SignIn() {
             />
           )}
         </Field>
-        <PrimaryButton type="submit" disabled={pending} className="mt-3">
+        <Link
+          to="/forgot-password"
+          className="-mt-1 self-end py-1 text-[17px] font-semibold text-primary"
+        >
+          Passwort vergessen?
+        </Link>
+        <PrimaryButton type="submit" disabled={pending} className="mt-1">
           Anmelden
         </PrimaryButton>
       </form>

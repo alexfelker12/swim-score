@@ -2,12 +2,12 @@
 
 Zählt Schwimmen-Spiele fester Gruppen live am Tisch und vergleicht die Spieler über Ranglisten. Begriffe: `CONTEXT.md`, Entscheidungen: `docs/adr/`, Design: `docs/design/`, Ablauf für Tickets: `docs/agents/workflow.md`.
 
-Stack: TanStack Start (React 19, Vite), shadcn/ui auf Base UI, Tailwind 4, Postgres auf Neon mit Drizzle, better-auth (Benutzername/Passwort und Google), Pusher für Live-Benachrichtigungen.
+Stack: TanStack Start (React 19, Vite), shadcn/ui auf Base UI, Tailwind 4, Postgres auf Neon mit Drizzle, better-auth (Benutzername/Passwort und Google), Pusher für Live-Benachrichtigungen, Resend für E-Mails.
 
 ## Lokal starten
 
 1. `pnpm install`
-2. `.env.example` nach `.env.local` kopieren und ausfüllen (Datenbank, `BETTER_AUTH_SECRET`, optional Google und Pusher).
+2. `.env.example` nach `.env.local` kopieren und ausfüllen (Datenbank, `BETTER_AUTH_SECRET`, optional Google, Pusher und Resend). Ohne Resend stehen E-Mails samt Link im Server-Log, so lässt sich „Passwort vergessen“ auch lokal durchspielen.
 3. Migrationen anwenden: `pnpm db:migrate`
 4. `pnpm dev` und http://localhost:3000 öffnen.
 
@@ -20,6 +20,7 @@ Gebaut wird mit Nitro (`nitro/vite` in `vite.config.ts`). Auf Vercel erkennt Nit
 - **Google:** In der Google Cloud Console `<BETTER_AUTH_URL>/api/auth/callback/google` als Redirect-URI eintragen.
 - **Pusher:** `VITE_PUSHER_KEY` und `VITE_PUSHER_CLUSTER` werden beim Build in die Seite eingebaut. Nach einer Änderung neu deployen.
 - **Pusher-Webhook** (für „Zähler ist offline“ und das Übernehmen): im Pusher-Dashboard unter „Webhooks“ einen Webhook auf `https://<deine-domain>/api/pusher/webhook` mit dem Event-Typ **Presence** anlegen. Ohne ihn weiß der Server nichts über den Zähler, und Übernehmen geht immer sofort. Lokal kommt Pusher nicht an den Webhook heran.
+- **Resend:** Die Absender-Domain unter resend.com/domains verifizieren, dann `RESEND_API_KEY` und `EMAIL_FROM` (z. B. `Swim Score <noreply@deine-domain.de>`) setzen. Ohne die beiden Werte verschickt die App in Produktion keine E-Mails (und schreibt keine Links ins Log), „Passwort vergessen“ funktioniert dann nicht.
 - **Migrationen** laufen nicht automatisch. Vor dem Deploy ausführen: `DATABASE_URL=… pnpm db:migrate`.
 - **Region der Functions** möglichst nah an der Neon-Region, z. B. `fra1` bei `aws-eu-central-1`.
 
@@ -38,6 +39,7 @@ Gebaut wird mit Nitro (`nitro/vite` in `vite.config.ts`). Auf Vercel erkennt Nit
   - `signUp(auth, { username })` legt ein Konto an und liefert die Sitzungs-Header für Befehle.
   - `signInWithGoogle(auth, profile)` simuliert die Anmeldung mit Google; das ID-Token ist das JSON des Profils.
   - Statt an Pusher gehen die Benachrichtigungen „Spiel geändert“ in `app.notifications`.
+  - Statt über Resend landen E-Mails in `app.outbox`.
 
 Weitere Prüfungen: `pnpm typecheck`, `pnpm lint`, `pnpm check` (Formatierung).
 

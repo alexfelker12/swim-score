@@ -25,6 +25,7 @@ import {
 import { getApp } from "./instance"
 import { getHome } from "./home"
 import { getLeaderboard } from "./leaderboard"
+import { getPasswordResetAccount } from "./password-reset"
 import { getPlayerProfile } from "./player-profile"
 import {
   confirmClaim,
@@ -327,3 +328,11 @@ export const handOverAdminFn = createServerFn({ method: "POST" })
 export const deleteAccountFn = createServerFn({ method: "POST" }).handler(() =>
   outcome(() => deleteAccount(getApp(), headers()))
 )
+
+/**
+ * Whose account a reset link is for ("Für das Konto anna"); null when the
+ * link is unknown, used or expired. No session needed.
+ */
+export const getPasswordResetAccountFn = createServerFn({ method: "GET" })
+  .validator((input: { token: string }) => input)
+  .handler(({ data }) => getPasswordResetAccount(getApp(), data))
