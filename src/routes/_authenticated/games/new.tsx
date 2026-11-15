@@ -17,14 +17,25 @@ import { addGuestFn, startGameFn } from "@/server/functions"
 import type { NewGame } from "@/server/games"
 
 export const Route = createFileRoute("/_authenticated/games/new")({
-  validateSearch: (search: Record<string, unknown>): { groupId: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>
+  ): { groupId: string; fromGame?: string } => ({
     groupId: typeof search.groupId === "string" ? search.groupId : "",
+    // "Nochmal mit denselben Teilnehmern": seat them as in that Game.
+    ...(typeof search.fromGame === "string"
+      ? { fromGame: search.fromGame }
+      : {}),
   }),
-  loaderDeps: ({ search }) => ({ groupId: search.groupId }),
+  loaderDeps: ({ search }) => ({
+    groupId: search.groupId,
+    fromGame: search.fromGame,
+  }),
   // The form starts from the preselection it renders with; `query` loads
   // it again whenever it is stale or invalidated, e.g. by a Game started.
   loader: async ({ context, deps }) => {
-    const setup = await context.queryClient.query(newGameQuery(deps.groupId))
+    const setup = await context.queryClient.query(
+      newGameQuery(deps.groupId, deps.fromGame)
+    )
     if (!setup) throw notFound()
   },
   component: NewGamePage,
@@ -35,10 +46,11 @@ const { minParticipants, maxParticipants } = standardRuleSet
 const ROW_PITCH = 64
 
 function NewGamePage() {
-  const { groupId } = Route.useSearch()
-  const setup = useSuspenseQuery(newGameQuery(groupId)).data
+  const { groupId, fromGame } = Route.useSearch()
+  const setup = useSuspenseQuery(newGameQuery(groupId, fromGame)).data
   if (!setup) return null
-  return <NewGameForm groupId={groupId} setup={setup} />
+  // A new start (another Seating Order to begin from) starts the form afresh.
+  return <NewGameForm key={fromGame ?? ""} groupId={groupId} setup={setup} />
 }
 
 function NewGameForm({ groupId, setup }: { groupId: string; setup: NewGame }) {

@@ -117,25 +117,42 @@ export type NewGame = {
   groupName: string
   /** Every current Player of the Group, sorted by name. */
   players: Array<{ id: string; name: string; guest: boolean }>
-  /** Player ids of the Group's last Game, in its Seating Order. */
+  /**
+   * Player ids in Seating Order: of `fromGame` ("Nochmal mit denselben
+   * Teilnehmern"), otherwise of the Group's last Game.
+   */
   preselected: Array<string>
 }
 
-/** What "Spiel starten" offers: the Group's Players and the last Seating Order. */
+/**
+ * What "Spiel starten" offers: the Group's Players and a Seating Order to
+ * start from, that of `fromGame` if it is one of the Group's Games, else the
+ * Group's last one. Former Players drop out of it.
+ */
 export async function getNewGame(
   app: App,
   headers: Headers,
-  input: { groupId: string }
+  input: { groupId: string; fromGame?: string }
 ): Promise<NewGame> {
   const group = await getGroup(app, headers, input)
-  const last = await app.db.query.game.findFirst({
-    where: eq(game.groupId, input.groupId),
-    orderBy: desc(game.startedAt),
-    columns: {},
-    with: {
-      participants: { orderBy: participant.seat, columns: { playerId: true } },
-    },
-  })
+  const inGroup = eq(game.groupId, input.groupId)
+  // A Game's Seating Order, as Player ids.
+  const seating = (where: SQL | undefined) =>
+    app.db.query.game.findFirst({
+      where,
+      orderBy: desc(game.startedAt),
+      columns: {},
+      with: {
+        participants: {
+          orderBy: participant.seat,
+          columns: { playerId: true },
+        },
+      },
+    })
+  const chosen = input.fromGame
+    ? await seating(and(inGroup, eq(game.id, input.fromGame)))
+    : undefined
+  const last = chosen ?? (await seating(inGroup))
   const present = new Set(group.players.map((p) => p.id))
   return {
     groupName: group.name,
@@ -284,6 +301,7 @@ export async function recordEvent(
       version: row.events.length + 1,
       event,
       recordedById: me.id,
+      recordedAt: app.now(),
     })
     if (next.state.finished) {
       await tx

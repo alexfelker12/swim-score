@@ -4,6 +4,7 @@ import {
   getGameFn,
   getGroupFn,
   getGroupManagementFn,
+  getHomeFn,
   getInviteFn,
   getInviteLinkFn,
   getLeaderboardFn,
@@ -12,7 +13,6 @@ import {
   getProfileFn,
   getSpectatorGameFn,
   listGamesFn,
-  listMyGroupsFn,
 } from "@/server/functions"
 
 /**
@@ -21,7 +21,8 @@ import {
  * with that one prefix.
  */
 export const queryKeys = {
-  myGroups: () => ["myGroups"] as const,
+  /** The start page: running Games, "Neues Spiel", "Meine Gruppen". */
+  home: () => ["home"] as const,
   /** Prefix of everything about one Group. */
   group: (groupId: string) => ["group", groupId] as const,
   groupView: (groupId: string) => ["group", groupId, "view"] as const,
@@ -31,7 +32,9 @@ export const queryKeys = {
     ["group", groupId, "leaderboard", from, to] as const,
   groupManagement: (groupId: string) =>
     ["group", groupId, "management"] as const,
-  newGame: (groupId: string) => ["group", groupId, "newGame"] as const,
+  /** `fromGame`: "Nochmal mit denselben Teilnehmern"; `""` for the last Game. */
+  newGame: (groupId: string, fromGame = "") =>
+    ["group", groupId, "newGame", fromGame] as const,
   inviteLink: (groupId: string) => ["group", groupId, "inviteLink"] as const,
   invite: (token: string) => ["invite", token] as const,
   /** Prefix of every Game. */
@@ -59,11 +62,14 @@ export const mutationKeys = {
 // takes fresh data from the cache and loads stale or invalidated data again
 // before the page renders, and read them with `useSuspenseQuery`.
 
-/** "Meine Gruppen". */
-export function myGroupsQuery() {
+/**
+ * The start page: running Games the viewer plays in, the Group for "Neues
+ * Spiel" and "Meine Gruppen".
+ */
+export function homeQuery() {
   return queryOptions({
-    queryKey: queryKeys.myGroups(),
-    queryFn: () => listMyGroupsFn(),
+    queryKey: queryKeys.home(),
+    queryFn: () => getHomeFn(),
   })
 }
 
@@ -109,11 +115,14 @@ export function groupManagementQuery(groupId: string) {
   })
 }
 
-/** "Neues Spiel": the current Players and the last Seating Order, or null. */
-export function newGameQuery(groupId: string) {
+/**
+ * "Neues Spiel": the current Players and a Seating Order to start from, that
+ * of `fromGame` or of the last Game; null when the viewer may not start one.
+ */
+export function newGameQuery(groupId: string, fromGame?: string) {
   return queryOptions({
-    queryKey: queryKeys.newGame(groupId),
-    queryFn: () => getNewGameFn({ data: { groupId } }),
+    queryKey: queryKeys.newGame(groupId, fromGame),
+    queryFn: () => getNewGameFn({ data: { groupId, fromGame } }),
   })
 }
 
@@ -192,7 +201,7 @@ function invalidate(
 /**
  * Something about a Group changed: its Players (a Guest added, a Player
  * removed, joined or merged, the Group Admin handed over), its name, its
- * Games. Reloads all of the Group, "Meine Gruppen" and the Player Profiles,
+ * Games. Reloads all of the Group, the start page and the Player Profiles,
  * whose Personal Stats and Group cards may show it. With `games`, also every
  * Game, because names shown in past Games changed (a Guest merged into an
  * account, the Group renamed).
@@ -204,7 +213,7 @@ export async function groupChanged(
 ) {
   await Promise.all([
     invalidate(queryClient, queryKeys.group(groupId), when),
-    invalidate(queryClient, queryKeys.myGroups(), when),
+    invalidate(queryClient, queryKeys.home(), when),
     invalidate(queryClient, queryKeys.playerProfiles(), when),
     games ? invalidate(queryClient, queryKeys.games(), when) : null,
   ])
@@ -250,7 +259,7 @@ export async function joined(
 export async function leftGroup(queryClient: QueryClient, groupId: string) {
   queryClient.removeQueries({ queryKey: queryKeys.group(groupId) })
   await Promise.all([
-    invalidate(queryClient, queryKeys.myGroups(), { later: true }),
+    invalidate(queryClient, queryKeys.home(), { later: true }),
     // Who shares a Group with the account, and its Personal Stats, changed.
     invalidate(queryClient, queryKeys.playerProfiles(), { later: true }),
   ])
