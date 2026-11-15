@@ -2,6 +2,8 @@ import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 import * as schema from "./db/schema"
 import { createAuth } from "./auth"
+import { waitUntil } from "@vercel/functions"
+import { loggingMailer, resendMailer, unconfiguredMailer } from "./email"
 import { createPusher, pusherNotifier, silentNotifier } from "./pusher"
 import type Pusher from "pusher"
 import type { App } from "./app"
@@ -15,6 +17,7 @@ export function getApp(): App {
     client: postgres(requireEnv("DATABASE_URL"), { prepare: false }),
     schema,
   })
+  const mailer = createMailer()
   const googleId = process.env.GOOGLE_CLIENT_ID
   const googleSecret = process.env.GOOGLE_CLIENT_SECRET
   app = {
@@ -27,11 +30,24 @@ export function getApp(): App {
         googleId && googleSecret
           ? { clientId: googleId, clientSecret: googleSecret }
           : undefined,
+      mailer,
+      runInBackground: waitUntil,
     }),
     now: () => new Date(),
     notifier: createNotifier(),
   }
   return app
+}
+
+/**
+ * Whether e-mails reach anyone: with Resend configured, or in development,
+ * where they go to the log. Without it "Passwort vergessen" is hidden.
+ */
+export function canSendEmail(): boolean {
+  return (
+    Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM) ||
+    process.env.NODE_ENV !== "production"
+  )
 }
 
 let pusher: Pusher | null | undefined
@@ -53,6 +69,22 @@ export function getPusher(): Pusher | null {
     pusher = createPusher({ appId, key, secret, cluster })
   }
   return pusher
+}
+
+/**
+ * Resend when it is configured. Without it, e-mails go to the log in
+ * development (links included) and nowhere in production.
+ */
+function createMailer() {
+  const apiKey = process.env.RESEND_API_KEY
+  const from = process.env.EMAIL_FROM
+  if (apiKey && from) return resendMailer({ apiKey, from })
+  if (!canSendEmail()) {
+    console.error("Resend is not configured: no e-mails are sent.")
+    return unconfiguredMailer
+  }
+  console.warn("Resend is not configured: e-mails only go to the log.")
+  return loggingMailer
 }
 
 function createNotifier() {

@@ -12,10 +12,13 @@ export function LinkGone({
   title,
   children,
   action,
+  to = "/",
 }: {
   title: string
   children: ReactNode
   action: string
+  /** Where the one way on leads; the start page unless said otherwise. */
+  to?: "/" | "/forgot-password"
 }) {
   return (
     <div className="flex min-h-svh flex-col">
@@ -36,7 +39,7 @@ export function LinkGone({
         <p className="text-pretty text-muted-foreground">{children}</p>
       </main>
       <div className="px-4 pb-6">
-        <Link to="/" className={primaryButtonClass}>
+        <Link to={to} className={primaryButtonClass}>
           {action}
         </Link>
       </div>

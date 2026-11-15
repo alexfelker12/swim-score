@@ -5,6 +5,7 @@ import * as schema from "../db/schema"
 import { createAuth } from "../auth"
 import type { GoogleProfile as GoogleIdToken } from "better-auth/social-providers"
 import type { App, Notifier } from "../app"
+import type { Email, Mailer } from "../email"
 
 export type GoogleProfile = {
   sub: string
@@ -13,22 +14,41 @@ export type GoogleProfile = {
   picture?: string
 }
 
-/** A test application that also keeps every Game-changed notification it sent. */
+/**
+ * A test application that also keeps every Game-changed notification and
+ * every e-mail it sent.
+ */
 export type TestApp = App & {
   notifications: Array<
     { gameId: string; version: number } | { gameId: string; presence: true }
   >
+  /** E-mails sent, oldest first (unless `mailer` replaces the outbox). */
+  outbox: Array<Email>
 }
 
 /**
  * A complete server application on a fresh in-memory Postgres (PGlite),
  * with the real migrations applied. Google sign-in accepts any ID token that
  * is a JSON-encoded `GoogleProfile`. Notifications are kept in
- * `notifications` instead of going to Pusher, unless `notifier` replaces them.
+ * `notifications` instead of going to Pusher, unless `notifier` replaces them;
+ * e-mails in `outbox`, unless `mailer` replaces it. Work better-auth would
+ * do after the response is awaited, unless `runInBackground` takes it.
  */
 export async function createTestApp({
   notifier,
-}: { notifier?: Notifier } = {}): Promise<TestApp> {
+  mailer,
+  runInBackground,
+}: {
+  notifier?: Notifier
+  mailer?: Mailer
+  runInBackground?: (task: Promise<unknown>) => void
+} = {}): Promise<TestApp> {
+  const outbox: Array<Email> = []
+  const sending: Mailer = mailer ?? {
+    send: async (email) => {
+      outbox.push(email)
+    },
+  }
   const client = new PGlite()
   const db = drizzle({ client, schema })
   await migrate(db, { migrationsFolder: "drizzle" })
@@ -36,6 +56,8 @@ export async function createTestApp({
     db,
     baseURL: "http://localhost:3000",
     secret: "test-secret-that-is-long-enough-for-better-auth",
+    mailer: sending,
+    runInBackground,
     google: {
       clientId: "test-client",
       clientSecret: "test-secret",
@@ -73,6 +95,7 @@ export async function createTestApp({
       },
     },
     notifications,
+    outbox,
   }
 }
 

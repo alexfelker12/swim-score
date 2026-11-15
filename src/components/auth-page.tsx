@@ -1,21 +1,43 @@
 import { useState } from "react"
+import { Link } from "@tanstack/react-router"
+import { ChevronLeft } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
 import { GoogleButton } from "./google-button"
 import { Logo } from "./logo"
 import type { ReactNode } from "react"
 
-/** Frame of the sign-in and sign-up pages: logo header, title, content. */
+/**
+ * Frame of the account pages (sign-in, sign-up, password reset): logo
+ * header, title, content. With `back`, a way back left of the logo.
+ */
 export function AuthPage({
   title,
+  back,
   children,
 }: {
   title: string
+  back?: "/sign-in"
   children: ReactNode
 }) {
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="flex h-18 shrink-0 items-center px-6">
+      <header
+        className={
+          back
+            ? "flex h-18 shrink-0 items-center gap-3 px-3"
+            : "flex h-18 shrink-0 items-center px-6"
+        }
+      >
+        {back ? (
+          <Link
+            to={back}
+            aria-label="Zurück zur Anmeldung"
+            className="flex size-11 items-center justify-center rounded-xl"
+          >
+            <ChevronLeft className="size-6" aria-hidden="true" />
+          </Link>
+        ) : null}
         <Logo />
       </header>
       <main className="flex flex-1 flex-col gap-5 px-6 pt-3 pb-7">
