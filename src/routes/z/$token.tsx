@@ -14,6 +14,12 @@ import {
   LinkGoneTitle,
 } from "@/components/link-gone"
 import { AppMark } from "@/components/logo"
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { describeExtraRound, describeLastEvent, nameOf } from "@/lib/game-text"
 import { spectatorGameChanged, spectatorGameQuery } from "@/lib/queries"
@@ -63,20 +69,18 @@ function LiveGame({ game }: { game: SpectatorView }) {
   const name = nameOf(game.participants)
   return (
     <div className="flex h-svh flex-col">
-      <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
+      <PageHeader>
         <span className="justify-self-center">
           <AppMark />
         </span>
-        <div className="flex min-w-0 flex-col items-center">
-          <h1 className="text-xl leading-tight font-semibold">
-            Runde {state.round}
-          </h1>
-          <span className="max-w-full truncate text-[13px] text-muted-foreground">
+        <PageHeaderContent>
+          <PageHeaderTitle size="lg">Runde {state.round}</PageHeaderTitle>
+          <PageHeaderDescription>
             {describeExtraRound(game.events, name(state.dealer)) ??
               game.groupName}
-          </span>
-        </div>
-      </header>
+          </PageHeaderDescription>
+        </PageHeaderContent>
+      </PageHeader>
       <ScorekeeperStatus
         viewer="spectator"
         scorekeeper={game.scorekeeper}

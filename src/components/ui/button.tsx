@@ -39,6 +39,18 @@ const buttonVariants = cva(
           "font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive-muted",
         /** The bomb: border and text `bomb` on `bomb-muted`. */
         bomb: "border-bomb bg-bomb-muted font-semibold text-bomb hover:bg-bomb-muted/70 active:bg-bomb-muted/70",
+        /** Choosing the Swimmer: border `swimmer` on `swimmer-muted`. */
+        swimmer:
+          "border-swimmer bg-swimmer-muted font-semibold hover:bg-swimmer-muted/70 active:bg-swimmer-muted/70",
+        /** Something to add, not there yet ("Nicht dabei" at the start): dashed border. */
+        dashed:
+          "border-dashed border-border font-semibold hover:bg-muted active:bg-muted",
+        /** An action on a `muted` bar (the last Event's Rückgängig): `background` fill. */
+        raised:
+          "bg-background font-semibold hover:bg-background/70 active:bg-background/70",
+        /** The same in the primary colour ("Stechen angeben"). */
+        "raised-primary":
+          "bg-background font-semibold text-primary hover:bg-background/70 active:bg-background/70",
         /** An icon action in a row in the primary colour (link a Guest). */
         "primary-ghost":
           "font-semibold text-primary hover:bg-primary-muted active:bg-primary-muted",
@@ -73,6 +85,8 @@ const buttonVariants = cva(
     compoundVariants: [
       // 12 px inset on the left, 10 px between logo and text, radius as the main buttons.
       { variant: "google", className: "gap-2.5 rounded-[14px] px-3 text-sm/5" },
+      // Choosing the Swimmer: 60 px rows with the name at 18 px.
+      { variant: "swimmer", className: "h-15 px-4.5 text-lg" },
       // A text link on its own ("Bild doch behalten") keeps the 44 px tap target.
       { variant: "link", size: "sm", className: "h-11! px-4!" },
     ],

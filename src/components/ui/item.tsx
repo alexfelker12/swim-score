@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -53,11 +54,22 @@ const itemVariants = cva(
         xs: "gap-2 px-2.5 py-2 in-data-[slot=dropdown-menu-content]:p-0",
         /** Rows in lists: no side padding, 6 px top and bottom. */
         list: "gap-3 px-0 py-1.5",
+        /**
+         * Lines of a menu in a sheet: 56 px, icon 22 px and text 17 px, no
+         * side padding.
+         */
+        menu: "min-h-14 gap-3.5 px-0 py-0 text-[17px] [&_[data-slot=item-media]_svg]:size-5.5",
+      },
+      tone: {
+        default: "",
+        /** Something that removes or ends ("Spiel abbrechen"): in coral. */
+        destructive: "text-destructive",
       },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      tone: "default",
     },
   }
 )
@@ -66,6 +78,7 @@ function Item({
   className,
   variant = "default",
   size = "default",
+  tone = "default",
   render,
   ...props
 }: useRender.ComponentProps<"div"> & VariantProps<typeof itemVariants>) {
@@ -73,7 +86,7 @@ function Item({
     defaultTagName: "div",
     props: mergeProps<"div">(
       {
-        className: cn(itemVariants({ variant, size, className })),
+        className: cn(itemVariants({ variant, size, tone, className })),
       },
       props
     ),
@@ -131,13 +144,13 @@ function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/** 16 px / 600; in list rows (`size="list"`) 17 px / 500. */
+/** 16 px / 600; in list rows (`size="list"`) 17 px / 500, in menus 17 px / 400. */
 function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-title"
       className={cn(
-        "line-clamp-1 flex w-fit min-w-0 items-center gap-2 text-base leading-snug font-semibold underline-offset-4 group-data-[size=list]/item:text-[17px] group-data-[size=list]/item:font-medium",
+        "line-clamp-1 flex w-fit min-w-0 items-center gap-2 text-base leading-snug font-semibold underline-offset-4 group-data-[size=list]/item:text-[17px] group-data-[size=list]/item:font-medium group-data-[size=menu]/item:text-[17px] group-data-[size=menu]/item:font-normal",
         className
       )}
       {...props}
@@ -194,8 +207,23 @@ function ItemFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * A row that is a button (a menu line): `<Item render={<ItemButton
+ * onClick={…} />}>`. The look comes from `Item`.
+ */
+function ItemButton({ className, ...props }: ButtonPrimitive.Props) {
+  return (
+    <ButtonPrimitive
+      data-slot="item-button"
+      className={cn("cursor-pointer text-left", className)}
+      {...props}
+    />
+  )
+}
+
 export {
   Item,
+  ItemButton,
   ItemMedia,
   ItemContent,
   ItemActions,

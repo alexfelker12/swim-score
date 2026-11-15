@@ -68,14 +68,19 @@ export function PageHeader({
   )
 }
 
-/** An icon button in the header (44 × 44 px, icon 24 px), as a link via `render`. */
+/**
+ * An icon button in the header (44 × 44 px, icon 24 px): a link via
+ * `render`, or a button with `onClick`.
+ */
 export function PageHeaderAction({
   render,
+  onClick,
   label,
   className,
   children,
 }: {
-  render: ReactElement
+  render?: ReactElement
+  onClick?: () => void
   /** What it does, for screen readers. */
   label: string
   className?: string
@@ -86,10 +91,11 @@ export function PageHeaderAction({
       data-slot="page-header-action"
       variant="ghost"
       size="icon"
-      nativeButton={false}
+      nativeButton={render === undefined}
       render={render}
+      onClick={onClick}
       aria-label={label}
-      className={cn("[&_svg]:size-6!", className)}
+      className={cn("justify-self-center [&_svg]:size-6!", className)}
     >
       {children}
     </Button>
@@ -128,19 +134,30 @@ export function PageHeaderContent({
   return (
     <div
       data-slot="page-header-content"
-      className={cn("col-start-2 flex min-w-0 flex-col", className)}
+      className={cn(
+        "col-start-2 flex min-w-0 flex-col items-center group-data-[variant=start]/page-header:items-stretch",
+        className
+      )}
       {...props}
     />
   )
 }
 
-/** 17 px / 600 centred; in the `start` header 20 px / 700 on the left. */
-export function PageHeaderTitle({ className, ...props }: ComponentProps<"h1">) {
+/**
+ * 17 px / 600 centred (`size="lg"`: 20 px, "Runde 5"); in the `start`
+ * header 20 px / 700 on the left.
+ */
+export function PageHeaderTitle({
+  className,
+  size = "default",
+  ...props
+}: ComponentProps<"h1"> & { size?: "default" | "lg" }) {
   return (
     <h1
       data-slot="page-header-title"
+      data-size={size}
       className={cn(
-        "col-start-2 truncate text-center text-[17px] font-semibold group-data-[variant=start]/page-header:text-left group-data-[variant=start]/page-header:text-xl group-data-[variant=start]/page-header:leading-tight group-data-[variant=start]/page-header:font-bold",
+        "col-start-2 max-w-full truncate text-center text-[17px] leading-tight font-semibold group-data-[variant=start]/page-header:text-left group-data-[variant=start]/page-header:text-xl group-data-[variant=start]/page-header:font-bold data-[size=lg]:text-xl",
         className
       )}
       {...props}
@@ -156,7 +173,10 @@ export function PageHeaderDescription({
   return (
     <span
       data-slot="page-header-description"
-      className={cn("text-[13px] text-muted-foreground", className)}
+      className={cn(
+        "max-w-full truncate text-[13px] text-muted-foreground",
+        className
+      )}
       {...props}
     />
   )

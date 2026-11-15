@@ -49,10 +49,11 @@ Gebaut wird aus den shadcn/ui-Komponenten auf Base UI in `src/components/ui` (AD
 
 Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die Komponente.
 
-- **Kopf** 56 px: Zurück (44 × 44 px, `chevron-left`), Titel zentriert 17–20 px / 600, darunter optional eine Unterzeile 13 px gedämpft, rechts Icon-Buttons (44 × 44 px). (`i05-start-spiel`) → `PageHeader` mit `PageHeaderBack` (Zurück als Link über `render`, `icon="close"` für ✕) und `PageHeaderTitle`; Icon-Buttons rechts `PageHeaderActions` mit `PageHeaderAction`. Gruppenseite (Titel links mit Unterzeile, 60 px): `PageHeader variant="start"` mit `PageHeaderContent`, `PageHeaderTitle`, `PageHeaderDescription`. Nur Logo (Einladung öffnen): `PageHeader variant="brand"`.
+- **Kopf** 56 px: Zurück (44 × 44 px, `chevron-left`), Titel zentriert 17–20 px / 600, darunter optional eine Unterzeile 13 px gedämpft, rechts Icon-Buttons (44 × 44 px). (`i05-start-spiel`) → `PageHeader` mit `PageHeaderBack` (Zurück als Link über `render`, `icon="close"` für ✕) und `PageHeaderTitle`; Icon-Buttons rechts `PageHeaderActions` mit `PageHeaderAction`. Titel 20 px („Runde 5“): `PageHeaderTitle size="lg"`, Unterzeile `PageHeaderDescription` in `PageHeaderContent`; Icon-Button ohne Link: `PageHeaderAction onClick`. Gruppenseite (Titel links mit Unterzeile, 60 px): `PageHeader variant="start"` mit `PageHeaderContent`, `PageHeaderTitle`, `PageHeaderDescription`. Nur Logo (Einladung öffnen): `PageHeader variant="brand"`.
 - **Profil-Kopf** (Avatar neben Name und Unterzeile, `i03-profil`) → `ProfileHeading` mit `Avatar`, `ProfileHeadingContent`, `ProfileHeadingTitle`, `ProfileHeadingDescription`.
-- **Statuszeile im Spiel** 40 px (mit „Übernehmen“ 48 px), Fläche `muted`, Radius 12 px, Innenabstand 14 px, Text 14 px, Punkt 8 px in `primary`. Offline invertiert. (`i05-runde-1`, `i10-offline-zaehlen`) → fachliche Komponente, „Übernehmen“ als `Button variant="soft" size="xs"`.
-- **Spielerzeile** (`i05-schwimmer`) → fachliche Komponente aus shadcn-Teilen, Zustände als Varianten:
+- **Statuszeile im Spiel** 40 px (mit „Übernehmen“ 48 px), Fläche `muted`, Radius 12 px, Innenabstand 14 px, Text 14 px, Punkt 8 px in `primary`. Offline invertiert. (`i05-runde-1`, `i10-offline-zaehlen`) → `ScorekeeperStatus` (Varianten normal, mit Übernehmen, offline), „Übernehmen“ als `Button variant="soft" size="xs"`. Darüber die Frage „Wer hat die Runde verloren?“ → `TablePrompt` (`bomb` gelb).
+- **Letztes Ereignis** (Leiste unten) → `LastEventBar` mit `LastEventAction` (Icon-Button auf `background`, „Stechen“ in `primary`; mit `showLabel` Icon und Text). Ausgeblendete Ausgeschiedene → `HiddenOutNote`.
+- **Spielerzeile** (`i05-schwimmer`) → `PlayerRow state="default|swimmer|bomb|out"` mit `PlayerRowTitle`, `PlayerRowName`, `LifeBar`, `SwimmerLabel` bzw. `PlayerRowOut` und `DealerBadge placement="corner"`; antippbar (`onTap`) ist die ganze Zeile ein Base-UI-Button. `ParticipantRows` setzt die Zeilen und ihre Höhe:
   - Höhe 52–88 px, Radius 14 px, Rand 1,5 px `border`, Fläche `card`. Name 18–20 px / 600.
   - Leben als 3 Balken (84 × 10 px). Varianten:
     - Schwimmer: Rand `swimmer`.
@@ -64,6 +65,7 @@ Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die
   - Sekundär: Rand 1,5 px `border`, transparent. → `variant="secondary"`; auf Karten-Fläche `"outline"`.
   - Gefährlich: `destructive` gefüllt. → `variant="destructive"`; als Text („Spiel abbrechen“) `"destructive-ghost"`; mit Rand (gefährliche Aktion als eigener Button: „Konto löschen“, „Gruppe verlassen“, „Entfernen“ im Profilbild-Editor) `"destructive-outline"`.
   - Bombe: Rand und Text `bomb` auf `bomb-muted`. → `variant="bomb"`.
+  - Schwimmer wählen (60 px, Name 18 px): `variant="swimmer"`. Noch nicht dabei („Nicht dabei“ beim Spielstart): `"dashed"`. Aktion auf einer `muted`-Leiste: `"raised"` bzw. `"raised-primary"`.
   - Leise Primär-Aktion („Übernehmen“, Hinzufügen): `variant="soft"`. Textaktion: `"link"` oder `"ghost"`; gedämpft („2 ehemalige Spieler“) `"muted"`.
   - Icon-Aktion in Zeilen: Verknüpfen `variant="primary-ghost"`, Entfernen `"destructive-ghost"`, jeweils `size="icon"`.
   - Google: `variant="google"` (Richtlinien in `decisions.md` › Konto).
@@ -73,7 +75,9 @@ Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die
 - **Bottom Sheet** (`i05-bombe-konflikt`, `i06-menue`) → `Drawer`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter`:
   - Hintergrund `scrim`, Fläche `card`, Radius 24 px oben, Rand oben 1 px, Griff 40 × 4 px, Innenabstand 10 / 20 / 24 px, Abstand 14–16 px.
   - Titel 22 px / 600. Aktionen untereinander (`DrawerFooter`) oder nebeneinander (`DrawerFooter orientation="horizontal"`), Haupt-Aktion zuerst bzw. rechts.
-  - Gewinner: `DrawerHeader align="center"`.
+  - Gewinner: `DrawerHeader align="center"` mit `DrawerTitle size="lg"` (Pokal 32 px, 34 px / 700). Warnung: `DrawerTitle tone="warning"` (Icon in `bomb`).
+  - Menü im Sheet („Spiel“): `Item variant="row" size="menu"` mit `ItemMedia` (Icon) und `ItemTitle`, als Button `render={<ItemButton … />}`, „Spiel abbrechen“ mit `tone="destructive"`; Ein/Aus → `Switch`.
+  - Personen aus einem Raster wählen (Stechen) → `Toggle variant="seat"`, die feste Person daneben `TiebreakLoser`.
 - **Segmented Tabs:** Fläche `muted`, Innenabstand 4 px, Radius 14 px. Aktiver Tab `card` mit 600, inaktive `muted-foreground`. Höhe 40 px. (`i04-spieler`, `i03-profil`) → `Tabs`, `TabsList` (Standard-Variante `segmented`), `TabsTrigger`, `TabsContent`.
 - **Aktionen in Zeilen und Feldern** (Listenzeile, Spielerzeile, Link zum Kopieren, Passwortfeld): so kompakt wie möglich, weil am Handy wenig Platz ist. Gibt es ein allgemein bekanntes Icon (kopieren, entfernen, bearbeiten, teilen, Sichtbarkeit), ist es ein Icon-Button (`size="icon"`, im Feld `InputGroupButton size="icon"`) mit `aria-label`. Text nur, wo es kein solches Icon gibt („Übernehmen“). Das Icon endet 16 px vor dem Rand des Felds.
 - **Rückmeldung beim Tippen:** Touch-Geräte zeigen kein `hover:`. Buttons, Tabs, Radio-Karten und antippbare Zeilen reagieren deshalb auf `active:` (Fläche wie bei Hover, Buttons schrumpfen kurz auf 97 %, Icon-Buttons auf 90 %, abgeschaltet bei reduzierter Bewegung). Das ist in den Komponenten eingebaut.
@@ -90,7 +94,8 @@ Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die
 - **Einstellung mit wenigen kurzen Optionen** (Darstellung: System / Hell / Dunkel), sieht aus wie die Segmented Tabs → `RadioGroup variant="segmented"` mit `RadioSegment` (Icon optional vor dem Text).
 - **Einzelauswahl als Karten** („Wer bist du?“) → `RadioGroup` mit `RadioCard`, `RadioCardTitle`, `RadioCardDescription`.
 - **Hinweis** („Link unterwegs“) → `Alert` mit Icon; Fehler-Box → `Alert variant="destructive"`.
-- **Tabelle** am Spielende → `Table`. **Trenner** „oder“ → `Separator`. **Laden** → `Skeleton`.
+- **Spielende** → `WinnerHeading` und `ResultTable` mit `ResultRow` (auf `Table`; Platz 1 in `primary`, Schwimmer-Zeile getönt). **Verlauf** → `GameOutcome`, `HistoryList`, `HistoryEntry`. **Sitzreihenfolge** beim Start → `SeatList`, `SeatRow`, `SeatGrip`, `SeatNumber`, `SeatName`, `SeatRemove`, `SeatCandidate`; Zähler neben der Überschrift `Badge variant="count"` bzw. `"count-error"`. Fehler, der die Haupt-Aktion sperrt: `FieldError size="lg"` mit Icon.
+- **Tabelle** sonst → `Table`. **Trenner** „oder“ → `Separator`. **Laden** → `Skeleton`.
 - **Warn-Sheet und Fehlerseite:** Icon links neben der Überschrift, alles linksbündig. (`i09-uebernahme-warnung`, `i08-link-abgelaufen`) → Icon als erstes Kind von `DrawerTitle`.
 - **Vollbild-Dialog** (nur der Profilbild-Editor, `i03-profilbild-neu`): Kopf 56 px mit zentriertem Titel. Fußleiste mit Trennlinie oben, Innenabstand 12 / 16 / 24 px, zwei Buttons nebeneinander. → `Dialog`, `DialogContent variant="fullscreen"`, `DialogHeader`, `DialogTitle`, `DialogFooter`.
 - **Fokus:** `outline: 2px solid primary; outline-offset: 2px` auf Buttons, Links, Tabs und Radios; Eingaben zeigen den Fokus als Rand in `primary` (beides in den Komponenten eingebaut).

@@ -22,6 +22,7 @@ import {
   zoomAround,
 } from "@/lib/avatar-crop"
 import { initialOf } from "@/lib/initial"
+import { useOpenOnMount } from "@/lib/use-sheet"
 import { cn } from "@/lib/utils"
 import {
   getAvatarSourceFn,
@@ -68,7 +69,7 @@ export function AvatarEditor({
   onClose: () => void
   onSaved: () => Promise<void>
 }) {
-  const [open, setOpen] = useState(true)
+  const { value: open, set: setOpen } = useOpenOnMount()
   const [picture, setPicture] = useState<Picture | null>(null)
   const [view, setView] = useState<View>(START_VIEW)
   const [removed, setRemoved] = useState(false)

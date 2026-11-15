@@ -27,6 +27,12 @@ const badgeVariants = cva(
         /** A plain note beside a name ("du", "Gast, von Ben angelegt"): 13 px muted, no pill. */
         plain:
           "h-auto truncate rounded-none px-0 py-0 text-[13px] font-normal text-muted-foreground",
+        /** A count beside a heading ("6/9"): 15 px / 600 muted, tabular. */
+        count:
+          "h-auto rounded-none px-0 py-0 text-[15px] font-semibold text-muted-foreground tabular-nums",
+        /** The same count when it is out of bounds ("10/9"), in coral. */
+        "count-error":
+          "h-auto rounded-none px-0 py-0 text-[15px] font-semibold text-destructive tabular-nums",
         /** The Dealer's pill: 20 px, `primary` on `primary-muted` over `card`, 2 px ring in `background`. */
         dealer:
           "rounded-full bg-card bg-[image:linear-gradient(var(--primary-muted),var(--primary-muted))] px-2 leading-none font-semibold text-primary ring-2 ring-background",

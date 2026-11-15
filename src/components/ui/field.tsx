@@ -174,9 +174,15 @@ function FieldError({
   className,
   children,
   errors,
+  size = "default",
   ...props
 }: React.ComponentProps<"div"> & {
   errors?: Array<{ message?: string } | undefined>
+  /**
+   * `lg`: what keeps the page's main action disabled, 15 px / 500 with an
+   * icon before it ("Höchstens 9 Spieler").
+   */
+  size?: "default" | "lg"
 }) {
   const content = useMemo(() => {
     if (children) {
@@ -213,8 +219,9 @@ function FieldError({
     <div
       role="alert"
       data-slot="field-error"
+      data-size={size}
       className={cn(
-        "text-[13px] font-normal text-pretty text-destructive",
+        "text-[13px] font-normal text-pretty text-destructive data-[size=lg]:flex data-[size=lg]:items-center data-[size=lg]:gap-2 data-[size=lg]:text-[15px] data-[size=lg]:font-medium [&>svg]:size-5 [&>svg]:shrink-0",
         className
       )}
       {...props}

@@ -6,11 +6,30 @@ import {
   notFound,
   useNavigate,
 } from "@tanstack/react-router"
-import { ChevronLeft, CircleAlert, GripVertical, Plus, X } from "lucide-react"
-import { PrimaryButton } from "@/components/buttons"
+import { CircleAlert, Plus } from "lucide-react"
 import { DealerBadge } from "@/components/dealer-badge"
-import { TextInput } from "@/components/form-field"
-import { cn } from "@/lib/utils"
+import { PageFooter } from "@/components/page-footer"
+import {
+  PageHeader,
+  PageHeaderBack,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header"
+import {
+  SeatCandidate,
+  SeatGrip,
+  SeatList,
+  SeatName,
+  SeatNumber,
+  SeatRemove,
+  SeatRow,
+} from "@/components/seating"
+import { Section, SectionTitle } from "@/components/section"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { standardRuleSet } from "@/rules-engine"
 import { groupChanged, newGameQuery } from "@/lib/queries"
 import { addGuestFn, startGameFn } from "@/server/functions"
@@ -89,99 +108,75 @@ function NewGameForm({ groupId, setup }: { groupId: string; setup: NewGame }) {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
-        <Link
-          to="/groups/$groupId"
-          params={{ groupId }}
-          aria-label="Zurück zur Gruppe"
-          className="flex size-11 items-center justify-center justify-self-center rounded-xl"
-        >
-          <ChevronLeft className="size-6" aria-hidden="true" />
-        </Link>
-        <div className="flex min-w-0 flex-col items-center">
-          <h1 className="text-xl leading-tight font-semibold">Neues Spiel</h1>
-          <span className="max-w-full truncate text-[13px] text-muted-foreground">
-            {setup.groupName}
-          </span>
-        </div>
-      </header>
+      <PageHeader>
+        <PageHeaderBack
+          render={<Link to="/groups/$groupId" params={{ groupId }} />}
+          label="Zurück zur Gruppe"
+        />
+        <PageHeaderContent>
+          <PageHeaderTitle size="lg">Neues Spiel</PageHeaderTitle>
+          <PageHeaderDescription>{setup.groupName}</PageHeaderDescription>
+        </PageHeaderContent>
+      </PageHeader>
 
       <main className="flex flex-1 flex-col gap-3 px-4 pt-2 pb-4">
-        <div className="mx-1 flex items-baseline justify-between">
-          <h2 className="text-[17px] font-semibold">
-            Am Tisch, im Uhrzeigersinn
-          </h2>
-          <span
-            className={cn(
-              "text-[15px] font-semibold tabular-nums",
-              problem ? "text-destructive" : "text-muted-foreground"
-            )}
-          >
-            {seated.length}/{maxParticipants}
-          </span>
-        </div>
-        <SeatingList
-          players={seatedPlayers}
-          onReorder={setSeated}
-          onRemove={(id) => setSeated((now) => now.filter((s) => s !== id))}
-        />
+        <Section aria-labelledby="seated" className="gap-3">
+          <div className="mx-1 flex items-baseline justify-between">
+            <SectionTitle id="seated">Am Tisch, im Uhrzeigersinn</SectionTitle>
+            <Badge variant={problem ? "count-error" : "count"}>
+              {seated.length}/{maxParticipants}
+            </Badge>
+          </div>
+          <SeatingList
+            players={seatedPlayers}
+            onReorder={setSeated}
+            onRemove={(id) => setSeated((now) => now.filter((s) => s !== id))}
+          />
+        </Section>
 
-        <h2 className="mx-1 mt-4 text-[17px] font-semibold">Nicht dabei</h2>
-        <NewGuest
-          groupId={groupId}
-          onAdded={(id) => setSeated((now) => [...now, id])}
-        />
-        <ul className="flex flex-col gap-2">
-          {others.map((player) => (
-            <li key={player.id}>
-              <button
-                type="button"
-                onClick={() => setSeated((now) => [...now, player.id])}
-                aria-label={`${player.name} an den Tisch setzen`}
-                className="flex h-13 w-full items-center gap-2 rounded-[14px] border-[1.5px] border-dashed border-border px-4 text-left"
-              >
-                <span className="truncate text-[17px] font-semibold">
-                  {player.name}
-                </span>
-                {player.guest ? <GuestLabel /> : null}
-                <Plus
-                  className="ml-auto size-5.5 shrink-0 text-primary"
-                  aria-hidden="true"
+        <Section aria-labelledby="others" className="mt-4 gap-3">
+          <SectionTitle id="others" className="mx-1">
+            Nicht dabei
+          </SectionTitle>
+          <NewGuest
+            groupId={groupId}
+            onAdded={(id) => setSeated((now) => [...now, id])}
+          />
+          <ul className="flex flex-col gap-2">
+            {others.map((player) => (
+              <li key={player.id}>
+                <SeatCandidate
+                  name={player.name}
+                  guest={player.guest}
+                  onClick={() => setSeated((now) => [...now, player.id])}
                 />
-              </button>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        </Section>
       </main>
 
-      <div className="sticky bottom-0 flex flex-col gap-3 border-t border-border bg-background px-4 pt-3 pb-6">
-        {problem || error ? (
-          <p
-            role="alert"
-            className="flex items-center gap-2 text-[15px] font-medium text-destructive"
-          >
-            <CircleAlert className="size-5 shrink-0" aria-hidden="true" />
+      <PageFooter variant="sticky">
+        {error || problem ? (
+          <FieldError size="lg">
+            <CircleAlert />
             {error ?? problem}
-          </p>
+          </FieldError>
         ) : null}
-        <PrimaryButton
-          type="button"
+        <Button
+          size="xl"
           onClick={start}
           disabled={problem !== null || pending}
         >
           Spiel starten
-        </PrimaryButton>
-      </div>
+        </Button>
+      </PageFooter>
     </div>
   )
 }
 
 function tooMany(count: number) {
   return count === 1 ? "1 Person" : `${count} Personen`
-}
-
-function GuestLabel() {
-  return <span className="text-sm text-muted-foreground">Gast</span>
 }
 
 type Seated = NewGame["players"][number]
@@ -290,32 +285,23 @@ function SeatingList({
   const order = drag ? moved(ids, drag.from, to) : ids
 
   return (
-    <ol className={cn("flex flex-col gap-2", drag && "select-none")}>
+    <SeatList dragging={drag !== null}>
       {players.map((player, index) => {
         const dragged = drag?.id === player.id
         const seat = order.indexOf(player.id)
         // Rows the dragged one passes move one row towards its old place.
         const shift = dragged ? offset : (seat - index) * ROW_PITCH
         return (
-          <li
+          <SeatRow
             key={player.id}
+            dragged={dragged}
+            moving={drag !== null}
+            first={seat === 0}
             style={shift === 0 ? undefined : { translate: `0 ${shift}px` }}
-            className={cn(
-              "relative flex h-14 items-center gap-1 rounded-[14px] border-[1.5px] border-border bg-card pr-1",
-              dragged
-                ? "z-10 border-primary shadow-lg"
-                : drag && "transition-[translate] duration-150",
-              // The Dealer's badge hangs over the row below, so draw it on top.
-              seat === 0 && !dragged && "z-[1]"
-            )}
           >
-            <button
-              type="button"
-              aria-label={`${player.name} verschieben, Platz ${index + 1}. Pfeiltasten hoch und runter`}
-              className={cn(
-                "flex size-11 shrink-0 touch-none items-center justify-center text-muted-foreground",
-                dragged ? "cursor-grabbing" : "cursor-grab"
-              )}
+            <SeatGrip
+              label={`${player.name} verschieben, Platz ${index + 1}. Pfeiltasten hoch und runter`}
+              dragged={dragged}
               onPointerDown={(event) => startDrag(player.id, event)}
               onKeyDown={(event) => {
                 if (event.key === "ArrowUp") moveBy(player.id, -1)
@@ -323,31 +309,20 @@ function SeatingList({
                 else return
                 event.preventDefault()
               }}
-            >
-              <GripVertical className="size-5" aria-hidden="true" />
-            </button>
-            <span className="w-6 shrink-0 text-center text-[15px] text-muted-foreground tabular-nums">
-              {seat + 1}
-            </span>
-            <span className="ml-2 flex min-w-0 flex-1 items-center gap-2">
-              <span className="truncate text-[17px] font-semibold">
-                {player.name}
-              </span>
-              {player.guest ? <GuestLabel /> : null}
-            </span>
-            <button
-              type="button"
+            />
+            <SeatNumber>{seat + 1}</SeatNumber>
+            <SeatName guest={player.guest} className="ml-2">
+              {player.name}
+            </SeatName>
+            <SeatRemove
+              label={`${player.name} vom Tisch nehmen`}
               onClick={() => onRemove(player.id)}
-              aria-label={`${player.name} vom Tisch nehmen`}
-              className="flex size-11 shrink-0 items-center justify-center text-muted-foreground"
-            >
-              <X className="size-5.5" aria-hidden="true" />
-            </button>
+            />
             {seat === 0 ? <DealerBadge placement="corner" /> : null}
-          </li>
+          </SeatRow>
         )
       })}
-    </ol>
+    </SeatList>
   )
 }
 
@@ -393,35 +368,34 @@ function NewGuest({
   }
 
   return (
-    <form onSubmit={add} noValidate className="flex flex-col gap-1.5">
-      <div className="flex gap-2">
-        <label htmlFor="new-guest" className="sr-only">
+    <form onSubmit={add} noValidate>
+      <Field data-invalid={error ? true : undefined}>
+        <FieldLabel htmlFor="new-guest" className="sr-only">
           Name des neuen Gastes
-        </label>
-        <TextInput
-          id="new-guest"
-          value={name}
-          maxLength={30}
-          placeholder="Neuer Gast, z. B. Lukas"
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? "new-guest-error" : undefined}
-          onChange={(e) => setName(e.target.value)}
-          className="min-w-0 flex-1"
-        />
-        <button
-          type="submit"
-          aria-label="Gast anlegen und an den Tisch setzen"
-          disabled={pending || name.trim() === ""}
-          className="flex size-13 shrink-0 items-center justify-center rounded-xl bg-primary-muted text-primary disabled:opacity-40"
-        >
-          <Plus className="size-5.5" strokeWidth={2.2} aria-hidden="true" />
-        </button>
-      </div>
-      {error ? (
-        <span id="new-guest-error" className="text-[13px] text-destructive">
-          {error}
-        </span>
-      ) : null}
+        </FieldLabel>
+        <div className="flex gap-2">
+          <Input
+            id="new-guest"
+            value={name}
+            maxLength={30}
+            placeholder="Neuer Gast, z. B. Lukas"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? "new-guest-error" : undefined}
+            onChange={(e) => setName(e.target.value)}
+            className="flex-1"
+          />
+          <Button
+            type="submit"
+            variant="soft"
+            size="icon-lg"
+            aria-label="Gast anlegen und an den Tisch setzen"
+            disabled={pending || name.trim() === ""}
+          >
+            <Plus />
+          </Button>
+        </div>
+        <FieldError id="new-guest-error">{error}</FieldError>
+      </Field>
     </form>
   )
 }
