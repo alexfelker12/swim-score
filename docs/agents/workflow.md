@@ -24,3 +24,11 @@ Ein Ticket (GitHub Issue mit `ready-for-agent`) ist genau ein Branch und ein Pul
 
 - **Ticket zu groß für eine Sitzung:** mit `/to-tickets` teilen, Abhängigkeiten anpassen.
 - **Sitzung wird zu lang:** mit `/handoff` an eine frische Sitzung übergeben.
+
+## Oberfläche
+
+- UI kommt aus den shadcn/ui-Komponenten auf Base UI in `src/components/ui` (ADR 0009). Vor dem Bauen nachsehen, welche Komponente passt (`docs/design/README.md` › Bausteine, shadcn-MCP oder `pnpm dlx shadcn@latest add <name>`). Keine eigenen Sheets, Dialoge, Tabs, Felder oder rohen `<button>`.
+- Looks gehören als Variante oder Größe in die Komponente. An der Aufrufstelle nur Layout-Klassen (Abstand, Breite, Platzierung).
+- Datum und Auswahl nativ: `DateInput`, `NativeSelect`.
+- Mehrteiliges als Compound Component bauen, nicht inline zusammensetzen.
+- Aktionen in Zeilen und Feldern so kompakt wie möglich: Icon-Button mit `aria-label`, wo es ein bekanntes Icon gibt (z. B. kopieren), sonst Text.

@@ -2,34 +2,69 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
+/**
+ * Buttons from docs/design/README.md › Bausteine. Pick look and size here;
+ * call sites only add layout classes (width, flex, margin).
+ *
+ * Touch screens never show `hover:` (Tailwind only applies it on devices
+ * that can hover), so every variant also reacts to `active:` and the button
+ * shrinks a little while pressed.
+ *
+ * A link that looks like a button: `<Button nativeButton={false}
+ * render={<Link to="…" />}>`.
+ */
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-2xl border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center gap-2 border-[1.5px] border-transparent bg-clip-padding whitespace-nowrap transition-[color,background-color,border-color,opacity,scale] duration-100 outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40 motion-reduce:active:scale-100 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        /** Main action: primary fill. */
+        default:
+          "bg-primary font-semibold text-primary-foreground hover:bg-primary/90 active:bg-primary/90",
+        /** Secondary action: 1.5 px border, no fill ("Abbrechen", "Zur Gruppe"). */
+        secondary: "border-border font-medium hover:bg-muted active:bg-muted",
+        /** Like secondary, on a card surface (bars, sheets over the page). */
         outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-transparent dark:hover:bg-input/30",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "border-border bg-card font-medium hover:bg-muted active:bg-muted",
+        /** Quiet primary action ("Übernehmen", add buttons). */
+        soft: "bg-primary-muted font-semibold text-primary hover:bg-primary-muted/70 active:bg-primary-muted/70",
+        /** Removes or deletes something: coral fill. */
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-destructive font-semibold text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/90",
+        /** Removes something, as text ("Spiel abbrechen", "Konto löschen"). */
+        "destructive-ghost":
+          "font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive-muted",
+        /** The bomb: border and text `bomb` on `bomb-muted`. */
+        bomb: "border-bomb bg-bomb-muted font-semibold text-bomb hover:bg-bomb-muted/70 active:bg-bomb-muted/70",
+        /** Icon buttons in headers and rows, text buttons without a frame. */
+        ghost: "font-medium hover:bg-muted active:bg-muted",
+        /** Inline text action in the primary colour. */
+        link: "h-auto! px-0! font-semibold text-primary underline-offset-4 hover:underline active:opacity-70",
+        /** "Mit Google anmelden" after Google's branding guidelines. */
+        google:
+          "border border-google-stroke bg-google-fill font-google text-sm/5 font-medium text-google-text active:opacity-80",
       },
       size: {
-        default:
-          "h-8 gap-1.5 px-3 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5",
-        xs: "h-6 gap-1 px-2.5 text-xs has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 px-3 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        lg: "h-9 gap-1.5 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
-        icon: "size-8",
-        "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-7",
-        "icon-lg": "size-9",
+        /** Main buttons, 56 px. */
+        xl: "h-14 rounded-[14px] px-4 text-base",
+        /** Main buttons where space is tight, 52 px. */
+        lg: "h-13 rounded-[14px] px-4 text-base",
+        /** Buttons in bars and sheets, 48 px. */
+        default: "h-12 rounded-xl px-4 text-[15px]",
+        /** Small actions, 44 px (the minimum tap target). */
+        sm: "h-11 rounded-xl px-3.5 text-[15px]",
+        /** Compact actions inside a row or card, 36 px. */
+        xs: "h-9 rounded-[10px] px-3.5 text-sm [&_svg:not([class*='size-'])]:size-4",
+        /** Icon button, 44 × 44 px. */
+        icon: "size-11 rounded-xl active:scale-90",
+        /** Large icon button, 52 × 52 px. */
+        "icon-lg": "size-13 rounded-xl active:scale-90",
       },
     },
+    compoundVariants: [
+      // 12 px inset on the left, 10 px between logo and text, radius as the main buttons.
+      { variant: "google", className: "gap-2.5 rounded-[14px] px-3 text-sm/5" },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",
