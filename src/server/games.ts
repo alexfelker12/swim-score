@@ -904,7 +904,10 @@ function replayGame(recorded: RecordedGame): GameState {
  * How a Participant did. Lives lost counts every Round that went against
  * them, the one that made them the Swimmer included (as shown at the end).
  */
-function summarize(recorded: RecordedGame, id: string): ParticipantSummary {
+export function summarize(
+  recorded: RecordedGame,
+  id: string
+): ParticipantSummary {
   const { ruleSet } = recorded
   const events = recorded.events.map((e) => e.event)
   let state = replayGame({ ...recorded, events: [] })

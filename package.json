@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx}\"",
+    "import:old": "tsx --env-file=.env.import.local scripts/import-old-data.ts",
     "check": "prettier --check \"**/*.{ts,tsx,js,jsx}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -57,6 +58,8 @@
     "eslint": "^10",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "sharp": "^0.35.5",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.2",
     "vite": "^8",
     "vitest": "^5.1.0"
