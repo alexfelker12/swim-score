@@ -137,7 +137,7 @@ export async function setAvatar(
       .onConflictDoUpdate({ target: avatar.userId, set: values })
     await tx
       .update(user)
-      .set({ image: `/api/avatar/${id}?v=${values.updatedAt.getTime()}` })
+      .set({ image: avatarUrl(id, values.updatedAt) })
       .where(eq(user.id, id))
   })
 }
@@ -295,4 +295,12 @@ export async function deleteAccount(app: App, headers: Headers): Promise<void> {
     // Group Admin role of a Group that stays becomes empty.
     await tx.delete(user).where(eq(user.id, id))
   })
+}
+
+/**
+ * Where an account's stored picture is served; the time of the change makes
+ * browsers load a new picture instead of the cached one.
+ */
+export function avatarUrl(userId: string, updatedAt: Date): string {
+  return `/api/avatar/${userId}?v=${updatedAt.getTime()}`
 }

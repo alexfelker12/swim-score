@@ -97,9 +97,11 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
-const AVATAR_SIDE = 256
-const SOURCE_MAX_SIDE = 1600
-const SOURCE_MAX_BYTES = 1024 * 1024
+/** Side of the stored avatar, in px. */
+export const AVATAR_SIDE = 256
+/** Longest side of the stored source image, in px. */
+export const SOURCE_MAX_SIDE = 1600
+export const SOURCE_MAX_BYTES = 1024 * 1024
 
 /** The 256 × 256 px avatar for the given crop. */
 export function renderAvatar(

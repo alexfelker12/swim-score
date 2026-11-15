@@ -121,11 +121,7 @@ export type Auth = ReturnType<typeof createAuth>
  * username, with a number appended when it is taken.
  */
 async function freeUsername(db: Database, email: string): Promise<string> {
-  const local = email
-    .split("@")[0]
-    .toLowerCase()
-    .replace(/[^a-z0-9_.]/g, "")
-  const base = (local.length >= 3 ? local : `${local}spieler`).slice(0, 27)
+  const base = usernameFromEmail(email)
   for (let suffix = 1; ; suffix++) {
     const candidate = suffix === 1 ? base : `${base}${suffix}`
     const taken = await db.query.user.findFirst({
@@ -134,4 +130,17 @@ async function freeUsername(db: Database, email: string): Promise<string> {
     })
     if (!taken) return candidate
   }
+}
+
+/**
+ * The username an account gets from its e-mail address before a number is
+ * appended against collisions: the part before the @, normalised like any
+ * username, at least 3 and at most 27 characters (room for the number).
+ */
+export function usernameFromEmail(email: string): string {
+  const local = email
+    .split("@")[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9_.]/g, "")
+  return (local.length >= 3 ? local : `${local}spieler`).slice(0, 27)
 }

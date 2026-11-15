@@ -30,11 +30,35 @@ Gebaut wird mit Nitro (`nitro/vite` in `vite.config.ts`). Auf Vercel erkennt Nit
 - Nach einer Schema-Änderung: `pnpm db:generate` erzeugt eine SQL-Migration in `drizzle/`, die mit committet wird.
 - `pnpm db:migrate` wendet sie auf `DATABASE_URL` an.
 
+## Alte Daten übernehmen (einmalig)
+
+`pnpm import:old` übernimmt die Tracker „Bauwagen“ und „Montagsschillen“ der alten App (`alexfelker12/score-tracker`) als Gruppen, mit ihren Konten, Gästen und Spielen (#17). Code: `src/import/`, Skript: `scripts/import-old-data.ts`.
+
+1. Die neue Datenbank muss leer sein (nur die Migrationen). Sonst bricht der Import ab, bevor er etwas schreibt.
+2. `.env.import.local` anlegen (ist in `.gitignore`):
+   ```
+   OLD_DATABASE_URL=postgres://…   # alte Datenbank, direkte Verbindung (nicht prisma://)
+   DATABASE_URL=postgres://…       # neue Datenbank (Neon)
+   ```
+3. Probelauf: `pnpm import:old --dry-run` macht alles in einer Transaktion, gibt den Bericht aus und nimmt alles zurück.
+4. Import: `pnpm import:old`. Alles oder nichts, in einer Transaktion.
+
+Was dabei passiert:
+
+- **Konten** behalten ihre Id, ihr Passwort und die Verknüpfung mit Google: Anmelden geht wie vorher (gleicher Google-OAuth-Client). Sitzungen werden nicht übernommen, alle melden sich einmal neu an.
+- **Benutzernamen**, die die neuen Regeln verletzen, werden angepasst und im Bericht genannt: ohne Leerzeichen am Rand, unerlaubte Zeichen werden `_`, zu kurze werden mit `_` aufgefüllt („F“ → „F__“). Konten ohne Benutzernamen (Google) bekommen ihn wie bei einer neuen Google-Anmeldung aus der E-Mail-Adresse.
+- **Profilbilder** aus Vercel Blob werden geladen und wie ein Upload gespeichert (256 px, Ausschnitt mittig, später im Editor änderbar). Google-Bilder bleiben Links. Nicht ladbare Bilder nennt der Bericht, das Konto hat dann keins.
+- **Ids:** Gruppen, Spieler, Spiele und Teilnehmer bekommen UUIDs, die aus der alten cuid abgeleitet sind. Ein zweiter Import in eine leere Datenbank ergibt dieselben Ids.
+- **Spieler:** Spieler eines Trackers werden Spieler der Gruppe, Gäste werden Gäste (später beanspruchbar). Wer in Spielen vorkommt, aber nicht mehr im Tracker ist, wird ehemaliger Spieler.
+- **Spiele:** Beendete und abgebrochene Spiele werden aus den alten Runden-Snapshots in Ereignisse umgerechnet (`src/import/convert-game.ts`), beendete bekommen ihre Zusammenfassung für die Statistik. Laufende Spiele werden ausgelassen. Ersteller des Trackers gilt als Zähler aller Spiele.
+- **Eigenheiten der alten Daten:** In den ersten Spielen (bis Anfang Mai 2025) fehlt der Dealer, dort gilt die alte Reihenfolge, Platz 0 gibt zuerst. In einem Spiel hat eine Bombe schon Ausgeschiedenen Leben abgezogen (bis −2), ausgeschieden ist ausgeschieden: 0 Leben.
+
 ## Tests
 
 `pnpm test` führt alle Tests mit Vitest aus. Getestet wird nur an den zwei Schnittstellen aus der Spec (#1):
 
 - **Spiellogik** (`src/rules-engine/`): reine Funktionen, ohne Datenbank.
+- **Import der alten Daten** (`src/import/`): die Umrechnung der alten Runden-Snapshots (Round-Trip mit anonymisierten echten Spielen aus `fixtures/old-games.json`) und der Import gegen eine Datenbank im alten Schema (`fixtures/old-schema.sql`).
 - **Server-Anwendungsschicht** (`src/server/`): die Server-Befehle und better-auth gegen eine **echte Postgres-Instanz**. Jeder Test ruft `createTestApp()` aus `src/server/testing/test-app.ts` auf und bekommt eine frische Datenbank im Speicher ([PGlite](https://pglite.dev)), auf die die Migrationen aus `drizzle/` angewendet sind. Docker oder eine Datenbank-URL braucht es dafür nicht.
   - `signUp(auth, { username })` legt ein Konto an und liefert die Sitzungs-Header für Befehle.
   - `signInWithGoogle(auth, profile)` simuliert die Anmeldung mit Google; das ID-Token ist das JSON des Profils.

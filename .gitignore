@@ -17,3 +17,6 @@ todos.json
 
 !.env.example
 .vercel
+
+# pg_dump
+**/*.local.sql

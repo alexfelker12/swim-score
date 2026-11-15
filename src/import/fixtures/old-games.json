@@ -1,0 +1,2625 @@
+[
+  {
+    "description": "Bombe mit Schwimmerwahl (Konflikt)",
+    "status": "COMPLETED",
+    "winner": "p1",
+    "rounds": [
+      {
+        "round": 0,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            }
+          ],
+          "dealer": "p1"
+        }
+      },
+      {
+        "round": 1,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2,
+              "order": 4
+            }
+          ],
+          "dealer": "p2"
+        }
+      },
+      {
+        "round": 2,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2,
+              "order": 4
+            }
+          ],
+          "dealer": "p3"
+        }
+      },
+      {
+        "round": 3,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            }
+          ],
+          "dealer": "p4"
+        }
+      },
+      {
+        "round": 4,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            }
+          ],
+          "dealer": "p5"
+        }
+      },
+      {
+        "round": 5,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            }
+          ],
+          "dealer": "p1"
+        }
+      },
+      {
+        "round": 6,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 1,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            }
+          ],
+          "dealer": "p2"
+        }
+      },
+      {
+        "round": 7,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 2,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 1,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            }
+          ],
+          "dealer": "p3"
+        }
+      },
+      {
+        "round": 8,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 2,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 1,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            }
+          ],
+          "dealer": "p4"
+        }
+      },
+      {
+        "round": 9,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 1,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 0,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 0,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p3",
+          "nukeBy": "p1",
+          "dealer": "p1"
+        }
+      },
+      {
+        "round": 10,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 0,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 0,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 0,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p3",
+          "dealer": "p2"
+        }
+      },
+      {
+        "round": 11,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 0,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 0,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 0,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 0,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p3",
+          "dealer": "p1"
+        }
+      }
+    ]
+  },
+  {
+    "description": "Schwimmer gewinnt",
+    "status": "COMPLETED",
+    "winner": "p2",
+    "rounds": [
+      {
+        "round": 0,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 3,
+              "order": 5
+            }
+          ],
+          "dealer": "p1"
+        }
+      },
+      {
+        "round": 1,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 2,
+              "order": 5
+            }
+          ],
+          "dealer": "p2"
+        }
+      },
+      {
+        "round": 2,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 2,
+              "order": 5
+            }
+          ],
+          "dealer": "p3"
+        }
+      },
+      {
+        "round": 3,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 2,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 2,
+              "order": 5
+            }
+          ],
+          "dealer": "p4"
+        }
+      },
+      {
+        "round": 4,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 2,
+              "order": 5
+            }
+          ],
+          "dealer": "p5"
+        }
+      },
+      {
+        "round": 5,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 2,
+              "order": 5
+            }
+          ],
+          "dealer": "p6"
+        }
+      },
+      {
+        "round": 6,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 2,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p1"
+        }
+      },
+      {
+        "round": 7,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 2,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p2"
+        }
+      },
+      {
+        "round": 8,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 2,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p3"
+        }
+      },
+      {
+        "round": 9,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 1,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p4"
+        }
+      },
+      {
+        "round": 10,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 1,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 1,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p5"
+        }
+      },
+      {
+        "round": 11,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 1,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 0,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p1"
+        }
+      },
+      {
+        "round": 12,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 1,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 0,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p2"
+        }
+      },
+      {
+        "round": 13,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 1,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 0,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p3"
+        }
+      },
+      {
+        "round": 14,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 1,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 0,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p4"
+        }
+      },
+      {
+        "round": 15,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 0,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 0,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p5"
+        }
+      },
+      {
+        "round": 16,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 0,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 0,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p2"
+        }
+      },
+      {
+        "round": 17,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 0,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 0,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 0,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p5"
+        }
+      },
+      {
+        "round": 18,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 0,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 0,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 0,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 0,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p2",
+          "dealer": "p2"
+        }
+      }
+    ]
+  },
+  {
+    "description": "Erste Version: kein Dealer, Bombe trifft schon Ausgeschiedene",
+    "status": "COMPLETED",
+    "winner": "p5",
+    "rounds": [
+      {
+        "round": 0,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 3
+            },
+            {
+              "id": "p3",
+              "lifes": 3
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3
+            },
+            {
+              "id": "p6",
+              "lifes": 3
+            }
+          ]
+        }
+      },
+      {
+        "round": 1,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 2
+            },
+            {
+              "id": "p3",
+              "lifes": 3
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3
+            },
+            {
+              "id": "p6",
+              "lifes": 3
+            }
+          ]
+        }
+      },
+      {
+        "round": 2,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 2
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3
+            },
+            {
+              "id": "p6",
+              "lifes": 3
+            }
+          ]
+        }
+      },
+      {
+        "round": 3,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3
+            },
+            {
+              "id": "p6",
+              "lifes": 3
+            }
+          ]
+        }
+      },
+      {
+        "round": 4,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3
+            },
+            {
+              "id": "p6",
+              "lifes": 3
+            }
+          ],
+          "playerSwimming": "p2"
+        }
+      },
+      {
+        "round": 5,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 3
+            }
+          ],
+          "playerSwimming": "p2"
+        }
+      },
+      {
+        "round": 6,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 2
+            }
+          ],
+          "playerSwimming": "p2"
+        }
+      },
+      {
+        "round": 7,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2
+            },
+            {
+              "id": "p2",
+              "lifes": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 2
+            }
+          ],
+          "playerSwimming": "p2"
+        }
+      },
+      {
+        "round": 8,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1
+            },
+            {
+              "id": "p2",
+              "lifes": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 2
+            }
+          ],
+          "playerSwimming": "p2"
+        }
+      },
+      {
+        "round": 9,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 2
+            }
+          ],
+          "playerSwimming": "p2"
+        }
+      },
+      {
+        "round": 10,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 0
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 2
+            }
+          ],
+          "playerSwimming": "p2"
+        }
+      },
+      {
+        "round": 11,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 0
+            },
+            {
+              "id": "p3",
+              "lifes": 1
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 2
+            }
+          ],
+          "playerSwimming": "p2"
+        }
+      },
+      {
+        "round": 12,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 0
+            },
+            {
+              "id": "p3",
+              "lifes": 0
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 2
+            }
+          ],
+          "playerSwimming": "p2"
+        }
+      },
+      {
+        "round": 13,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": -1
+            },
+            {
+              "id": "p2",
+              "lifes": -1
+            },
+            {
+              "id": "p3",
+              "lifes": -1
+            },
+            {
+              "id": "p4",
+              "lifes": 2
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 1
+            }
+          ],
+          "playerSwimming": "p2",
+          "nukeBy": "p5"
+        }
+      },
+      {
+        "round": 14,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": -1
+            },
+            {
+              "id": "p2",
+              "lifes": -1
+            },
+            {
+              "id": "p3",
+              "lifes": -1
+            },
+            {
+              "id": "p4",
+              "lifes": 1
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 1
+            }
+          ],
+          "playerSwimming": "p2"
+        }
+      },
+      {
+        "round": 15,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": -2
+            },
+            {
+              "id": "p2",
+              "lifes": -2
+            },
+            {
+              "id": "p3",
+              "lifes": -2
+            },
+            {
+              "id": "p4",
+              "lifes": 0
+            },
+            {
+              "id": "p5",
+              "lifes": 2
+            },
+            {
+              "id": "p6",
+              "lifes": 0
+            }
+          ],
+          "playerSwimming": "p2",
+          "nukeBy": "p5"
+        }
+      }
+    ]
+  },
+  {
+    "description": "Abgebrochen mitten im Spiel",
+    "status": "CANCELLED",
+    "winner": null,
+    "rounds": [
+      {
+        "round": 0,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 3,
+              "order": 5
+            }
+          ],
+          "dealer": "p1"
+        }
+      },
+      {
+        "round": 1,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 3,
+              "order": 5
+            }
+          ],
+          "dealer": "p2"
+        }
+      },
+      {
+        "round": 2,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 3,
+              "order": 5
+            }
+          ],
+          "dealer": "p3"
+        }
+      },
+      {
+        "round": 3,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 3,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p1",
+          "dealer": "p4"
+        }
+      },
+      {
+        "round": 4,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            },
+            {
+              "id": "p6",
+              "lifes": 3,
+              "order": 5
+            }
+          ],
+          "playerSwimming": "p1",
+          "dealer": "p5"
+        }
+      }
+    ]
+  },
+  {
+    "description": "Mehrere scheiden in derselben Runde aus",
+    "status": "COMPLETED",
+    "winner": "p3",
+    "rounds": [
+      {
+        "round": 0,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            }
+          ],
+          "dealer": "p1"
+        }
+      },
+      {
+        "round": 1,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            }
+          ],
+          "dealer": "p2"
+        }
+      },
+      {
+        "round": 2,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 2,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            }
+          ],
+          "dealer": "p3"
+        }
+      },
+      {
+        "round": 3,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 3,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            }
+          ],
+          "dealer": "p4"
+        }
+      },
+      {
+        "round": 4,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 2,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            }
+          ],
+          "dealer": "p5"
+        }
+      },
+      {
+        "round": 5,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 2,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p4",
+          "dealer": "p1"
+        }
+      },
+      {
+        "round": 6,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 2,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p4",
+          "dealer": "p2"
+        }
+      },
+      {
+        "round": 7,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 2,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p4",
+          "dealer": "p3"
+        }
+      },
+      {
+        "round": 8,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 1,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 1,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 3,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p4",
+          "dealer": "p4"
+        }
+      },
+      {
+        "round": 9,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 0,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 0,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 2,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p4",
+          "nukeBy": "p3",
+          "dealer": "p5"
+        }
+      },
+      {
+        "round": 10,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 0,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 3,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 0,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p4",
+          "dealer": "p3"
+        }
+      },
+      {
+        "round": 11,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 0,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 0,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 1,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p4",
+          "dealer": "p5"
+        }
+      },
+      {
+        "round": 12,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 0,
+              "order": 0
+            },
+            {
+              "id": "p2",
+              "lifes": 0,
+              "order": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 2,
+              "order": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 0,
+              "order": 3
+            },
+            {
+              "id": "p5",
+              "lifes": 0,
+              "order": 4
+            }
+          ],
+          "playerSwimming": "p4",
+          "dealer": "p3"
+        }
+      }
+    ]
+  },
+  {
+    "description": "Montagsschillen",
+    "status": "COMPLETED",
+    "winner": "p1",
+    "rounds": [
+      {
+        "round": 0,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 3
+            },
+            {
+              "id": "p3",
+              "lifes": 3
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            }
+          ]
+        }
+      },
+      {
+        "round": 1,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 3
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            }
+          ]
+        }
+      },
+      {
+        "round": 2,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 2
+            },
+            {
+              "id": "p3",
+              "lifes": 2
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            }
+          ]
+        }
+      },
+      {
+        "round": 3,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 3
+            },
+            {
+              "id": "p2",
+              "lifes": 2
+            },
+            {
+              "id": "p3",
+              "lifes": 1
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            }
+          ]
+        }
+      },
+      {
+        "round": 4,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2
+            },
+            {
+              "id": "p2",
+              "lifes": 2
+            },
+            {
+              "id": "p3",
+              "lifes": 1
+            },
+            {
+              "id": "p4",
+              "lifes": 3
+            }
+          ]
+        }
+      },
+      {
+        "round": 5,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2
+            },
+            {
+              "id": "p2",
+              "lifes": 2
+            },
+            {
+              "id": "p3",
+              "lifes": 1
+            },
+            {
+              "id": "p4",
+              "lifes": 2
+            }
+          ]
+        }
+      },
+      {
+        "round": 6,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2
+            },
+            {
+              "id": "p2",
+              "lifes": 2
+            },
+            {
+              "id": "p3",
+              "lifes": 1
+            },
+            {
+              "id": "p4",
+              "lifes": 2
+            }
+          ],
+          "playerSwimming": "p3"
+        }
+      },
+      {
+        "round": 7,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 2
+            },
+            {
+              "id": "p2",
+              "lifes": 2
+            },
+            {
+              "id": "p3",
+              "lifes": 1
+            },
+            {
+              "id": "p4",
+              "lifes": 1
+            }
+          ],
+          "playerSwimming": "p3"
+        }
+      },
+      {
+        "round": 8,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1
+            },
+            {
+              "id": "p2",
+              "lifes": 2
+            },
+            {
+              "id": "p3",
+              "lifes": 1
+            },
+            {
+              "id": "p4",
+              "lifes": 1
+            }
+          ],
+          "playerSwimming": "p3"
+        }
+      },
+      {
+        "round": 9,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1
+            },
+            {
+              "id": "p2",
+              "lifes": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 1
+            },
+            {
+              "id": "p4",
+              "lifes": 1
+            }
+          ],
+          "playerSwimming": "p3"
+        }
+      },
+      {
+        "round": 10,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1
+            },
+            {
+              "id": "p2",
+              "lifes": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 0
+            },
+            {
+              "id": "p4",
+              "lifes": 1
+            }
+          ],
+          "playerSwimming": "p3"
+        }
+      },
+      {
+        "round": 11,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1
+            },
+            {
+              "id": "p2",
+              "lifes": 1
+            },
+            {
+              "id": "p3",
+              "lifes": 0
+            },
+            {
+              "id": "p4",
+              "lifes": 0
+            }
+          ],
+          "playerSwimming": "p3"
+        }
+      },
+      {
+        "round": 12,
+        "data": {
+          "players": [
+            {
+              "id": "p1",
+              "lifes": 1
+            },
+            {
+              "id": "p2",
+              "lifes": 0
+            },
+            {
+              "id": "p3",
+              "lifes": 0
+            },
+            {
+              "id": "p4",
+              "lifes": 0
+            }
+          ],
+          "playerSwimming": "p3"
+        }
+      }
+    ]
+  }
+]
