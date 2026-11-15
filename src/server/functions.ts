@@ -25,6 +25,7 @@ import {
 } from "./games"
 import { getApp } from "./instance"
 import { getLeaderboard } from "./leaderboard"
+import { getPlayerProfile } from "./player-profile"
 import {
   confirmClaim,
   getGroupManagement,
@@ -236,6 +237,19 @@ export const getLeaderboardFn = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const result = await outcome(() =>
       getLeaderboard(getApp(), headers(), data)
+    )
+    return result.ok ? result.value : null
+  })
+
+/**
+ * An account's Player Profile with its Personal Stats for a period, or null
+ * when the viewer may not see it (or the period is not one).
+ */
+export const getPlayerProfileFn = createServerFn({ method: "GET" })
+  .validator((input: { userId: string; from?: string; to?: string }) => input)
+  .handler(async ({ data }) => {
+    const result = await outcome(() =>
+      getPlayerProfile(getApp(), headers(), data)
     )
     return result.ok ? result.value : null
   })

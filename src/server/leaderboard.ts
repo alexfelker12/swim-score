@@ -1,19 +1,33 @@
-import { and, eq, gte, lte, min, sql } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { game, participant, player, user } from "./db/schema"
-import { CommandError } from "./errors"
-import { isCurrentPlayer, isGuest, playerName, requirePlayer } from "./groups"
+import {
+  byName,
+  isCurrentPlayer,
+  isGuest,
+  playerName,
+  requirePlayer,
+} from "./groups"
 import { METRICS } from "./metrics"
 import { requireUser } from "./session"
-import { isCalendarDay } from "@/lib/dates"
-import type { SQL } from "drizzle-orm"
+import {
+  inPeriod,
+  isCompleted,
+  metricCountFields,
+  metricValue,
+  parsePeriod,
+  periodChoices,
+} from "./stats"
 import type { App } from "./app"
 import type { MetricDefinition, MetricId, MetricUnit } from "./metrics"
+import type { MetricCounts, Period } from "./stats"
 
 export type { MetricId, MetricUnit } from "./metrics"
 
 /** A player on the Group Leaderboard for one metric. */
 export type RankedPlayer = {
   playerId: string
+  /** The account behind the Player, for their Player Profile; null for a Guest. */
+  userId: string | null
   name: string
   guest: boolean
   /** Players with the same value share it; the next one skips accordingly. */
@@ -26,6 +40,8 @@ export type RankedPlayer = {
 /** A player with too few Games for a metric with a minimum. */
 export type PendingPlayer = {
   playerId: string
+  /** The account behind the Player, for their Player Profile; null for a Guest. */
+  userId: string | null
   name: string
   guest: boolean
   games: number
@@ -51,18 +67,6 @@ export type Leaderboard = {
   metrics: Array<MetricBoard>
 }
 
-/** A day in German time, `YYYY-MM-DD`; both ends are included. */
-export type Period = { from?: string; to?: string }
-
-/**
- * The day a Game started, in German time: a Game at 23:30 on New Year's Eve
- * belongs to the old year.
- */
-const startDay = sql`(${game.startedAt} at time zone 'UTC' at time zone 'Europe/Berlin')::date`
-
-// Case does not matter, accents do; the same order as the player list.
-const byName = new Intl.Collator("de", { sensitivity: "accent", numeric: true })
-
 /**
  * The Group Leaderboard: every current Player, Guests included, ranked by
  * each metric over the Group's completed Games in the period (all of them
@@ -78,14 +82,8 @@ export async function getLeaderboard(
   await requirePlayer(app, input.groupId, me.id)
   const period = parsePeriod(input)
 
-  const finished = and(
-    eq(game.groupId, input.groupId),
-    eq(game.status, "finished")
-  )
-  const counts = Object.fromEntries(
-    METRICS.map((m) => [m.id, m.count])
-  ) as Record<MetricId, SQL<number>>
-  const [rows, [range], years] = await Promise.all([
+  const inGroup = eq(game.groupId, input.groupId)
+  const [rows, choices] = await Promise.all([
     app.db
       .select({
         playerId: player.id,
@@ -93,59 +91,41 @@ export async function getLeaderboard(
         userId: player.userId,
         formerNumber: player.formerNumber,
         userName: user.name,
-        played: sql<number>`count(*)::int`,
-        ...counts,
+        ...metricCountFields(),
       })
       .from(participant)
       .innerJoin(game, eq(game.id, participant.gameId))
       .innerJoin(player, eq(player.id, participant.playerId))
       .leftJoin(user, eq(user.id, player.userId))
-      .where(
-        and(
-          finished,
-          isCurrentPlayer,
-          period.from ? gte(startDay, period.from) : undefined,
-          period.to ? lte(startDay, period.to) : undefined
-        )
-      )
+      .where(and(inGroup, isCompleted, isCurrentPlayer, inPeriod(period)))
       .groupBy(player.id, user.id),
-    app.db
-      .select({ since: min(game.startedAt) })
-      .from(game)
-      .where(finished),
-    app.db
-      .selectDistinct({
-        year: sql<number>`extract(year from ${startDay})::int`.as("year"),
-      })
-      .from(game)
-      .where(finished),
+    periodChoices(app, inGroup),
   ])
 
   const players = rows.map((row) => ({
     playerId: row.playerId,
+    userId: row.userId,
     name: playerName({
       name: row.name,
       formerNumber: row.formerNumber,
       user: row.userName === null ? null : { name: row.userName },
     }),
     guest: isGuest(row),
-    games: row.played,
     counts: row,
   }))
 
   return {
-    since: range.since ?? null,
-    years: years.map((y) => y.year).sort((a, b) => b - a),
+    ...choices,
     metrics: METRICS.map((metric) => rank(metric, players)),
   }
 }
 
 type PlayerCounts = {
   playerId: string
+  userId: string | null
   name: string
   guest: boolean
-  games: number
-  counts: Record<MetricId, number>
+  counts: MetricCounts
 }
 
 function rank(
@@ -155,6 +135,7 @@ function rank(
   const { minGames } = metric
   const entries = players.map((p) => ({
     ...p,
+    games: p.counts.games,
     count: p.counts[metric.id],
   }))
   const counted = entries.filter(
@@ -177,13 +158,15 @@ function rank(
     const previous = index > 0 ? counted[index - 1] : null
     ranked.push({
       playerId: p.playerId,
+      userId: p.userId,
       name: p.name,
       guest: p.guest,
       rank:
         previous && compare(previous, p) === 0
           ? ranked[index - 1].rank
           : index + 1,
-      value: metric.perGame ? p.count / p.games : p.count,
+      // Ranked players have played, so a rate has a value.
+      value: metricValue(metric, p.count, p.games) ?? 0,
       detail: metric.detail({ count: p.count, games: p.games }),
     })
   })
@@ -191,8 +174,9 @@ function rank(
   const pending = entries
     .filter((p) => minGames !== null && p.games < minGames)
     .sort((a, b) => b.games - a.games || byName.compare(a.name, b.name))
-    .map(({ playerId, name, guest, games }) => ({
+    .map(({ playerId, userId, name, guest, games }) => ({
       playerId,
+      userId,
       name,
       guest,
       games,
@@ -207,14 +191,4 @@ function rank(
     ranked,
     pending,
   }
-}
-
-/** Both ends or neither, each a real day, `from` not after `to`. */
-function parsePeriod(input: Period): Period {
-  const { from, to } = input
-  if (from === undefined && to === undefined) return {}
-  if (!isCalendarDay(from) || !isCalendarDay(to) || from > to) {
-    throw new CommandError("invalidPeriod")
-  }
-  return { from, to }
 }

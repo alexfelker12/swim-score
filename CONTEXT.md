@@ -131,7 +131,7 @@ The completed Games a statistic covers, by the day they started (German time): a
 _Avoid_: Season, Range
 
 **Personal Stats** (Persönliche Statistik):
-One account holder's statistics across all Groups they play in, in total and per Group, shown on their Player Profile.
+One account holder's statistics over all their completed Games, shown on their Player Profile: in total (also Games in Groups they have left) and per Group they currently play in.
 
 **Player Profile** (Spielerprofil):
 The page of an account holder showing their Personal Stats; visible to anyone who shares at least one Group with them, with the per-Group breakdown limited to Groups they share.

@@ -1,7 +1,6 @@
 import { useState } from "react"
 import {
   Bomb,
-  Calendar,
   Check,
   ChevronDown,
   Percent,
@@ -12,18 +11,9 @@ import {
   Waves,
 } from "lucide-react"
 import { BottomSheet } from "@/components/bottom-sheet"
-import { Field, TextInput } from "@/components/form-field"
-import {
-  largeSecondaryButtonClass,
-  primaryButtonClass,
-} from "@/components/buttons"
-import {
-  formatDayRange,
-  formatMonthYear,
-  formatShortDayRange,
-  todayKey,
-  yearOf,
-} from "@/lib/dates"
+import { PeriodButton, PeriodSheet } from "@/components/period-picker"
+import { ProfileLink } from "@/components/profile-link"
+import { formatMetricValue } from "@/lib/metric-format"
 import { cn } from "@/lib/utils"
 import type { LucideIcon } from "lucide-react"
 import type {
@@ -31,9 +21,9 @@ import type {
   MetricBoard,
   MetricId,
   MetricUnit,
-  Period,
   RankedPlayer,
 } from "@/server/leaderboard"
+import type { Period } from "@/server/stats"
 
 /** Each metric's icon, on the selector and in the metric sheet. */
 const METRIC_ICONS: Record<MetricId, LucideIcon> = {
@@ -49,53 +39,6 @@ const METRIC_ICONS: Record<MetricId, LucideIcon> = {
 function MetricIcon({ id, className }: { id: MetricId; className?: string }) {
   const Icon = METRIC_ICONS[id]
   return <Icon className={cn("size-5", className)} aria-hidden="true" />
-}
-
-const decimal = new Intl.NumberFormat("de", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
-
-function formatValue(value: number, unit: MetricUnit): string {
-  switch (unit) {
-    case "percent":
-      return `${Math.round(value * 100)}\u00a0%`
-    case "decimal":
-      return decimal.format(value)
-    case "count":
-      return String(value)
-  }
-}
-
-/** A whole calendar year as a period, e.g. 2025. */
-function yearPeriod(year: number): Required<Period> {
-  return { from: `${year}-01-01`, to: `${year}-12-31` }
-}
-
-/** Which option of the period sheet a period is. */
-type PeriodChoice =
-  { kind: "all" } | { kind: "year"; year: number } | { kind: "custom" }
-
-function choiceOf(period: Period): PeriodChoice {
-  if (!period.from || !period.to) return { kind: "all" }
-  const year = Number(period.from.slice(0, 4))
-  const whole = yearPeriod(year)
-  return whole.from === period.from && whole.to === period.to
-    ? { kind: "year", year }
-    : { kind: "custom" }
-}
-
-/**
- * "Gesamt", "2025" or "1. März bis 30. Juni 2026"; `short` gives the custom
- * period as "1.3.–30.6.2026", which fits beside the metric on the button.
- */
-function periodLabel(period: Period, { short = false } = {}): string {
-  const choice = choiceOf(period)
-  if (choice.kind === "all") return "Gesamt"
-  if (choice.kind === "year") return String(choice.year)
-  const from = period.from ?? ""
-  const to = period.to ?? ""
-  return short ? formatShortDayRange(from, to) : formatDayRange(from, to)
 }
 
 /** Tab "Rangliste": metric and period above the ranking of the Group's Players. */
@@ -139,26 +82,7 @@ export function LeaderboardTab({
           <span className="sr-only">, Kennzahl ändern</span>
           <ChevronDown className="ml-auto size-5 shrink-0" aria-hidden="true" />
         </button>
-        <button
-          type="button"
-          onClick={() => setSheet("period")}
-          aria-haspopup="dialog"
-          className="flex h-11 min-w-0 items-center gap-2 rounded-xl border-[1.5px] border-border px-3 text-base font-semibold"
-        >
-          <Calendar
-            className="size-5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <span className="truncate" aria-hidden="true">
-            {periodLabel(period, { short: true })}
-          </span>
-          <span className="sr-only">{periodLabel(period)}</span>
-          <span className="sr-only">, Zeitraum ändern</span>
-          <ChevronDown
-            className="size-5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
-        </button>
+        <PeriodButton period={period} onClick={() => setSheet("period")} />
       </div>
       <p className="mx-1 mt-2 mb-1 text-[15px] text-muted-foreground">
         {metric.description}
@@ -179,7 +103,8 @@ export function LeaderboardTab({
       ) : null}
       {sheet === "period" ? (
         <PeriodSheet
-          leaderboard={leaderboard}
+          since={leaderboard.since}
+          years={leaderboard.years}
           period={period}
           onApply={(next) => {
             setSheet(null)
@@ -224,15 +149,17 @@ function Ranking({ metric }: { metric: MetricBoard }) {
           </h2>
           <ul>
             {metric.pending.map((p) => (
-              <li
-                key={p.playerId}
-                className="grid min-h-13 grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-border text-muted-foreground"
-              >
-                <span />
-                <PlayerName name={p.name} guest={p.guest} />
-                <span className="text-[15px] tabular-nums">
-                  {p.games} von {metric.minGames} Spielen
-                </span>
+              <li key={p.playerId} className="border-b border-border">
+                <ProfileLink
+                  userId={p.userId}
+                  className="grid min-h-13 grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-2 text-muted-foreground"
+                >
+                  <span />
+                  <PlayerName name={p.name} guest={p.guest} />
+                  <span className="text-[15px] tabular-nums">
+                    {p.games} von {metric.minGames} Spielen
+                  </span>
+                </ProfileLink>
               </li>
             ))}
           </ul>
@@ -242,33 +169,38 @@ function Ranking({ metric }: { metric: MetricBoard }) {
   )
 }
 
+/** A ranked player; with an account, the row opens their Player Profile. */
 function RankedRow({ row, unit }: { row: RankedPlayer; unit: MetricUnit }) {
   const first = row.rank === 1
+  const className =
+    "grid min-h-[55px] grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-2 py-2"
   return (
-    <li className="grid min-h-[55px] grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-border py-2">
-      <span
-        className={cn(
-          "text-center text-[17px] font-semibold tabular-nums",
-          first ? "text-primary" : "text-muted-foreground"
-        )}
-      >
-        <span className="sr-only">Platz </span>
-        {row.rank}
-      </span>
-      <PlayerName name={row.name} guest={row.guest} strong={first} />
-      <span className="flex flex-col items-end">
+    <li className="border-b border-border">
+      <ProfileLink userId={row.userId} className={className}>
         <span
           className={cn(
-            "text-lg leading-tight font-bold tabular-nums",
-            first && "text-primary"
+            "text-center text-[17px] font-semibold tabular-nums",
+            first ? "text-primary" : "text-muted-foreground"
           )}
         >
-          {formatValue(row.value, unit)}
+          <span className="sr-only">Platz </span>
+          {row.rank}
         </span>
-        <span className="text-sm text-muted-foreground tabular-nums">
-          {row.detail}
+        <PlayerName name={row.name} guest={row.guest} strong={first} />
+        <span className="flex flex-col items-end">
+          <span
+            className={cn(
+              "text-lg leading-tight font-bold tabular-nums",
+              first && "text-primary"
+            )}
+          >
+            {formatMetricValue(row.value, unit)}
+          </span>
+          <span className="text-sm text-muted-foreground tabular-nums">
+            {row.detail}
+          </span>
         </span>
-      </span>
+      </ProfileLink>
     </li>
   )
 }
@@ -349,165 +281,5 @@ function MetricSheet({
         })}
       </div>
     </BottomSheet>
-  )
-}
-
-/** The option ticked in the period sheet: all Games, a year, or a custom range. */
-type PeriodOption = "all" | number | "custom"
-
-function PeriodSheet({
-  leaderboard,
-  period,
-  onApply,
-  onDismiss,
-}: {
-  leaderboard: Leaderboard
-  period: Period
-  onApply: (period: Period) => void
-  onDismiss: () => void
-}) {
-  const current = choiceOf(period)
-  const [draft, setDraft] = useState<PeriodOption>(
-    current.kind === "year" ? current.year : current.kind
-  )
-  const thisYear = yearOf(new Date())
-  const [from, setFrom] = useState(period.from ?? `${thisYear}-01-01`)
-  const [to, setTo] = useState(period.to ?? todayKey())
-  const customValid = from !== "" && to !== "" && from <= to
-
-  const options: Array<{ value: PeriodOption; label: string; note?: string }> =
-    [
-      {
-        value: "all",
-        label: "Gesamt",
-        note: leaderboard.since
-          ? `Alle Spiele seit ${formatMonthYear(leaderboard.since)}`
-          : "Alle Spiele",
-      },
-      ...leaderboard.years.map((year) => ({
-        value: year,
-        label: String(year),
-        note: year === thisYear ? "Dieses Jahr" : undefined,
-      })),
-      {
-        value: "custom",
-        label: "Eigener Zeitraum",
-        note: "Von und bis selbst wählen",
-      },
-    ]
-  // A year chosen before that no longer has Games stays selectable.
-  if (typeof draft === "number" && !leaderboard.years.includes(draft)) {
-    options.splice(1, 0, { value: draft, label: String(draft) })
-  }
-
-  function apply() {
-    if (draft === "all") onApply({})
-    else if (draft === "custom") onApply({ from, to })
-    else onApply(yearPeriod(draft))
-  }
-
-  return (
-    <BottomSheet title="Zeitraum" onDismiss={onDismiss}>
-      <div
-        role="radiogroup"
-        aria-label="Zeitraum"
-        className="-mt-1 flex max-h-[50svh] flex-col overflow-y-auto"
-      >
-        {options.map((option) => {
-          const on = option.value === draft
-          return (
-            <button
-              key={String(option.value)}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              onClick={() => setDraft(option.value)}
-              className="flex min-h-13 items-center gap-3 border-b border-border px-1 py-1.5 text-left"
-            >
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className={cn("text-[17px]", on && "font-semibold")}>
-                  {option.label}
-                </span>
-                {option.note ? (
-                  <span className="text-[15px] text-muted-foreground">
-                    {option.note}
-                  </span>
-                ) : null}
-              </span>
-              {on ? (
-                <Check
-                  className="mr-2 size-5.5 shrink-0 text-primary"
-                  aria-hidden="true"
-                />
-              ) : null}
-            </button>
-          )
-        })}
-      </div>
-      {draft === "custom" ? (
-        <div className="grid grid-cols-2 gap-3">
-          <DateField
-            label="Von"
-            value={from}
-            max={to || undefined}
-            onChange={setFrom}
-          />
-          <DateField
-            label="Bis"
-            value={to}
-            min={from || undefined}
-            onChange={setTo}
-          />
-        </div>
-      ) : null}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={onDismiss}
-          className={largeSecondaryButtonClass}
-        >
-          Abbrechen
-        </button>
-        <button
-          type="button"
-          onClick={apply}
-          disabled={draft === "custom" && !customValid}
-          className={primaryButtonClass}
-        >
-          Übernehmen
-        </button>
-      </div>
-    </BottomSheet>
-  )
-}
-
-function DateField({
-  label,
-  value,
-  min,
-  max,
-  onChange,
-}: {
-  label: string
-  value: string
-  min?: string
-  max?: string
-  onChange: (value: string) => void
-}) {
-  return (
-    <Field label={label}>
-      {(props) => (
-        <TextInput
-          {...props}
-          type="date"
-          value={value}
-          min={min}
-          max={max}
-          required
-          onChange={(event) => onChange(event.target.value)}
-          className="min-w-0 px-3 dark:[color-scheme:dark]"
-        />
-      )}
-    </Field>
   )
 }

@@ -221,7 +221,7 @@ describe("the Group Leaderboard", () => {
   })
 
   it("Winrate: wins per Game, players under 5 Games are not ranked yet", async () => {
-    const { app, anna, groupId, players } = await table()
+    const { app, anna, carla, groupId, players } = await table()
     const { Anna, Ben, Carla, Dario } = players
     // Anna: 5 Games, 4 wins. Ben: 5 Games, 1 win. Dario: 4 of 4, Carla: 0 of 4.
     for (let i = 0; i < 4; i++) {
@@ -234,8 +234,14 @@ describe("the Group Leaderboard", () => {
 
     expect(lines(winRate)).toEqual(["1 Anna 0.8 4 von 5", "2 Ben 0.2 1 von 5"])
     expect(winRate.pending).toEqual([
-      { playerId: Carla, name: "Carla", guest: false, games: 4 },
-      { playerId: Dario, name: "Dario", guest: true, games: 4 },
+      {
+        playerId: Carla,
+        userId: carla.user.id,
+        name: "Carla",
+        guest: false,
+        games: 4,
+      },
+      { playerId: Dario, userId: null, name: "Dario", guest: true, games: 4 },
     ])
   })
 
@@ -324,8 +330,18 @@ describe("the Group Leaderboard", () => {
     const wins = await board(app, anna.headers, groupId, "wins")
 
     expect(wins.ranked).toEqual([
-      expect.objectContaining({ name: "Dario", guest: true, value: 1 }),
-      expect.objectContaining({ name: "Anna", guest: false, value: 0 }),
+      expect.objectContaining({
+        name: "Dario",
+        guest: true,
+        userId: null,
+        value: 1,
+      }),
+      expect.objectContaining({
+        name: "Anna",
+        guest: false,
+        userId: anna.user.id,
+        value: 0,
+      }),
     ])
     expect(wins.ranked[1].detail).toBe("aus 2 Spielen")
   })

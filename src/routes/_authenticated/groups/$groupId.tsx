@@ -9,10 +9,10 @@ import {
   groupManagementQuery,
   groupQuery,
 } from "@/lib/queries"
-import { isCalendarDay } from "@/lib/dates"
+import { periodFromSearch } from "@/lib/period-search"
 import { GamesTab } from "./-games-tab"
 import { LeaderboardTab } from "./-leaderboard-tab"
-import type { Period } from "@/server/leaderboard"
+import type { Period } from "@/server/stats"
 import { PlayersTab } from "./-players-tab"
 
 const TABS = ["games", "leaderboard", "players"] as const
@@ -31,9 +31,7 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   validateSearch: (search: Record<string, unknown>): GroupSearch => ({
     ...(TABS.includes(search.tab as Tab) ? { tab: search.tab as Tab } : {}),
     ...(typeof search.metric === "string" ? { metric: search.metric } : {}),
-    ...(isCalendarDay(search.from) && isCalendarDay(search.to)
-      ? { from: search.from, to: search.to }
-      : {}),
+    ...periodFromSearch(search),
   }),
   loaderDeps: ({ search }) => ({
     leaderboard: search.tab === "leaderboard",

@@ -23,6 +23,8 @@ export type Db = App["db"] | Tx
 /** A Player as every Player of the Group sees them; never an e-mail address. */
 export type GroupPlayer = {
   id: string
+  /** The account, for its Player Profile; null for a Guest. */
+  userId: string | null
   /** Display Name for accounts, the given name for Guests. */
   name: string
   image: string | null
@@ -59,7 +61,10 @@ const MAX_GUEST_NAME_LENGTH = 30
 
 // Case does not matter, accents do: "emil" is Emil, "Zoë" is not "Zoe".
 // Numbers count as numbers: "Ehemaliger Spieler 2" before "… 10".
-const byName = new Intl.Collator("de", { sensitivity: "accent", numeric: true })
+export const byName = new Intl.Collator("de", {
+  sensitivity: "accent",
+  numeric: true,
+})
 
 /** Players still in their Group; Former Players have left it. */
 export const isCurrentPlayer = isNull(player.leftAt)
@@ -114,6 +119,7 @@ export async function getGroup(
     players: active
       .map((p) => ({
         id: p.id,
+        userId: p.userId,
         name: playerName(p),
         image: p.user?.image ?? null,
         guest: isGuest(p),

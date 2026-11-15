@@ -20,6 +20,7 @@ describe("creating a group", () => {
       players: [
         {
           id: expect.any(String),
+          userId: anna.user.id,
           name: "Anna",
           image: null,
           guest: false,
@@ -61,6 +62,7 @@ describe("adding a Guest", () => {
     const { players } = await getGroup(app, anna.headers, { groupId })
     expect(players.find((p) => p.name === "Emil")).toEqual({
       id: expect.any(String),
+      userId: null,
       name: "Emil",
       image: null,
       guest: true,
