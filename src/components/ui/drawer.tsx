@@ -190,26 +190,64 @@ function DrawerHeader({
   )
 }
 
-/** Actions under each other, the main action first. */
-function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
+const drawerFooterVariants = cva("flex shrink-0 gap-2.5", {
+  variants: {
+    orientation: {
+      /** Under each other, the main action first. */
+      vertical: "flex-col",
+      /** Side by side, sharing the width, the main action on the right. */
+      horizontal: "flex-row *:flex-1",
+    },
+  },
+  defaultVariants: { orientation: "vertical" },
+})
+
+function DrawerFooter({
+  className,
+  orientation,
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof drawerFooterVariants>) {
   return (
     <div
       data-slot="drawer-footer"
-      className={cn("flex shrink-0 flex-col gap-2.5", className)}
+      className={cn(drawerFooterVariants({ orientation }), className)}
       {...props}
     />
   )
 }
 
-/** 22 px / 600. An icon inside sits to the left of the text, in `primary`. */
-function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
+const drawerTitleVariants = cva(
+  "flex items-center gap-3 leading-tight text-foreground [&>svg]:shrink-0",
+  {
+    variants: {
+      size: {
+        /** 22 px / 600, icon 24 px. */
+        default: "text-[22px] font-semibold [&>svg]:size-6",
+        /** The Winner: 34 px / 700, trophy 32 px. */
+        lg: "text-[34px] font-bold [&>svg]:size-8 [&>svg]:stroke-[1.8]",
+      },
+      tone: {
+        /** The icon in `primary`. */
+        default: "[&>svg]:text-primary",
+        /** A warning: the icon in `bomb` (yellow). */
+        warning: "gap-2.5 [&>svg]:text-bomb",
+      },
+    },
+    defaultVariants: { size: "default", tone: "default" },
+  }
+)
+
+/** An icon inside sits to the left of the text. */
+function DrawerTitle({
+  className,
+  size,
+  tone,
+  ...props
+}: DrawerPrimitive.Title.Props & VariantProps<typeof drawerTitleVariants>) {
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn(
-        "flex items-center gap-3 text-[22px] leading-tight font-semibold text-foreground [&>svg]:size-6 [&>svg]:shrink-0 [&>svg]:text-primary",
-        className
-      )}
+      className={cn(drawerTitleVariants({ size, tone }), className)}
       {...props}
     />
   )

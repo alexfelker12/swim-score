@@ -1,10 +1,15 @@
 import { useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { Mail } from "lucide-react"
-import { AuthPage } from "@/components/auth-page"
-import { PrimaryButton } from "@/components/buttons"
-import { Field, TextInput } from "@/components/form-field"
-import { Notice } from "@/components/notice"
+import {
+  AuthPage,
+  AuthPageDescription,
+  AuthPageTitle,
+} from "@/components/auth-page"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
 import { getPasswordResetAvailableFn } from "@/server/functions"
@@ -24,11 +29,12 @@ function ForgotPassword() {
 /** Opened by its address while no e-mail can be sent (no link leads here then). */
 function NotAvailable() {
   return (
-    <AuthPage title="Passwort vergessen" back="/sign-in">
-      <p className="text-lg text-pretty text-muted-foreground">
+    <AuthPage back="/sign-in">
+      <AuthPageTitle>Passwort vergessen</AuthPageTitle>
+      <AuthPageDescription>
         Zurücksetzen per E-Mail ist noch nicht eingerichtet. Melde dich mit
         Google an, falls dein Konto damit verbunden ist.
-      </p>
+      </AuthPageDescription>
     </AuthPage>
   )
 }
@@ -62,37 +68,43 @@ function ForgotPasswordForm() {
   }
 
   return (
-    <AuthPage title="Passwort vergessen" back="/sign-in">
-      <p className="text-lg text-pretty text-muted-foreground">
+    <AuthPage back="/sign-in">
+      <AuthPageTitle>Passwort vergessen</AuthPageTitle>
+      <AuthPageDescription>
         Gib die E-Mail-Adresse deines Kontos ein. Wir schicken dir einen Link,
         mit dem du ein neues Passwort setzt.
-      </p>
+      </AuthPageDescription>
       <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
-        <Field label="E-Mail" error={error ?? undefined}>
-          {(field) => (
-            <TextInput
-              {...field}
-              type="email"
-              autoComplete="email"
-              autoCapitalize="none"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value)
-                setSent(false)
-              }}
-            />
-          )}
+        <Field data-invalid={error ? true : undefined}>
+          <FieldLabel htmlFor="forgot-password-email">E-Mail</FieldLabel>
+          <Input
+            id="forgot-password-email"
+            type="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              setSent(false)
+            }}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? "forgot-password-email-error" : undefined}
+          />
+          <FieldError id="forgot-password-email-error">{error}</FieldError>
         </Field>
-        <PrimaryButton type="submit" disabled={pending}>
+        <Button type="submit" size="xl" disabled={pending}>
           Link senden
-        </PrimaryButton>
+        </Button>
       </form>
       {sent ? (
-        <Notice icon={Mail}>
-          Wenn es zu dieser Adresse ein Konto gibt, ist der Link unterwegs. Er
-          gilt eine Stunde und führt zu „Neues Passwort“. Schau auch im
-          Spam-Ordner nach.
-        </Notice>
+        <Alert>
+          <Mail />
+          <AlertDescription>
+            Wenn es zu dieser Adresse ein Konto gibt, ist der Link unterwegs. Er
+            gilt eine Stunde und führt zu „Neues Passwort“. Schau auch im
+            Spam-Ordner nach.
+          </AlertDescription>
+        </Alert>
       ) : null}
     </AuthPage>
   )

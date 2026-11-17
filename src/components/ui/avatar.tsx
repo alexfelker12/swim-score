@@ -8,10 +8,13 @@ function Avatar({
   variant = "default",
   ...props
 }: AvatarPrimitive.Root.Props & {
-  /** Rows 36 px (default), headers 44, the home page 56, profiles 64. */
-  size?: "default" | "md" | "lg" | "xl"
-  /** Guests: dashed ring, muted initial. */
-  variant?: "default" | "guest"
+  /**
+   * Rows 36 px (default), headers 44, the home page 56, profiles 64, the
+   * picture editor without a picture 160.
+   */
+  size?: "default" | "md" | "lg" | "xl" | "2xl"
+  /** Players with an account in lists: solid ring; guests: dashed ring, muted initial. */
+  variant?: "default" | "account" | "guest"
 }) {
   return (
     <AvatarPrimitive.Root
@@ -19,7 +22,7 @@ function Avatar({
       data-size={size}
       data-variant={variant}
       className={cn(
-        "group/avatar relative flex size-9 shrink-0 rounded-full text-[15px] select-none data-[size=lg]:size-14 data-[size=lg]:text-[22px] data-[size=md]:size-11 data-[size=md]:text-lg data-[size=xl]:size-16 data-[size=xl]:text-[26px] data-[variant=guest]:border-[1.5px] data-[variant=guest]:border-dashed data-[variant=guest]:border-life-off",
+        "group/avatar relative flex size-9 shrink-0 rounded-full text-[15px] select-none data-[size=2xl]:size-40 data-[size=2xl]:text-[64px] data-[size=lg]:size-14 data-[size=lg]:text-[22px] data-[size=md]:size-11 data-[size=md]:text-lg data-[size=xl]:size-16 data-[size=xl]:text-[26px] data-[variant=account]:border-[1.5px] data-[variant=account]:border-life-off data-[variant=guest]:border-[1.5px] data-[variant=guest]:border-dashed data-[variant=guest]:border-life-off",
         className
       )}
       {...props}

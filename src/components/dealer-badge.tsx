@@ -1,8 +1,10 @@
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 /**
- * The Dealer's pill. In the game view it hangs off the lower left corner of
- * the row ("corner"); elsewhere it sits next to the name ("inline").
+ * The Dealer's pill (`Badge variant="dealer"`). In the game view it hangs
+ * off the lower left corner of the row ("corner"); elsewhere it sits next
+ * to the name ("inline").
  */
 export function DealerBadge({
   placement = "inline",
@@ -10,16 +12,15 @@ export function DealerBadge({
   placement?: "inline" | "corner"
 }) {
   return (
-    <span
+    <Badge
+      variant="dealer"
       className={cn(
-        "inline-flex h-5 shrink-0 items-center gap-1 rounded-full bg-card bg-[image:linear-gradient(var(--primary-muted),var(--primary-muted))] px-2 text-xs leading-none font-semibold text-primary",
-        placement === "corner" &&
-          "absolute -bottom-1.75 -left-1.5 z-[2] ring-2 ring-background"
+        placement === "corner" && "absolute -bottom-1.75 -left-1.5 z-[2]"
       )}
     >
       <CardsIcon />
       Dealer
-    </span>
+    </Badge>
   )
 }
 

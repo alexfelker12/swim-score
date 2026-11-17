@@ -1,13 +1,26 @@
 import { useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute, notFound } from "@tanstack/react-router"
+import { Link, createFileRoute, notFound } from "@tanstack/react-router"
 import {
   LastEventBar,
   ParticipantRows,
   ScorekeeperStatus,
 } from "@/components/game-board"
-import { LinkGone } from "@/components/link-gone"
+import {
+  LinkGone,
+  LinkGoneContent,
+  LinkGoneDescription,
+  LinkGoneFooter,
+  LinkGoneTitle,
+} from "@/components/link-gone"
 import { AppMark } from "@/components/logo"
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 import { describeExtraRound, describeLastEvent, nameOf } from "@/lib/game-text"
 import { spectatorGameChanged, spectatorGameQuery } from "@/lib/queries"
 import { useLiveGame } from "@/lib/use-live-game"
@@ -56,20 +69,18 @@ function LiveGame({ game }: { game: SpectatorView }) {
   const name = nameOf(game.participants)
   return (
     <div className="flex h-svh flex-col">
-      <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
+      <PageHeader>
         <span className="justify-self-center">
           <AppMark />
         </span>
-        <div className="flex min-w-0 flex-col items-center">
-          <h1 className="text-xl leading-tight font-semibold">
-            Runde {state.round}
-          </h1>
-          <span className="max-w-full truncate text-[13px] text-muted-foreground">
+        <PageHeaderContent>
+          <PageHeaderTitle size="lg">Runde {state.round}</PageHeaderTitle>
+          <PageHeaderDescription>
             {describeExtraRound(game.events, name(state.dealer)) ??
               game.groupName}
-          </span>
-        </div>
-      </header>
+          </PageHeaderDescription>
+        </PageHeaderContent>
+      </PageHeader>
       <ScorekeeperStatus
         viewer="spectator"
         scorekeeper={game.scorekeeper}
@@ -95,9 +106,19 @@ function LiveGame({ game }: { game: SpectatorView }) {
 
 function GameOver() {
   return (
-    <LinkGone title="Dieses Spiel ist vorbei" action="Swim Score öffnen">
-      Zuschauer-Links gelten nur, solange ein Spiel läuft. Das Ergebnis sehen
-      alle Spieler der Gruppe in der App.
+    <LinkGone>
+      <LinkGoneContent>
+        <LinkGoneTitle>Dieses Spiel ist vorbei</LinkGoneTitle>
+        <LinkGoneDescription>
+          Zuschauer-Links gelten nur, solange ein Spiel läuft. Das Ergebnis
+          sehen alle Spieler der Gruppe in der App.
+        </LinkGoneDescription>
+      </LinkGoneContent>
+      <LinkGoneFooter>
+        <Button size="xl" nativeButton={false} render={<Link to="/" />}>
+          Swim Score öffnen
+        </Button>
+      </LinkGoneFooter>
     </LinkGone>
   )
 }

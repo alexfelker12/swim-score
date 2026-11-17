@@ -1,7 +1,10 @@
 import { useLayoutEffect, useRef, useState } from "react"
+import { Button as ButtonPrimitive } from "@base-ui/react/button"
+import { cva, type VariantProps } from "class-variance-authority"
 import { Circle, CloudOff, Eye, Waves } from "lucide-react"
-import { Badge } from "@/components/badge"
 import { DealerBadge } from "@/components/dealer-badge"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   formatCountdown,
   formatOfflineFor,
@@ -10,7 +13,7 @@ import {
 import { liveUpdates } from "@/lib/use-live-game"
 import { useServerNow } from "@/lib/use-server-now"
 import { cn } from "@/lib/utils"
-import type { ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 import type { ParticipantState } from "@/rules-engine"
 
 // The Game table: one row per Participant, for the Scorekeeper, the other
@@ -62,7 +65,6 @@ export function ParticipantRows({
     observer.observe(element)
     return () => observer.disconnect()
   }, [count])
-  const largeText = height >= 70
 
   return (
     <div
@@ -78,35 +80,34 @@ export function ParticipantRows({
             ? "schwimmt"
             : `${state.lives} Leben`
         const tappable = onTap !== null && !out
-        const className = cn(
-          "relative flex w-full shrink-0 items-center justify-between gap-3 rounded-[14px] border-[1.5px] bg-card px-4.5 text-left",
-          out
-            ? "border-dashed border-border bg-transparent opacity-50"
-            : bombMode && tappable
-              ? "border-bomb"
-              : swimming
-                ? "border-swimmer"
-                : "border-border"
-        )
-        const content = (
-          <>
-            <span className="flex min-w-0 items-center gap-2.5">
-              <span
-                className={cn(
-                  "truncate font-semibold",
-                  largeText ? "text-[21px]" : "text-lg"
-                )}
-              >
-                {participant.name}
-              </span>
+        return (
+          <PlayerRow
+            key={participant.id}
+            state={
+              out
+                ? "out"
+                : bombMode && tappable
+                  ? "bomb"
+                  : swimming
+                    ? "swimmer"
+                    : "default"
+            }
+            height={height}
+            onTap={tappable ? () => onTap(participant.id) : undefined}
+            aria-label={
+              tappable
+                ? `${participant.name}, ${status}. Tippen: ${bombMode ? "wirft die Bombe" : "verliert die Runde"}`
+                : `${participant.name}, ${status}`
+            }
+          >
+            <PlayerRowTitle>
+              <PlayerRowName>{participant.name}</PlayerRowName>
               {participant.id === scorekeeperParticipantId ? (
-                <Badge tone="muted">zählt</Badge>
+                <Badge variant="muted">zählt</Badge>
               ) : null}
-            </span>
+            </PlayerRowTitle>
             {out ? (
-              <span className="shrink-0 text-sm text-muted-foreground">
-                ausgeschieden
-              </span>
+              <PlayerRowOut />
             ) : swimming ? (
               <SwimmerLabel />
             ) : (
@@ -115,34 +116,129 @@ export function ParticipantRows({
             {participant.id === dealer && !out ? (
               <DealerBadge placement="corner" />
             ) : null}
-          </>
-        )
-        return tappable ? (
-          <button
-            key={participant.id}
-            type="button"
-            style={{ height }}
-            onClick={() => onTap(participant.id)}
-            aria-label={`${participant.name}, ${status}. Tippen: ${bombMode ? "wirft die Bombe" : "verliert die Runde"}`}
-            className={className}
-          >
-            {content}
-          </button>
-        ) : (
-          <div
-            key={participant.id}
-            style={{ height }}
-            aria-label={`${participant.name}, ${status}`}
-            role="group"
-            className={className}
-          >
-            {content}
-          </div>
+          </PlayerRow>
         )
       })}
     </div>
   )
 }
+
+const playerRowVariants = cva(
+  "relative flex w-full shrink-0 items-center justify-between gap-3 rounded-[14px] border-[1.5px] bg-card px-4.5 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+  {
+    variants: {
+      state: {
+        default: "border-border",
+        /** The Swimmer: blue border. */
+        swimmer: "border-swimmer",
+        /** Waiting for who threw the Bomb: yellow border. */
+        bomb: "border-bomb",
+        /** Out: dashed, see-through, keeps its place. */
+        out: "border-dashed border-border bg-transparent opacity-50",
+      },
+    },
+    defaultVariants: { state: "default" },
+  }
+)
+
+/**
+ * A Participant's row in the Game (`i05-schwimmer`). With `onTap` the whole
+ * row is a button ("verliert die Runde"); `height` comes from the table so
+ * all rows fit, and from 70 px on the name grows.
+ *
+ * ```tsx
+ * <PlayerRow state="swimmer" height={64} onTap={…} aria-label="…">
+ *   <PlayerRowTitle><PlayerRowName>Dario</PlayerRowName></PlayerRowTitle>
+ *   <SwimmerLabel />
+ *   <DealerBadge placement="corner" />
+ * </PlayerRow>
+ * ```
+ */
+export function PlayerRow({
+  state,
+  height,
+  onTap,
+  className,
+  children,
+  ...props
+}: Omit<ComponentProps<"div">, "onClick"> &
+  VariantProps<typeof playerRowVariants> & {
+    height: number
+    onTap?: () => void
+  }) {
+  const shared = {
+    "data-slot": "player-row",
+    "data-size": height >= 70 ? "lg" : "default",
+    style: { height },
+    className: cn(
+      "group/player-row",
+      playerRowVariants({ state }),
+      onTap &&
+        "transition-[background-color,scale] duration-100 active:scale-[0.98] active:bg-muted motion-reduce:active:scale-100",
+      className
+    ),
+  }
+  return onTap ? (
+    <ButtonPrimitive
+      {...(props as ComponentProps<typeof ButtonPrimitive>)}
+      {...shared}
+      onClick={onTap}
+    >
+      {children}
+    </ButtonPrimitive>
+  ) : (
+    <div role="group" {...shared} {...props}>
+      {children}
+    </div>
+  )
+}
+
+/** Name and a badge after it ("zählt"), on the left. */
+export function PlayerRowTitle({
+  className,
+  ...props
+}: ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="player-row-title"
+      className={cn("flex min-w-0 items-center gap-2.5", className)}
+      {...props}
+    />
+  )
+}
+
+/** The name, 18 px / 600; 21 px in tall rows. */
+export function PlayerRowName({ className, ...props }: ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="player-row-name"
+      className={cn(
+        "truncate text-lg font-semibold group-data-[size=lg]/player-row:text-[21px]",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/** "ausgeschieden" in place of the lives. */
+export function PlayerRowOut() {
+  return (
+    <span className="shrink-0 text-sm text-muted-foreground">
+      ausgeschieden
+    </span>
+  )
+}
+
+const lifeSegmentVariants = cva("h-2.5 flex-1 rounded-[5px]", {
+  variants: {
+    state: {
+      left: "bg-foreground",
+      /** A lost life stays as an outline (`--life-off`). */
+      lost: "shadow-[inset_0_0_0_1.5px_var(--life-off)]",
+    },
+  },
+})
 
 /** Lives as a bar of segments; lost ones stay as an outline. */
 export function LifeBar({ lives, of }: { lives: number; of: number }) {
@@ -151,12 +247,9 @@ export function LifeBar({ lives, of }: { lives: number; of: number }) {
       {Array.from({ length: of }, (_, index) => (
         <span
           key={index}
-          className={cn(
-            "h-2.5 flex-1 rounded-[5px]",
-            index < lives
-              ? "bg-foreground"
-              : "shadow-[inset_0_0_0_1.5px_var(--life-off)]"
-          )}
+          className={lifeSegmentVariants({
+            state: index < lives ? "left" : "lost",
+          })}
         />
       ))}
     </span>
@@ -171,6 +264,20 @@ export function SwimmerLabel() {
     </span>
   )
 }
+
+const statusLineVariants = cva("flex items-center gap-2.5 rounded-xl text-sm", {
+  variants: {
+    variant: {
+      /** 40 px on `muted`. */
+      default: "min-h-10 bg-muted pr-1 pl-3.5",
+      /** With "Übernehmen": 48 px. */
+      takeover: "min-h-12 bg-muted py-1 pr-1 pl-3.5",
+      /** The Scorekeeper offline: inverted. */
+      offline: "min-h-10 bg-foreground px-3.5 font-semibold text-background",
+    },
+  },
+  defaultVariants: { variant: "default" },
+})
 
 /**
  * The line under the header saying who keeps score: "Du zählst · alle sehen
@@ -207,7 +314,7 @@ export function ScorekeeperStatus({
   if (viewer === "scorekeeper" && unsentRounds !== null) {
     return (
       <div className="shrink-0 px-4 pb-2" role="status">
-        <div className="flex min-h-10 items-center gap-2.5 rounded-xl bg-foreground px-3.5 text-sm font-semibold text-background">
+        <div className={statusLineVariants({ variant: "offline" })}>
           <CloudOff className="size-4.5 shrink-0" aria-hidden="true" />
           Offline,{" "}
           {unsentRounds === 0
@@ -242,10 +349,9 @@ export function ScorekeeperStatus({
   return (
     <div className="shrink-0 px-4 pb-2">
       <div
-        className={cn(
-          "flex items-center gap-2.5 rounded-xl bg-muted pr-1 pl-3.5 text-sm",
-          onTakeOver ? "min-h-12 py-1" : "min-h-10"
-        )}
+        className={statusLineVariants({
+          variant: onTakeOver ? "takeover" : "default",
+        })}
       >
         {viewer === "scorekeeper" ? (
           <>
@@ -286,14 +392,14 @@ export function ScorekeeperStatus({
                   Übernehmen in {formatCountdown(opensIn)}
                 </span>
               ) : (
-                <button
-                  type="button"
+                <Button
+                  variant="soft"
+                  size="xs"
                   onClick={onTakeOver}
                   disabled={takingOver}
-                  className="h-9 shrink-0 rounded-[10px] bg-primary-muted px-3.5 text-sm font-semibold text-primary disabled:opacity-40"
                 >
                   Übernehmen
-                </button>
+                </Button>
               )
             ) : null}
           </>
@@ -303,7 +409,7 @@ export function ScorekeeperStatus({
   )
 }
 
-/** The bar at the bottom with the last Event; `children` are its actions. */
+/** The bar at the bottom with the last Event; `children` are `LastEventAction`s. */
 export function LastEventBar({
   last,
   emptyText,
@@ -331,6 +437,96 @@ export function LastEventBar({
         </span>
       )}
       {children}
+    </div>
+  )
+}
+
+/**
+ * A step in the bar with the last Event: a 44 px icon ("Rückgängig",
+ * "Stechen angeben") so the Event's text keeps the width, or with
+ * `showLabel` icon and text.
+ */
+export function LastEventAction({
+  label,
+  showLabel = false,
+  tone = "default",
+  children,
+  ...props
+}: Omit<ComponentProps<typeof Button>, "aria-label" | "variant" | "size"> & {
+  label: string
+  showLabel?: boolean
+  /** `primary` for "Stechen angeben". */
+  tone?: "default" | "primary"
+}) {
+  return (
+    <Button
+      variant={tone === "primary" ? "raised-primary" : "raised"}
+      size={showLabel ? "sm" : "icon"}
+      aria-label={showLabel ? undefined : label}
+      title={label}
+      {...props}
+    >
+      {children}
+      {showLabel ? label : null}
+    </Button>
+  )
+}
+
+const tablePromptVariants = cva(
+  "flex h-8.5 shrink-0 items-center px-5 text-[15px]",
+  {
+    variants: {
+      state: {
+        default: "text-muted-foreground",
+        bomb: "font-semibold text-bomb",
+      },
+    },
+  }
+)
+
+/** "Wer hat die Runde verloren?" over the rows; yellow while waiting for the Bomb's thrower. */
+export function TablePrompt({
+  bomb = false,
+  children,
+}: {
+  bomb?: boolean
+  children: ReactNode
+}) {
+  return (
+    <p className={tablePromptVariants({ state: bomb ? "bomb" : "default" })}>
+      {children}
+    </p>
+  )
+}
+
+/** "2 Ausgeschiedene ausgeblendet. Anzeigen" under the rows. */
+export function HiddenOutNote({
+  count,
+  onShow,
+}: {
+  count: number
+  onShow: () => void
+}) {
+  return (
+    <p className="shrink-0 px-4 pt-1 text-center text-[15px] text-muted-foreground">
+      {count === 1
+        ? "1 Ausgeschiedener ausgeblendet."
+        : `${count} Ausgeschiedene ausgeblendet.`}{" "}
+      <Button variant="link" onClick={onShow}>
+        Anzeigen
+      </Button>
+    </p>
+  )
+}
+
+/** The loser in the Tiebreak sheet: fixed, "verloren" beside the name. */
+export function TiebreakLoser({ name }: { name: string }) {
+  return (
+    <div className="flex h-13 min-w-0 items-center justify-between gap-2 rounded-xl border-[1.5px] border-border bg-muted px-3.5">
+      <span className="truncate font-semibold">{name}</span>
+      <span className="shrink-0 text-[13px] text-muted-foreground">
+        verloren
+      </span>
     </div>
   )
 }

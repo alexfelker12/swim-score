@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react"
-import { createPortal } from "react-dom"
 import { ImageUp, Move, Trash2 } from "lucide-react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { FieldError } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import {
   clampView,
   cropToView,
@@ -11,8 +21,9 @@ import {
   viewToCrop,
   zoomAround,
 } from "@/lib/avatar-crop"
+import { initialOf } from "@/lib/initial"
+import { useOpenOnMount } from "@/lib/use-sheet"
 import { cn } from "@/lib/utils"
-import { useModal } from "@/lib/use-modal"
 import {
   getAvatarSourceFn,
   removeAvatarFn,
@@ -41,6 +52,9 @@ const AREA_WIDTH = "min(100%, calc(100svh - 380px))"
  * Full-screen editor for the profile picture: move and zoom the image behind
  * a circle, pick another one, or remove it. Nothing reaches the server
  * before "Übernehmen" / "Speichern".
+ *
+ * Opens when mounted. `onClose` runs once it has closed (after "Abbrechen",
+ * Escape or saving), so the caller can unmount it.
  */
 export function AvatarEditor({
   start,
@@ -55,19 +69,17 @@ export function AvatarEditor({
   onClose: () => void
   onSaved: () => Promise<void>
 }) {
+  const { value: open, set: setOpen } = useOpenOnMount()
   const [picture, setPicture] = useState<Picture | null>(null)
   const [view, setView] = useState<View>(START_VIEW)
   const [removed, setRemoved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const dialog = useRef<HTMLDivElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const objectUrl = useRef<string | null>(null)
   // Every image load gets a number; a load that finishes after a newer one
   // started, or after the editor closed, is dropped.
   const loads = useRef(0)
-  const latest = useRef({ onClose, saving })
-  latest.current = { onClose, saving }
 
   function show(next: Picture, nextView: View) {
     if (objectUrl.current && objectUrl.current !== next.src) {
@@ -123,10 +135,6 @@ export function AvatarEditor({
     }
   }, [])
 
-  useModal(dialog, () => {
-    if (!latest.current.saving) latest.current.onClose()
-  })
-
   async function save() {
     setSaving(true)
     setError(null)
@@ -141,6 +149,8 @@ export function AvatarEditor({
         )
       }
       await onSaved()
+      setSaving(false)
+      setOpen(false)
     } catch (failure) {
       setError(
         failure instanceof Error && failure.message === UNREADABLE
@@ -151,136 +161,127 @@ export function AvatarEditor({
     }
   }
 
-  const errorLine = error ? (
-    <p role="alert" className="text-[13px] text-destructive">
-      {error}
-    </p>
-  ) : null
+  const errorLine = error ? <FieldError>{error}</FieldError> : null
 
-  // Rendered into <body>, above and outside the page it was opened from.
-  return createPortal(
-    <div
-      ref={dialog}
-      tabIndex={-1}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="avatar-editor-title"
-      className="fixed inset-0 z-50 mx-auto flex max-w-[500px] flex-col bg-background outline-none"
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!saving) setOpen(next)
+      }}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) onClose()
+      }}
     >
-      <header className="flex h-14 shrink-0 items-center justify-center px-4">
-        <h1 id="avatar-editor-title" className="text-[17px] font-semibold">
-          Profilbild
-        </h1>
-      </header>
+      <DialogContent variant="fullscreen">
+        <DialogHeader>
+          <DialogTitle>Profilbild</DialogTitle>
+        </DialogHeader>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3.5 px-6 pt-1 pb-4">
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3.5">
-          {removed ? (
-            <>
-              <div
-                className="flex aspect-square flex-col items-center justify-center gap-4 rounded-[20px] border-[1.5px] border-dashed border-border bg-card"
-                style={{ width: AREA_WIDTH }}
-              >
-                <span
-                  aria-hidden="true"
-                  className="flex size-40 items-center justify-center rounded-full bg-muted text-[64px] font-semibold text-primary"
+        <div className="flex min-h-0 flex-1 flex-col gap-3.5 px-6 pt-1 pb-4">
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3.5">
+            {removed ? (
+              <>
+                <div
+                  className="flex aspect-square flex-col items-center justify-center gap-4 rounded-[20px] border-[1.5px] border-dashed border-border bg-card"
+                  style={{ width: AREA_WIDTH }}
                 >
-                  {name.trim().charAt(0).toUpperCase() || "?"}
-                </span>
-                <span className="max-w-[260px] text-center text-[15px] text-pretty text-muted-foreground">
-                  Ohne Bild sehen alle in deinen Gruppen deine Initiale.
-                </span>
-              </div>
-              {errorLine}
-              <button
-                type="button"
-                onClick={() => {
-                  setRemoved(false)
-                  setError(null)
-                }}
-                className="h-11 rounded-xl px-4 text-[15px] font-semibold text-primary"
-              >
-                Bild doch behalten
-              </button>
-            </>
-          ) : (
-            <>
-              <CropArea picture={picture} view={view} onChange={setView} />
-              {errorLine ?? (
-                <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
-                  <Move className="size-4" aria-hidden="true" />
-                  Ziehen zum Verschieben, mit zwei Fingern zoomen
-                </p>
-              )}
-              {picture ? (
-                <div className="flex items-center gap-3 self-stretch px-1 py-0.5">
-                  <ImageInCircle picture={picture} view={view} size={56} />
-                  <ImageInCircle picture={picture} view={view} size={36} />
-                  <span className="text-[13px] text-pretty text-muted-foreground">
-                    So sehen dich die anderen in Listen und Spielen.
+                  <Avatar size="2xl" aria-hidden="true">
+                    <AvatarFallback>{initialOf(name)}</AvatarFallback>
+                  </Avatar>
+                  <span className="max-w-[260px] text-center text-[15px] text-pretty text-muted-foreground">
+                    Ohne Bild sehen alle in deinen Gruppen deine Initiale.
                   </span>
                 </div>
-              ) : null}
-            </>
-          )}
-        </div>
+                {errorLine}
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => {
+                    setRemoved(false)
+                    setError(null)
+                  }}
+                >
+                  Bild doch behalten
+                </Button>
+              </>
+            ) : (
+              <>
+                <CropArea picture={picture} view={view} onChange={setView} />
+                {errorLine ?? (
+                  <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+                    <Move className="size-4" aria-hidden="true" />
+                    Ziehen zum Verschieben, mit zwei Fingern zoomen
+                  </p>
+                )}
+                {picture ? (
+                  <div className="flex items-center gap-3 self-stretch px-1 py-0.5">
+                    <ImageInCircle picture={picture} view={view} size={56} />
+                    <ImageInCircle picture={picture} view={view} size={36} />
+                    <span className="text-[13px] text-pretty text-muted-foreground">
+                      So sehen dich die anderen in Listen und Spielen.
+                    </span>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </div>
 
-        <div className="flex gap-2.5">
-          <button
-            type="button"
-            onClick={() => fileInput.current?.click()}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-border bg-card text-[15px] font-medium"
-          >
-            <ImageUp className="size-[18px]" aria-hidden="true" />
-            {removed ? "Bild auswählen" : "Anderes Bild"}
-          </button>
-          {hasSavedPicture && !removed ? (
-            <button
-              type="button"
-              onClick={() => {
-                setRemoved(true)
-                setError(null)
-              }}
-              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-border bg-card text-[15px] font-semibold text-destructive"
+          <div className="flex gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => fileInput.current?.click()}
+              className="flex-1"
             >
-              <Trash2 className="size-[18px]" aria-hidden="true" />
-              Entfernen
-            </button>
-          ) : null}
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(event) => {
-              const file = event.target.files?.[0]
-              event.target.value = ""
-              if (file) void showFile(file)
-            }}
-          />
+              <ImageUp />
+              {removed ? "Bild auswählen" : "Anderes Bild"}
+            </Button>
+            {hasSavedPicture && !removed ? (
+              <Button
+                variant="destructive-outline"
+                onClick={() => {
+                  setRemoved(true)
+                  setError(null)
+                }}
+                className="flex-1"
+              >
+                <Trash2 />
+                Entfernen
+              </Button>
+            ) : null}
+            <Input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                event.target.value = ""
+                if (file) void showFile(file)
+              }}
+            />
+          </div>
         </div>
-      </div>
 
-      <footer className="flex shrink-0 gap-2.5 border-t border-border px-4 pt-3 pb-6">
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={saving}
-          className="h-13 flex-1 rounded-[14px] border-[1.5px] border-border text-base font-medium disabled:opacity-40"
-        >
-          Abbrechen
-        </button>
-        <button
-          type="button"
-          onClick={() => void save()}
-          disabled={saving || (!removed && picture === null)}
-          className="h-13 flex-1 rounded-[14px] bg-primary text-base font-semibold text-primary-foreground disabled:opacity-40"
-        >
-          {removed ? "Speichern" : "Übernehmen"}
-        </button>
-      </footer>
-    </div>,
-    document.body
+        <DialogFooter>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => setOpen(false)}
+            disabled={saving}
+          >
+            Abbrechen
+          </Button>
+          <Button
+            size="lg"
+            onClick={() => void save()}
+            disabled={saving || (!removed && picture === null)}
+          >
+            {removed ? "Speichern" : "Übernehmen"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

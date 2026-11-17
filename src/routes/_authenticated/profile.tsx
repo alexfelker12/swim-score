@@ -1,15 +1,46 @@
 import { useRef, useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
-import { ChevronLeft } from "lucide-react"
-import { PrimaryButton, SecondaryButton } from "@/components/buttons"
-import { ConfirmSheet } from "@/components/confirm-sheet"
-import { Field, ReadOnlyValue, TextInput } from "@/components/form-field"
+import { LogOut, Moon, Sun, SunMoon, Trash2 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { AvatarEditor } from "@/components/avatar-editor"
+import {
+  PageHeader,
+  PageHeaderBack,
+  PageHeaderTitle,
+} from "@/components/page-header"
 import { PersonalStats } from "@/components/personal-stats"
-import { SegmentedTabs } from "@/components/segmented-tabs"
+import {
+  ProfileHeading,
+  ProfileHeadingContent,
+  ProfileHeadingDescription,
+  ProfileHeadingTitle,
+} from "@/components/profile-heading"
 import type { AvatarEditorStart } from "@/components/avatar-editor"
-import { UserAvatar } from "@/components/user-avatar"
+import { PersonAvatar } from "@/components/person-avatar"
+import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldNote,
+  FieldTitle,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioSegment } from "@/components/ui/radio-group"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { authClient } from "@/lib/auth-client"
 import { periodFromSearch } from "@/lib/period-search"
 import {
@@ -55,33 +86,27 @@ function ProfilePage() {
   const navigate = Route.useNavigate()
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
-        <Link
-          to="/"
-          aria-label="Zurück zur Startseite"
-          className="flex size-11 items-center justify-center justify-self-center rounded-xl"
-        >
-          <ChevronLeft className="size-6" aria-hidden="true" />
-        </Link>
-        <h1 className="text-center text-[17px] font-semibold">Profil</h1>
-      </header>
+      <PageHeader>
+        <PageHeaderBack
+          render={<Link to="/" />}
+          label="Zurück zur Startseite"
+        />
+        <PageHeaderTitle>Profil</PageHeaderTitle>
+      </PageHeader>
 
-      <div className="flex items-center gap-3.5 px-5 pt-1 pb-3.5">
-        <UserAvatar name={profile.name} image={profile.image} size={56} />
-        <div className="flex min-w-0 flex-col">
-          <span className="truncate text-[22px] leading-tight font-bold">
-            {profile.name}
-          </span>
-          <span className="text-sm text-muted-foreground">
+      <ProfileHeading className="px-5 pt-1 pb-3.5">
+        <PersonAvatar size="lg" name={profile.name} image={profile.image} />
+        <ProfileHeadingContent>
+          <ProfileHeadingTitle>{profile.name}</ProfileHeadingTitle>
+          <ProfileHeadingDescription>
             @{profile.username}
-          </span>
-        </div>
-      </div>
+          </ProfileHeadingDescription>
+        </ProfileHeadingContent>
+      </ProfileHeading>
 
-      <SegmentedTabs
-        label="Profil"
+      <Tabs
         value={tab}
-        onChange={(next) =>
+        onValueChange={(next) =>
           navigate({
             search: (previous) => ({
               ...previous,
@@ -90,18 +115,19 @@ function ProfilePage() {
             replace: true,
           })
         }
-        options={[
-          { value: "details", label: "Details" },
-          { value: "stats", label: "Meine Statistik" },
-        ]}
-        className="mx-4 mb-3.5"
-      />
-
-      {tab === "details" ? (
-        <Details profile={profile} />
-      ) : (
-        <MyStats userId={profile.id} period={{ from, to }} />
-      )}
+        className="gap-3.5"
+      >
+        <TabsList aria-label="Profil" className="mx-4 w-auto">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="stats">Meine Statistik</TabsTrigger>
+        </TabsList>
+        <TabsContent value="details">
+          <Details profile={profile} />
+        </TabsContent>
+        <TabsContent value="stats">
+          <MyStats userId={profile.id} period={{ from, to }} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
@@ -112,18 +138,16 @@ function MyStats({ userId, period }: { userId: string; period: Period }) {
   const { data: stats } = useSuspenseQuery(playerProfileQuery(userId, period))
   if (!stats) return null
   return (
-    <div role="tabpanel">
-      <PersonalStats
-        profile={stats}
-        period={period}
-        onPeriodChange={({ from, to }) =>
-          navigate({
-            search: (previous) => ({ ...previous, from, to }),
-            replace: true,
-          })
-        }
-      />
-    </div>
+    <PersonalStats
+      profile={stats}
+      period={period}
+      onPeriodChange={({ from, to }) =>
+        navigate({
+          search: (previous) => ({ ...previous, from, to }),
+          replace: true,
+        })
+      }
+    />
   )
 }
 
@@ -140,6 +164,12 @@ const profileErrors: Partial<
     message: "Zu dieser E-Mail gibt es schon ein Konto.",
   },
 }
+
+const themes: Array<{ value: Theme; label: string; icon: LucideIcon }> = [
+  { value: "system", label: "System", icon: SunMoon },
+  { value: "light", label: "Hell", icon: Sun },
+  { value: "dark", label: "Dunkel", icon: Moon },
+]
 
 function Details({ profile }: { profile: Profile }) {
   const router = useRouter()
@@ -159,6 +189,7 @@ function Details({ profile }: { profile: Profile }) {
   const [editor, setEditor] = useState<AvatarEditorStart | null>(null)
   const [saved, setSaved] = useState(false)
   const [pending, setPending] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const changed = name !== profile.name || email !== profile.email
 
   async function save(event: React.FormEvent) {
@@ -200,21 +231,17 @@ function Details({ profile }: { profile: Profile }) {
     await router.navigate({ to: "/sign-in" })
   }
 
-  const [deleting, setDeleting] = useState(false)
-
   return (
-    <div role="tabpanel" className="flex flex-col gap-4.5 px-5 pt-1 pb-6">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-col">
-          <span className="text-sm font-medium">Profilbild</span>
-          <span className="text-[13px] text-muted-foreground">
-            Sehen alle in deinen Gruppen
-          </span>
-        </div>
-        <SecondaryButton type="button" onClick={changePicture}>
+    <div className="flex flex-col gap-4.5 px-5 pt-1 pb-6">
+      <Field orientation="horizontal">
+        <FieldContent>
+          <FieldTitle>Profilbild</FieldTitle>
+          <FieldDescription>Sehen alle in deinen Gruppen</FieldDescription>
+        </FieldContent>
+        <Button variant="outline" size="sm" onClick={changePicture}>
           Bild ändern
-        </SecondaryButton>
-        <input
+        </Button>
+        <Input
           ref={fileInput}
           type="file"
           accept="image/*"
@@ -225,127 +252,138 @@ function Details({ profile }: { profile: Profile }) {
             if (file) setEditor({ kind: "file", file })
           }}
         />
-        {editor ? (
-          <AvatarEditor
-            start={editor}
-            hasSavedPicture={profile.image !== null}
-            name={profile.name}
-            onClose={() => setEditor(null)}
-            onSaved={async () => {
-              await reloadAfterChange()
-              setEditor(null)
-            }}
-          />
-        ) : null}
-      </div>
+      </Field>
+      {editor ? (
+        <AvatarEditor
+          start={editor}
+          hasSavedPicture={profile.image !== null}
+          name={profile.name}
+          onClose={() => setEditor(null)}
+          onSaved={reloadAfterChange}
+        />
+      ) : null}
 
       <form onSubmit={save} className="flex flex-col gap-4.5" noValidate>
-        <Field
-          label="Anzeigename"
-          hint="So heißt du in Spielen und Ranglisten."
-          error={errors.name}
-        >
-          {(field) => (
-            <TextInput
-              {...field}
-              value={name}
-              maxLength={30}
-              onChange={(e) => {
-                setName(e.target.value)
-                setSaved(false)
-              }}
-            />
-          )}
+        <Field data-invalid={errors.name ? true : undefined}>
+          <FieldLabel htmlFor="profile-name">Anzeigename</FieldLabel>
+          <Input
+            id="profile-name"
+            value={name}
+            maxLength={30}
+            onChange={(e) => {
+              setName(e.target.value)
+              setSaved(false)
+            }}
+            aria-invalid={errors.name ? true : undefined}
+            aria-describedby="profile-name-note"
+          />
+          <FieldNote id="profile-name-note" error={errors.name}>
+            So heißt du in Spielen und Ranglisten.
+          </FieldNote>
         </Field>
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">Benutzername</span>
-          <ReadOnlyValue>{profile.username}</ReadOnlyValue>
-          <span className="text-[13px] text-muted-foreground">
+        <Field>
+          <FieldLabel htmlFor="profile-username">Benutzername</FieldLabel>
+          <Input
+            id="profile-username"
+            value={profile.username}
+            readOnly
+            aria-describedby="profile-username-note"
+          />
+          <FieldDescription id="profile-username-note">
             Damit meldest du dich an. Lässt sich nicht ändern.
-          </span>
-        </div>
-        <Field
-          label="E-Mail"
-          hint="Nur für dich sichtbar."
-          error={errors.email}
-        >
-          {(field) => (
-            <TextInput
-              {...field}
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value)
-                setSaved(false)
-              }}
-            />
-          )}
+          </FieldDescription>
         </Field>
-        <PrimaryButton
-          type="submit"
-          disabled={pending || !changed}
-          className="h-13"
-        >
+        <Field data-invalid={errors.email ? true : undefined}>
+          <FieldLabel htmlFor="profile-email">E-Mail</FieldLabel>
+          <Input
+            id="profile-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              setSaved(false)
+            }}
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby="profile-email-note"
+          />
+          <FieldNote id="profile-email-note" error={errors.email}>
+            Nur für dich sichtbar.
+          </FieldNote>
+        </Field>
+        <Button type="submit" size="lg" disabled={pending || !changed}>
           {saved && !changed ? "Gespeichert" : "Änderungen speichern"}
-        </PrimaryButton>
+        </Button>
       </form>
 
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium">Darstellung</span>
-        <SegmentedTabs
-          label="Darstellung"
+      <Field>
+        <FieldTitle id="profile-theme">Darstellung</FieldTitle>
+        <RadioGroup
+          variant="segmented"
+          aria-labelledby="profile-theme"
           value={profile.theme}
-          onChange={chooseTheme}
-          options={[
-            { value: "system", label: "System" },
-            { value: "light", label: "Hell" },
-            { value: "dark", label: "Dunkel" },
-          ]}
-        />
-      </div>
-
-      <div className="mt-1.5 flex flex-col border-t border-border">
-        <button
-          type="button"
-          onClick={signOut}
-          className="flex h-14 items-center border-b border-border text-left"
+          onValueChange={(theme) => void chooseTheme(theme as Theme)}
         >
-          Abmelden
-        </button>
-        <div className="flex flex-col gap-2 pt-4">
-          <button
-            type="button"
-            onClick={() => setDeleting(true)}
-            className="h-11 self-start font-semibold text-destructive"
-          >
-            Konto löschen
-          </button>
-          <span className="text-[13px] text-pretty text-muted-foreground">
-            Löscht Name, Bild, E-Mail und Zugangsdaten. In deinen Gruppen stehst
-            du danach als „Ehemaliger Spieler“ in den alten Spielen, die
-            Ergebnisse der anderen bleiben gleich.
-          </span>
-        </div>
+          {themes.map((theme) => (
+            <RadioSegment key={theme.value} value={theme.value}>
+              <theme.icon />
+              {theme.label}
+            </RadioSegment>
+          ))}
+        </RadioGroup>
+      </Field>
+
+      <Separator />
+      <Button variant="secondary" size="lg" onClick={signOut}>
+        <LogOut />
+        Abmelden
+      </Button>
+      <Separator />
+      <div className="flex flex-col gap-2">
+        <Button
+          variant="destructive-outline"
+          size="lg"
+          onClick={() => setDeleting(true)}
+        >
+          <Trash2 />
+          Konto löschen
+        </Button>
+        <FieldDescription>
+          Löscht Name, Bild, E-Mail und Zugangsdaten. In deinen Gruppen stehst
+          du danach als „Ehemaliger Spieler“ in den alten Spielen, die
+          Ergebnisse der anderen bleiben gleich.
+        </FieldDescription>
       </div>
-      {deleting ? (
-        <DeleteAccountSheet onClose={() => setDeleting(false)} />
-      ) : null}
+      <DeleteAccountSheet open={deleting} onOpenChange={setDeleting} />
     </div>
   )
 }
 
 /** "Konto löschen?": the last step before the account is gone. */
-function DeleteAccountSheet({ onClose }: { onClose: () => void }) {
+function DeleteAccountSheet({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function remove() {
+    setPending(true)
+    setError(null)
     const result = await deleteAccountFn()
     if (!result.ok) {
-      return result.code === "stillAdmin"
-        ? "Du verwaltest noch eine Gruppe, in der andere ein Konto haben. Übergib dort zuerst die Verwalterrolle."
-        : "Das hat nicht geklappt."
+      setError(
+        result.code === "stillAdmin"
+          ? "Du verwaltest noch eine Gruppe, in der andere ein Konto haben. Übergib dort zuerst die Verwalterrolle."
+          : "Das hat nicht geklappt."
+      )
+      setPending(false)
+      return
     }
     // The session is gone with the account; this clears its cookie.
     await authClient.signOut().catch(() => undefined)
@@ -355,12 +393,43 @@ function DeleteAccountSheet({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <ConfirmSheet
-      title="Konto löschen?"
-      description="Name, Bild, E-Mail und Zugangsdaten werden gelöscht. In deinen Gruppen stehst du danach als „Ehemaliger Spieler“ in den alten Spielen. Gruppen, in denen nie jemand anderes ein Konto hatte, werden mit ihren Spielen gelöscht. Das lässt sich nicht rückgängig machen."
-      confirmLabel="Konto löschen"
-      onConfirm={remove}
-      onClose={onClose}
-    />
+    <Drawer
+      open={open}
+      onOpenChange={(next) => {
+        if (pending) return
+        onOpenChange(next)
+        if (!next) setError(null)
+      }}
+    >
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Konto löschen?</DrawerTitle>
+          <DrawerDescription>
+            Name, Bild, E-Mail und Zugangsdaten werden gelöscht. In deinen
+            Gruppen stehst du danach als „Ehemaliger Spieler“ in den alten
+            Spielen. Gruppen, in denen nie jemand anderes ein Konto hatte,
+            werden mit ihren Spielen gelöscht. Das lässt sich nicht rückgängig
+            machen.
+          </DrawerDescription>
+        </DrawerHeader>
+        <FieldError>{error}</FieldError>
+        <DrawerFooter>
+          <Button
+            variant="destructive"
+            size="xl"
+            disabled={pending}
+            onClick={() => void remove()}
+          >
+            Konto löschen
+          </Button>
+          <DrawerClose
+            render={<Button variant="secondary" size="xl" />}
+            disabled={pending}
+          >
+            Abbrechen
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   )
 }

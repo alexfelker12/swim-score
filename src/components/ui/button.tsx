@@ -31,11 +31,40 @@ const buttonVariants = cva(
         /** Removes or deletes something: coral fill. */
         destructive:
           "bg-destructive font-semibold text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/90",
+        /** Removes something, beside `outline` buttons ("Entfernen" in the picture editor). */
+        "destructive-outline":
+          "border-border bg-card font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive-muted",
         /** Removes something, as text ("Spiel abbrechen", "Konto löschen"). */
         "destructive-ghost":
           "font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive-muted",
         /** The bomb: border and text `bomb` on `bomb-muted`. */
         bomb: "border-bomb bg-bomb-muted font-semibold text-bomb hover:bg-bomb-muted/70 active:bg-bomb-muted/70",
+        /** A chosen filter that opens its choices (the metric on the Leaderboard). */
+        selected:
+          "border-primary bg-primary-muted text-base font-semibold text-primary hover:bg-primary-muted/70 active:bg-primary-muted/70",
+        /** A filter that opens its choices, not highlighted (the Period): border, 16 px / 600, muted icons. */
+        picker:
+          "border-border text-base font-semibold hover:bg-muted active:bg-muted [&_svg]:text-muted-foreground",
+        /** Add something new ("Gruppe anlegen"): dashed border, `primary` text. */
+        add: "border-dashed border-border font-semibold text-primary hover:bg-muted active:bg-muted",
+        /** Choosing the Swimmer: border `swimmer` on `swimmer-muted`. */
+        swimmer:
+          "border-swimmer bg-swimmer-muted font-semibold hover:bg-swimmer-muted/70 active:bg-swimmer-muted/70",
+        /** Something to add, not there yet ("Nicht dabei" at the start): dashed border. */
+        dashed:
+          "border-dashed border-border font-semibold hover:bg-muted active:bg-muted",
+        /** An action on a `muted` bar (the last Event's Rückgängig): `background` fill. */
+        raised:
+          "bg-background font-semibold hover:bg-background/70 active:bg-background/70",
+        /** The same in the primary colour ("Stechen angeben"). */
+        "raised-primary":
+          "bg-background font-semibold text-primary hover:bg-background/70 active:bg-background/70",
+        /** An icon action in a row in the primary colour (link a Guest). */
+        "primary-ghost":
+          "font-semibold text-primary hover:bg-primary-muted active:bg-primary-muted",
+        /** A quiet text action ("2 ehemalige Spieler"). */
+        muted:
+          "font-normal text-muted-foreground hover:bg-muted active:bg-muted",
         /** Icon buttons in headers and rows, text buttons without a frame. */
         ghost: "font-medium hover:bg-muted active:bg-muted",
         /** Inline text action in the primary colour. */
@@ -45,6 +74,8 @@ const buttonVariants = cva(
           "border border-google-stroke bg-google-fill font-google text-sm/5 font-medium text-google-text active:opacity-80",
       },
       size: {
+        /** The page's one main action (start page, "Neues Spiel in …"): 64 px, 17 px. */
+        "2xl": "h-16 rounded-[14px] px-4 text-[17px]",
         /** Main buttons, 56 px. */
         xl: "h-14 rounded-[14px] px-4 text-base",
         /** Main buttons where space is tight, 52 px. */
@@ -64,6 +95,10 @@ const buttonVariants = cva(
     compoundVariants: [
       // 12 px inset on the left, 10 px between logo and text, radius as the main buttons.
       { variant: "google", className: "gap-2.5 rounded-[14px] px-3 text-sm/5" },
+      // Choosing the Swimmer: 60 px rows with the name at 18 px.
+      { variant: "swimmer", className: "h-15 px-4.5 text-lg" },
+      // A text link on its own ("Bild doch behalten") keeps the 44 px tap target.
+      { variant: "link", size: "sm", className: "h-11! px-4!" },
     ],
     defaultVariants: {
       variant: "default",

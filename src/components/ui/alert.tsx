@@ -9,6 +9,8 @@ const alertVariants = cva(
       variant: {
         /** A quiet message ("Link unterwegs", "Passwort gespeichert"), icon in `primary`. */
         default: "bg-muted text-foreground *:[svg]:text-primary",
+        /** A quiet tip beside the content ("Am Tisch geht es am schnellsten …"): 15 px, all muted. */
+        note: "bg-muted text-[15px] text-muted-foreground *:[svg]:text-muted-foreground",
         /** Something went wrong. */
         destructive:
           "bg-destructive-muted text-destructive *:data-[slot=alert-description]:text-destructive *:[svg]:text-current",

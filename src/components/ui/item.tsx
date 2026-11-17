@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -11,10 +12,7 @@ function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
     <div
       role="list"
       data-slot="item-group"
-      className={cn(
-        "group/item-group flex w-full flex-col gap-4 has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2",
-        className
-      )}
+      className={cn("group/item-group flex w-full flex-col gap-4", className)}
       {...props}
     />
   )
@@ -40,8 +38,6 @@ const itemVariants = cva(
     variants: {
       variant: {
         default: "border-transparent",
-        outline: "border-border",
-        muted: "border-transparent bg-muted/50",
         /** List row: at least 56 px, 1 px divider at the bottom. */
         row: "min-h-14 rounded-none border-0 border-b border-border",
         /** A row as a card: 1.5 px border on `card`, radius 14 px. */
@@ -49,15 +45,29 @@ const itemVariants = cva(
       },
       size: {
         default: "gap-3.5 px-4 py-3.5",
-        sm: "gap-3.5 px-3.5 py-3",
-        xs: "gap-2 px-2.5 py-2 in-data-[slot=dropdown-menu-content]:p-0",
         /** Rows in lists: no side padding, 6 px top and bottom. */
         list: "gap-3 px-0 py-1.5",
+        /**
+         * Lines of a menu in a sheet: 56 px, icon 22 px and text 17 px, no
+         * side padding.
+         */
+        menu: "min-h-14 gap-3.5 px-0 py-0 text-[17px] [&_[data-slot=item-media]_svg]:size-5.5",
+        /**
+         * Rows to open something (a Group on the start page): at least 68 px,
+         * title 17 px, description 15 px, a muted chevron in `ItemActions`.
+         */
+        lg: "min-h-17 gap-3 px-4 py-2.5 [&_[data-slot=item-actions]_svg]:size-5 [&_[data-slot=item-actions]_svg]:text-muted-foreground",
+      },
+      tone: {
+        default: "",
+        /** Something that removes or ends ("Spiel abbrechen"): in coral. */
+        destructive: "text-destructive",
       },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      tone: "default",
     },
   }
 )
@@ -66,6 +76,7 @@ function Item({
   className,
   variant = "default",
   size = "default",
+  tone = "default",
   render,
   ...props
 }: useRender.ComponentProps<"div"> & VariantProps<typeof itemVariants>) {
@@ -73,7 +84,7 @@ function Item({
     defaultTagName: "div",
     props: mergeProps<"div">(
       {
-        className: cn(itemVariants({ variant, size, className })),
+        className: cn(itemVariants({ variant, size, tone, className })),
       },
       props
     ),
@@ -92,9 +103,6 @@ const itemMediaVariants = cva(
     variants: {
       variant: {
         default: "bg-transparent",
-        icon: "[&_svg:not([class*='size-'])]:size-4",
-        image:
-          "size-10 overflow-hidden rounded-xl group-data-[size=sm]/item:size-8 group-data-[size=xs]/item:size-6 group-data-[size=xs]/item:rounded-lg [&_img]:size-full [&_img]:object-cover",
       },
     },
     defaultVariants: {
@@ -123,7 +131,7 @@ function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="item-content"
       className={cn(
-        "flex flex-1 flex-col gap-1 group-data-[size=xs]/item:gap-0.5 [&+[data-slot=item-content]]:flex-none",
+        "flex flex-1 flex-col gap-1 [&+[data-slot=item-content]]:flex-none",
         className
       )}
       {...props}
@@ -131,12 +139,16 @@ function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * 16 px / 600; in list rows (`size="list"`) 17 px / 500, in menus 17 px / 400,
+ * in `size="lg"` 17 px / 600.
+ */
 function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-title"
       className={cn(
-        "line-clamp-1 flex w-fit items-center gap-2 text-base leading-snug font-semibold underline-offset-4",
+        "line-clamp-1 flex w-fit min-w-0 items-center gap-2 text-base leading-snug font-semibold underline-offset-4 group-data-[size=lg]/item:text-[17px] group-data-[size=list]/item:text-[17px] group-data-[size=list]/item:font-medium group-data-[size=menu]/item:text-[17px] group-data-[size=menu]/item:font-normal",
         className
       )}
       {...props}
@@ -149,7 +161,7 @@ function ItemDescription({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="item-description"
       className={cn(
-        "line-clamp-2 text-left text-[13px] font-normal text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        "line-clamp-2 text-left text-[13px] font-normal text-muted-foreground group-data-[size=lg]/item:text-[15px] [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
         className
       )}
       {...props}
@@ -193,8 +205,23 @@ function ItemFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * A row that is a button (a menu line): `<Item render={<ItemButton
+ * onClick={…} />}>`. The look comes from `Item`.
+ */
+function ItemButton({ className, ...props }: ButtonPrimitive.Props) {
+  return (
+    <ButtonPrimitive
+      data-slot="item-button"
+      className={cn("cursor-pointer text-left", className)}
+      {...props}
+    />
+  )
+}
+
 export {
   Item,
+  ItemButton,
   ItemMedia,
   ItemContent,
   ItemActions,

@@ -57,8 +57,6 @@ const fieldVariants = cva("group/field flex w-full gap-1.5", {
       vertical: "flex-col *:w-full [&>.sr-only]:w-auto",
       horizontal:
         "flex-row items-center has-[>[data-slot=field-content]]:items-start *:data-[slot=field-label]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
-      responsive:
-        "flex-col *:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:*:data-[slot=field-label]:flex-auto [&>.sr-only]:w-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
     },
   },
   defaultVariants: {
@@ -174,9 +172,15 @@ function FieldError({
   className,
   children,
   errors,
+  size = "default",
   ...props
 }: React.ComponentProps<"div"> & {
   errors?: Array<{ message?: string } | undefined>
+  /**
+   * `lg`: what keeps the page's main action disabled, 15 px / 500 with an
+   * icon before it ("Höchstens 9 Spieler").
+   */
+  size?: "default" | "lg"
 }) {
   const content = useMemo(() => {
     if (children) {
@@ -213,8 +217,9 @@ function FieldError({
     <div
       role="alert"
       data-slot="field-error"
+      data-size={size}
       className={cn(
-        "text-[13px] font-normal text-pretty text-destructive",
+        "text-[13px] font-normal text-pretty text-destructive data-[size=lg]:flex data-[size=lg]:items-center data-[size=lg]:gap-2 data-[size=lg]:text-[15px] data-[size=lg]:font-medium [&>svg]:size-5 [&>svg]:shrink-0",
         className
       )}
       {...props}
@@ -224,8 +229,28 @@ function FieldError({
   )
 }
 
+/**
+ * The line under an input: the hint, or the error in its place while there
+ * is one (as in the design's input pattern). Give the input
+ * `aria-describedby={id}` so either is read with it.
+ */
+function FieldNote({
+  error,
+  children,
+  ...props
+}: {
+  id?: string
+  className?: string
+  error?: string | null
+  children: React.ReactNode
+}) {
+  if (error) return <FieldError {...props}>{error}</FieldError>
+  return <FieldDescription {...props}>{children}</FieldDescription>
+}
+
 export {
   Field,
+  FieldNote,
   FieldLabel,
   FieldDescription,
   FieldError,

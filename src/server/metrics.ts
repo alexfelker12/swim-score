@@ -112,7 +112,7 @@ export const METRICS = [
     minGames: null,
     count: countWhere(sql`${participant.won} and ${participant.swam}`),
     perGame: false,
-    detail: () => "als Schwimmer gewonnen",
+    detail: () => "Unbreakable",
   },
   {
     id: "untouchable",
@@ -123,7 +123,7 @@ export const METRICS = [
     minGames: null,
     count: countWhere(sql`${participant.won} and ${participant.livesLost} = 0`),
     perGame: false,
-    detail: () => "ohne Lebensverlust",
+    detail: () => "Untouchable",
   },
 ] as const satisfies ReadonlyArray<MetricDefinition>
 

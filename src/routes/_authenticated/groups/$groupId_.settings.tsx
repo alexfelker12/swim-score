@@ -7,16 +7,52 @@ import {
   useNavigate,
 } from "@tanstack/react-router"
 import {
-  ChevronLeft,
   ChevronRight,
+  Info,
   Link as LinkIcon,
+  LogOut,
   UserMinus,
 } from "lucide-react"
-import { BottomSheet } from "@/components/bottom-sheet"
-import { PrimaryButton, SecondaryButton } from "@/components/buttons"
-import { ChoiceCard } from "@/components/choice-card"
-import { ConfirmSheet } from "@/components/confirm-sheet"
-import { TextInput } from "@/components/form-field"
+import {
+  PageHeader,
+  PageHeaderBack,
+  PageHeaderTitle,
+} from "@/components/page-header"
+import { Section, SectionDescription, SectionTitle } from "@/components/section"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { PersonAvatar } from "@/components/person-avatar"
+import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item"
+import {
+  RadioCard,
+  RadioCardDescription,
+  RadioCardTitle,
+  RadioGroup,
+} from "@/components/ui/radio-group"
 import { formatMonth, isToday } from "@/lib/dates"
 import {
   groupChanged,
@@ -25,6 +61,7 @@ import {
   leftGroup,
 } from "@/lib/queries"
 import { useManagement } from "./-use-management"
+import { useSheet } from "@/lib/use-sheet"
 import {
   handOverAdminFn,
   leaveGroupFn,
@@ -63,20 +100,21 @@ function SettingsPage() {
   if (!group) return null
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1">
-        <Link
-          to="/groups/$groupId"
-          params={{ groupId: group.id }}
-          search={{ tab: "players" }}
-          aria-label="Zurück zur Gruppe"
-          className="flex size-11 items-center justify-center justify-self-center rounded-xl"
-        >
-          <ChevronLeft className="size-6" aria-hidden="true" />
-        </Link>
-        <h1 className="text-center text-[17px] font-semibold">
+      <PageHeader>
+        <PageHeaderBack
+          render={
+            <Link
+              to="/groups/$groupId"
+              params={{ groupId: group.id }}
+              search={{ tab: "players" }}
+            />
+          }
+          label="Zurück zur Gruppe"
+        />
+        <PageHeaderTitle>
           {group.isAdmin ? "Gruppe verwalten" : "Gruppe"}
-        </h1>
-      </header>
+        </PageHeaderTitle>
+      </PageHeader>
       <main className="flex flex-col gap-7 px-4 pt-3 pb-8">
         {group.isAdmin && management ? (
           <AdminSettings group={group} management={management} />
@@ -102,86 +140,74 @@ function AdminSettings({
     <>
       <RenameForm group={group} />
 
-      <section aria-labelledby="players" className="flex flex-col gap-1">
-        <h2 id="players" className="text-[17px] font-semibold">
-          Spieler
-        </h2>
-        <ul className="flex flex-col">
+      <Section aria-labelledby="players" className="gap-1">
+        <SectionTitle id="players">Spieler</SectionTitle>
+        <ItemGroup className="gap-0">
           {group.players.map((p) => (
-            <li
-              key={p.id}
-              className="flex min-h-14 items-center gap-1 border-b border-border"
-            >
-              <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                <span className="truncate text-[17px] font-medium">
-                  {p.name}
-                </span>
-                <span className="truncate text-[13px] text-muted-foreground">
-                  {playerTag(p)}
-                </span>
-              </span>
-              {p.guest ? (
-                <button
-                  type="button"
-                  onClick={() => setLinking(p)}
-                  aria-label={`${p.name} mit Konto verknüpfen`}
-                  className="flex size-11 shrink-0 items-center justify-center rounded-xl text-primary"
-                >
-                  <LinkIcon className="size-5" aria-hidden="true" />
-                </button>
-              ) : null}
-              {p.me ? null : (
-                <button
-                  type="button"
-                  onClick={() => setRemoving(p)}
-                  aria-label={`${p.name} entfernen`}
-                  className="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-xl text-destructive"
-                >
-                  <UserMinus className="size-5" aria-hidden="true" />
-                </button>
-              )}
-            </li>
+            <Item key={p.id} variant="row" size="list" role="listitem">
+              <ItemMedia>
+                <PersonAvatar
+                  variant={p.guest ? "guest" : "account"}
+                  name={p.name}
+                  image={p.image}
+                />
+              </ItemMedia>
+              <ItemContent className="min-w-0 gap-0.5">
+                <ItemTitle>
+                  <span className="truncate">{p.name}</span>
+                </ItemTitle>
+                <PlayerTag player={p} />
+              </ItemContent>
+              <ItemActions className="-mr-2 gap-0">
+                {p.guest ? (
+                  <Button
+                    variant="primary-ghost"
+                    size="icon"
+                    onClick={() => setLinking(p)}
+                    aria-label={`${p.name} mit Konto verknüpfen`}
+                  >
+                    <LinkIcon />
+                  </Button>
+                ) : null}
+                {p.me ? null : (
+                  <Button
+                    variant="destructive-ghost"
+                    size="icon"
+                    onClick={() => setRemoving(p)}
+                    aria-label={`${p.name} entfernen`}
+                  >
+                    <UserMinus />
+                  </Button>
+                )}
+              </ItemActions>
+            </Item>
           ))}
-        </ul>
-        <p className="pt-2 text-sm text-pretty text-muted-foreground">
+        </ItemGroup>
+        <SectionDescription className="pt-2">
           Entfernte Spieler bleiben in alten Spielen sichtbar, tauchen aber
           nicht mehr in der Spielerauswahl und der Rangliste auf.
-        </p>
-      </section>
+        </SectionDescription>
+      </Section>
 
-      <section aria-labelledby="admin" className="flex flex-col gap-2.5">
-        <h2 id="admin" className="text-[17px] font-semibold">
-          Verwalter
-        </h2>
-        <p className="text-muted-foreground">Du verwaltest diese Gruppe.</p>
-        <button
-          type="button"
+      <Section aria-labelledby="admin" className="gap-2.5">
+        <SectionTitle id="admin">Verwalter</SectionTitle>
+        <SectionDescription>Du verwaltest diese Gruppe.</SectionDescription>
+        <Button
+          variant="outline"
+          size="xl"
           onClick={() => setHandingOver(true)}
-          className="flex h-14 items-center justify-between rounded-[14px] border-[1.5px] border-border bg-card px-4 text-left text-base font-medium"
+          className="justify-between"
         >
           Verwalterrolle übergeben
-          <ChevronRight
-            className="size-5 text-muted-foreground"
-            aria-hidden="true"
-          />
-        </button>
-      </section>
+          <ChevronRight />
+        </Button>
+      </Section>
 
       <FormerPlayers players={group.formerPlayers} />
 
-      <section className="flex flex-col gap-2">
-        <button
-          type="button"
-          disabled
-          className="h-11 self-start text-[17px] font-semibold text-destructive disabled:opacity-40"
-        >
-          Gruppe verlassen
-        </button>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Als Verwalter übergibst du die Rolle zuerst an einen Spieler mit
-          Konto.
-        </p>
-      </section>
+      <LeaveAction disabled>
+        Als Verwalter übergibst du die Rolle zuerst an einen Spieler mit Konto.
+      </LeaveAction>
 
       {removing ? (
         <RemoveSheet
@@ -210,44 +236,59 @@ function MemberSettings({ group }: { group: GroupView }) {
   const admin = group.players.find((p) => p.admin)
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <span className="text-[15px] text-muted-foreground">Name</span>
-        <span className="text-[22px] font-semibold wrap-break-word">
-          {group.name}
-        </span>
-      </div>
+      <Field>
+        <FieldLabel htmlFor="group-name">Name</FieldLabel>
+        <Input id="group-name" value={group.name} readOnly />
+      </Field>
 
       {admin ? (
-        <div className="flex flex-col gap-1">
-          <span className="text-[15px] text-muted-foreground">Verwalter</span>
-          <span className="text-xl font-semibold">{admin.name}</span>
-          <p className="text-[15px] text-pretty text-muted-foreground">
-            {admin.name} lädt neue Spieler ein und bestätigt, wer welcher Gast
-            ist. Gäste kann jeder anlegen, auch direkt beim Spielstart.
-          </p>
-        </div>
+        <Section aria-labelledby="admin">
+          <SectionTitle id="admin">Verwalter</SectionTitle>
+          <SectionDescription>
+            <strong>{admin.name}</strong> lädt neue Spieler ein und bestätigt,
+            wer welcher Gast ist. Gäste kann jeder anlegen, auch direkt beim
+            Spielstart.
+          </SectionDescription>
+        </Section>
       ) : null}
 
       <FormerPlayers players={group.formerPlayers} />
 
-      <section className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => setLeaving(true)}
-          className="h-11 self-start text-[17px] font-semibold text-destructive"
-        >
-          Gruppe verlassen
-        </button>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Deine bisherigen Spiele bleiben. In der Gruppe stehst du danach als
-          ehemaliger Spieler. Zurück kommst du nur über eine neue Einladung.
-        </p>
-      </section>
+      <LeaveAction onClick={() => setLeaving(true)}>
+        Deine bisherigen Spiele bleiben. In der Gruppe stehst du danach als
+        ehemaliger Spieler. Zurück kommst du nur über eine neue Einladung.
+      </LeaveAction>
 
       {leaving ? (
         <LeaveSheet group={group} onClose={() => setLeaving(false)} />
       ) : null}
     </>
+  )
+}
+
+/** "Gruppe verlassen" with what it means under it. */
+function LeaveAction({
+  disabled,
+  onClick,
+  children,
+}: {
+  disabled?: boolean
+  onClick?: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Button
+        variant="destructive-outline"
+        size="lg"
+        disabled={disabled}
+        onClick={onClick}
+      >
+        <LogOut />
+        Gruppe verlassen
+      </Button>
+      <FieldDescription>{children}</FieldDescription>
+    </div>
   )
 }
 
@@ -270,33 +311,30 @@ function RenameForm({ group }: { group: GroupView }) {
   }
 
   return (
-    <form onSubmit={save} noValidate className="flex flex-col gap-1.5">
-      <label htmlFor="group-name" className="text-sm font-medium">
-        Name
-      </label>
-      <div className="flex gap-2">
-        <TextInput
-          id="group-name"
-          value={name}
-          maxLength={40}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? "group-name-error" : undefined}
-          onChange={(e) => setName(e.target.value)}
-          className="min-w-0 flex-1"
-        />
-        <button
-          type="submit"
-          disabled={pending || !changed}
-          className="h-13 shrink-0 rounded-xl bg-primary-muted px-4 text-base font-semibold text-primary disabled:opacity-40"
-        >
-          Speichern
-        </button>
-      </div>
-      {error ? (
-        <span id="group-name-error" className="text-[13px] text-destructive">
-          {error}
-        </span>
-      ) : null}
+    <form onSubmit={save} noValidate>
+      <Field data-invalid={error ? true : undefined}>
+        <FieldLabel htmlFor="group-name">Name</FieldLabel>
+        <div className="flex gap-2">
+          <Input
+            id="group-name"
+            value={name}
+            maxLength={40}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? "group-name-error" : undefined}
+            onChange={(e) => setName(e.target.value)}
+            className="flex-1"
+          />
+          <Button
+            type="submit"
+            variant="soft"
+            size="lg"
+            disabled={pending || !changed}
+          >
+            Speichern
+          </Button>
+        </div>
+        <FieldError id="group-name-error">{error}</FieldError>
+      </Field>
     </form>
   )
 }
@@ -304,24 +342,21 @@ function RenameForm({ group }: { group: GroupView }) {
 function FormerPlayers({ players }: { players: Array<FormerPlayer> }) {
   if (players.length === 0) return null
   return (
-    <section aria-labelledby="former" className="flex flex-col gap-1">
-      <h2 id="former" className="text-[17px] font-semibold">
-        Ehemalige Spieler
-      </h2>
-      <ul className="flex flex-col">
+    <Section aria-labelledby="former" className="gap-1">
+      <SectionTitle id="former">Ehemalige Spieler</SectionTitle>
+      <ItemGroup className="gap-0">
         {players.map((p) => (
-          <li
-            key={p.id}
-            className="flex min-h-13 items-center justify-between gap-3 border-b border-border"
-          >
-            <span className="truncate">{p.name}</span>
-            <span className="shrink-0 text-[15px] text-muted-foreground">
-              {leftLabel(p)}
-            </span>
-          </li>
+          <Item key={p.id} variant="row" size="list" role="listitem">
+            <ItemContent className="min-w-0 gap-0.5">
+              <ItemTitle>
+                <span className="truncate">{p.name}</span>
+              </ItemTitle>
+              <ItemDescription>{leftLabel(p)}</ItemDescription>
+            </ItemContent>
+          </Item>
         ))}
-      </ul>
-    </section>
+      </ItemGroup>
+    </Section>
   )
 }
 
@@ -336,6 +371,7 @@ function RemoveSheet({
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
+  const sheet = useSheet(onClose)
 
   async function remove() {
     const result = await removePlayerFn({
@@ -347,17 +383,38 @@ function RemoveSheet({
         : "Das hat nicht geklappt."
     }
     await groupChanged(queryClient, groupId)
-    onClose()
   }
 
   return (
-    <ConfirmSheet
-      title={`${player.name} entfernen?`}
-      description={`${player.name} wird ehemaliger Spieler. Alte Spiele bleiben unverändert, in Spielerauswahl und Rangliste taucht ${player.name} nicht mehr auf.`}
-      confirmLabel="Entfernen"
-      onConfirm={remove}
-      onClose={onClose}
-    />
+    <Drawer {...sheet.drawer}>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>{player.name} entfernen?</DrawerTitle>
+          <DrawerDescription>
+            {player.name} wird ehemaliger Spieler. Alte Spiele bleiben
+            unverändert, in Spielerauswahl und Rangliste taucht {player.name}{" "}
+            nicht mehr auf.
+          </DrawerDescription>
+        </DrawerHeader>
+        <FieldError>{sheet.error}</FieldError>
+        <DrawerFooter>
+          <Button
+            variant="destructive"
+            size="xl"
+            disabled={sheet.pending}
+            onClick={() => void sheet.run(remove)}
+          >
+            Entfernen
+          </Button>
+          <DrawerClose
+            render={<Button variant="secondary" size="xl" />}
+            disabled={sheet.pending}
+          >
+            Abbrechen
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   )
 }
 
@@ -370,84 +427,78 @@ function HandOverSheet({
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
+  const sheet = useSheet(onClose)
   const [choice, setChoice] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const accounts = group.players.filter((p) => !p.guest && !p.me)
 
-  async function handOver(event: React.FormEvent) {
-    event.preventDefault()
-    if (!choice) return
-    setPending(true)
-    setError(null)
+  async function handOver(playerId: string) {
     const result = await handOverAdminFn({
-      data: { groupId: group.id, playerId: choice },
+      data: { groupId: group.id, playerId },
     })
     if (!result.ok) {
-      setPending(false)
-      setError(
-        result.code === "playerNotFound"
-          ? "Diesen Spieler gibt es in der Gruppe nicht mehr."
-          : "Das hat nicht geklappt."
-      )
-      return
+      return result.code === "playerNotFound"
+        ? "Diesen Spieler gibt es in der Gruppe nicht mehr."
+        : "Das hat nicht geklappt."
     }
     // The page reloads as "Gruppe", without the Group Admin's tools.
     await groupChanged(queryClient, group.id)
-    onClose()
   }
 
   return (
-    <BottomSheet
-      title="Verwalterrolle übergeben"
-      description="Wähle, wer die Gruppe ab jetzt verwaltet. Du bleibst Spieler der Gruppe."
-      onDismiss={onClose}
-    >
-      <form onSubmit={handOver} className="flex min-h-0 flex-col gap-4">
-        {accounts.length === 0 ? (
-          <p className="rounded-xl bg-muted p-4 text-sm text-pretty text-muted-foreground">
-            Noch ist außer dir niemand mit Konto in der Gruppe. Lade jemanden
-            ein, dann kannst du die Rolle übergeben.
-          </p>
-        ) : (
-          <fieldset className="flex max-h-[40svh] flex-col gap-2 overflow-auto">
-            <legend className="sr-only">Spieler mit Konto</legend>
-            {accounts.map((p) => (
-              <ChoiceCard
-                key={p.id}
-                name="admin"
-                value={p.id}
-                selected={choice}
-                onSelect={setChoice}
-                label={p.name}
-                note="Spieler mit Konto"
-              />
-            ))}
-          </fieldset>
-        )}
-        {error ? (
-          <p role="alert" className="text-sm text-pretty text-destructive">
-            {error}
-          </p>
-        ) : null}
-        <div className="flex gap-2.5">
-          <SecondaryButton
-            type="button"
-            onClick={onClose}
-            className="h-13 flex-1 rounded-[14px] bg-transparent text-base"
-          >
-            Abbrechen
-          </SecondaryButton>
-          <PrimaryButton
-            type="submit"
-            disabled={pending || !choice}
-            className="h-13 flex-1"
-          >
-            Übergeben
-          </PrimaryButton>
-        </div>
-      </form>
-    </BottomSheet>
+    <Drawer {...sheet.drawer}>
+      <DrawerContent>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (choice) void sheet.run(() => handOver(choice))
+          }}
+          className="flex flex-col gap-4"
+        >
+          <DrawerHeader>
+            <DrawerTitle>Verwalterrolle übergeben</DrawerTitle>
+            <DrawerDescription>
+              Wähle, wer die Gruppe ab jetzt verwaltet. Du bleibst Spieler der
+              Gruppe.
+            </DrawerDescription>
+          </DrawerHeader>
+          {accounts.length === 0 ? (
+            <Alert>
+              <Info />
+              <AlertDescription>
+                Noch ist außer dir niemand mit Konto in der Gruppe. Lade
+                jemanden ein, dann kannst du die Rolle übergeben.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <RadioGroup
+              aria-label="Spieler mit Konto"
+              value={choice}
+              onValueChange={(value) => setChoice(value as string)}
+              className="gap-2"
+            >
+              {accounts.map((p) => (
+                <RadioCard key={p.id} value={p.id}>
+                  <RadioCardTitle>{p.name}</RadioCardTitle>
+                  <RadioCardDescription>Spieler mit Konto</RadioCardDescription>
+                </RadioCard>
+              ))}
+            </RadioGroup>
+          )}
+          <FieldError>{sheet.error}</FieldError>
+          <DrawerFooter orientation="horizontal">
+            <DrawerClose
+              render={<Button variant="secondary" size="lg" />}
+              disabled={sheet.pending}
+            >
+              Abbrechen
+            </DrawerClose>
+            <Button type="submit" size="lg" disabled={sheet.pending || !choice}>
+              Übergeben
+            </Button>
+          </DrawerFooter>
+        </form>
+      </DrawerContent>
+    </Drawer>
   )
 }
 
@@ -461,6 +512,7 @@ function LeaveSheet({
 }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const sheet = useSheet(onClose)
 
   async function leave() {
     const result = await leaveGroupFn({ data: { groupId: group.id } })
@@ -475,14 +527,42 @@ function LeaveSheet({
   }
 
   return (
-    <ConfirmSheet
-      title="Gruppe verlassen?"
-      description={`In ${group.name} stehst du danach als ehemaliger Spieler. Deine bisherigen Spiele bleiben. Zurück kommst du nur über eine neue Einladung.`}
-      confirmLabel="Verlassen"
-      onConfirm={leave}
-      onClose={onClose}
-    />
+    <Drawer {...sheet.drawer}>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Gruppe verlassen?</DrawerTitle>
+          <DrawerDescription>
+            In {group.name} stehst du danach als ehemaliger Spieler. Deine
+            bisherigen Spiele bleiben. Zurück kommst du nur über eine neue
+            Einladung.
+          </DrawerDescription>
+        </DrawerHeader>
+        <FieldError>{sheet.error}</FieldError>
+        <DrawerFooter>
+          <Button
+            variant="destructive"
+            size="xl"
+            disabled={sheet.pending}
+            onClick={() => void sheet.run(leave)}
+          >
+            Verlassen
+          </Button>
+          <DrawerClose
+            render={<Button variant="secondary" size="xl" />}
+            disabled={sheet.pending}
+          >
+            Abbrechen
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   )
+}
+
+/** The second line of a row: "Gast, von Ben angelegt", "du, Verwalter" … */
+function PlayerTag({ player }: { player: GroupPlayer }) {
+  const tag = playerTag(player)
+  return tag ? <ItemDescription>{tag}</ItemDescription> : null
 }
 
 /** "du, Verwalter", "seit heute dabei", "Gast, von Ben angelegt" … */

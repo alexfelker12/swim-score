@@ -15,7 +15,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       role="group"
       className={cn(
         inputSurfaceClass,
-        "group/input-group relative flex w-full min-w-0 items-center has-[[data-slot=input-group-control]:focus-visible]:border-primary has-[[data-slot=input-group-control]:read-only]:border-transparent has-[[data-slot=input-group-control]:read-only]:bg-muted has-[[data-slot][aria-invalid=true]]:border-destructive has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>textarea]:h-auto has-[>[data-align=block-end]]:[&>input]:pt-3 has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5",
+        "group/input-group relative flex w-full min-w-0 items-center has-[[data-slot=input-group-control]:focus-visible]:border-primary has-[[data-slot=input-group-control]:read-only]:border-transparent has-[[data-slot=input-group-control]:read-only]:bg-muted has-[[data-slot][aria-invalid=true]]:border-destructive has-[>textarea]:h-auto has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5",
         className
       )}
       {...props}
@@ -30,10 +30,6 @@ const inputGroupAddonVariants = cva(
       align: {
         "inline-start": "order-first pl-1 has-[>kbd]:pl-2",
         "inline-end": "order-last pr-1 has-[>kbd]:pr-2",
-        "block-start":
-          "order-first w-full justify-start px-2.5 pt-2 group-has-[>input]/input-group:pt-2 [.border-b]:pb-2",
-        "block-end":
-          "order-last w-full justify-start px-2.5 pb-2 group-has-[>input]/input-group:pb-2 [.border-t]:pt-2",
       },
     },
     defaultVariants: {
@@ -70,16 +66,11 @@ const inputGroupButtonVariants = cva(
     variants: {
       size: {
         xs: "h-6 gap-1 rounded-xl px-1.5 [&>svg:not([class*='size-'])]:size-3.5",
-        sm: "",
-        "icon-xs": "size-6 rounded-xl p-0 has-[>svg]:p-0",
-        "icon-sm": "size-8 p-0 has-[>svg]:p-0",
         /**
          * Icon actions inside the field (eye / eye-off, copy), 44 × 44 px; the
          * icon ends 16 px from the field's edge.
          */
         icon: "size-11 rounded-[10px] p-0 text-muted-foreground has-[>svg]:p-0 [&>svg:not([class*='size-'])]:size-5",
-        /** A text action inside the field, only where no well-known icon exists. */
-        text: "h-10 rounded-[10px] px-3 text-sm font-medium",
       },
     },
     defaultVariants: {

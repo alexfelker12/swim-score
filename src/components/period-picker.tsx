@@ -1,11 +1,25 @@
-import { useState } from "react"
-import { Calendar, Check, ChevronDown } from "lucide-react"
-import { BottomSheet } from "@/components/bottom-sheet"
+import { createContext, useContext, useState } from "react"
+import { Calendar, ChevronDown } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { DateInput } from "@/components/ui/date-input"
 import {
-  largeSecondaryButtonClass,
-  primaryButtonClass,
-} from "@/components/buttons"
-import { Field, TextInput } from "@/components/form-field"
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Field, FieldLabel } from "@/components/ui/field"
+import {
+  RadioGroup,
+  RadioRow,
+  RadioRowContent,
+  RadioRowDescription,
+  RadioRowIndicator,
+  RadioRowTitle,
+} from "@/components/ui/radio-group"
 import {
   formatDayRange,
   formatMonthYear,
@@ -18,6 +32,11 @@ import type { Period } from "@/server/stats"
 
 // The Period of a statistic (Group Leaderboard, Personal Stats): the button
 // that shows it and the sheet that changes it.
+//
+//   <PeriodPicker since={…} years={…} period={…} onPeriodChange={…}>
+//     <PeriodPickerTrigger />
+//     <PeriodPickerContent />
+//   </PeriodPicker>
 
 /** A whole calendar year as a period, e.g. 2025. */
 function yearPeriod(year: number): Required<Period> {
@@ -50,39 +69,77 @@ export function periodLabel(period: Period, { short = false } = {}): string {
   return short ? formatShortDayRange(from, to) : formatDayRange(from, to)
 }
 
-/** The button that shows the Period and opens its sheet. */
-export function PeriodButton({
-  period,
-  onClick,
-  className,
-}: {
+type PeriodPickerContext = {
+  since: Date | null
+  years: Array<number>
   period: Period
-  onClick: () => void
-  className?: string
+  apply: (period: Period) => void
+}
+
+const Context = createContext<PeriodPickerContext | null>(null)
+
+function usePeriodPicker() {
+  const context = useContext(Context)
+  if (!context) throw new Error("Use inside <PeriodPicker>.")
+  return context
+}
+
+/** Holds the Period and the sheet's open state for its trigger and content. */
+export function PeriodPicker({
+  since,
+  years,
+  period,
+  onPeriodChange,
+  children,
+}: {
+  /** When the first counted Game started; null before one. */
+  since: Date | null
+  /** Years with counted Games, newest first. */
+  years: Array<number>
+  period: Period
+  onPeriodChange: (period: Period) => void
+  children: React.ReactNode
 }) {
+  const [open, setOpen] = useState(false)
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-haspopup="dialog"
-      className={cn(
-        "flex h-11 min-w-0 items-center gap-2 rounded-xl border-[1.5px] border-border px-3 text-base font-semibold",
-        className
-      )}
+    <Context.Provider
+      value={{
+        since,
+        years,
+        period,
+        apply: (next) => {
+          setOpen(false)
+          onPeriodChange(next)
+        },
+      }}
     >
-      <Calendar
-        className="size-5 shrink-0 text-muted-foreground"
-        aria-hidden="true"
-      />
+      <Drawer open={open} onOpenChange={setOpen}>
+        {children}
+      </Drawer>
+    </Context.Provider>
+  )
+}
+
+/** The button that shows the Period ("Gesamt", "2025", "1.3.–30.6.2026") and opens the sheet. */
+export function PeriodPickerTrigger({ className }: { className?: string }) {
+  const { period } = usePeriodPicker()
+  return (
+    <DrawerTrigger
+      render={
+        <Button
+          variant="picker"
+          size="sm"
+          className={cn("min-w-0 justify-start px-3", className)}
+        />
+      }
+    >
+      <Calendar />
       <span className="truncate" aria-hidden="true">
         {periodLabel(period, { short: true })}
       </span>
       <span className="sr-only">{periodLabel(period)}, Zeitraum ändern</span>
-      <ChevronDown
-        className="size-5 shrink-0 text-muted-foreground"
-        aria-hidden="true"
-      />
-    </button>
+      <ChevronDown className="ml-auto" aria-hidden="true" />
+    </DrawerTrigger>
   )
 }
 
@@ -93,21 +150,20 @@ type PeriodOption = "all" | number | "custom"
  * Sheet "Zeitraum": all Games (since the first one), the years with Games,
  * or a custom range with native date fields. Applies only on "Übernehmen".
  */
-export function PeriodSheet({
-  since,
-  years,
-  period,
-  onApply,
-  onDismiss,
-}: {
-  /** When the first counted Game started; null before one. */
-  since: Date | null
-  /** Years with counted Games, newest first. */
-  years: Array<number>
-  period: Period
-  onApply: (period: Period) => void
-  onDismiss: () => void
-}) {
+export function PeriodPickerContent() {
+  return (
+    <DrawerContent>
+      <DrawerHeader>
+        <DrawerTitle>Zeitraum</DrawerTitle>
+      </DrawerHeader>
+      <PeriodChoice />
+    </DrawerContent>
+  )
+}
+
+/** The choice itself; mounts with the sheet, so it starts from the applied Period. */
+function PeriodChoice() {
+  const { since, years, period, apply } = usePeriodPicker()
   const current = choiceOf(period)
   const [draft, setDraft] = useState<PeriodOption>(
     current.kind === "year" ? current.year : current.kind
@@ -142,114 +198,68 @@ export function PeriodSheet({
     options.splice(1, 0, { value: draft, label: String(draft) })
   }
 
-  function apply() {
-    if (draft === "all") onApply({})
-    else if (draft === "custom") onApply({ from, to })
-    else onApply(yearPeriod(draft))
-  }
-
   return (
-    <BottomSheet title="Zeitraum" onDismiss={onDismiss}>
-      <div
-        role="radiogroup"
+    <>
+      <RadioGroup
+        variant="list"
         aria-label="Zeitraum"
-        className="-mt-1 flex max-h-[50svh] flex-col overflow-y-auto"
+        // Many years scroll on their own, so the actions stay in view.
+        className="max-h-[50svh] overflow-y-auto"
+        value={draft}
+        onValueChange={(value) => setDraft(value as PeriodOption)}
       >
-        {options.map((option) => {
-          const on = option.value === draft
-          return (
-            <button
-              key={String(option.value)}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              onClick={() => setDraft(option.value)}
-              className="flex min-h-13 items-center gap-3 border-b border-border px-1 py-1.5 text-left"
-            >
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className={cn("text-[17px]", on && "font-semibold")}>
-                  {option.label}
-                </span>
-                {option.note ? (
-                  <span className="text-[15px] text-muted-foreground">
-                    {option.note}
-                  </span>
-                ) : null}
-              </span>
-              {on ? (
-                <Check
-                  className="mr-2 size-5.5 shrink-0 text-primary"
-                  aria-hidden="true"
-                />
+        {options.map((option) => (
+          <RadioRow key={String(option.value)} value={option.value}>
+            <RadioRowContent>
+              <RadioRowTitle>{option.label}</RadioRowTitle>
+              {option.note ? (
+                <RadioRowDescription>{option.note}</RadioRowDescription>
               ) : null}
-            </button>
-          )
-        })}
-      </div>
+            </RadioRowContent>
+            <RadioRowIndicator />
+          </RadioRow>
+        ))}
+      </RadioGroup>
       {draft === "custom" ? (
         <div className="grid grid-cols-2 gap-3">
-          <DateField
-            label="Von"
-            value={from}
-            max={to || undefined}
-            onChange={setFrom}
-          />
-          <DateField
-            label="Bis"
-            value={to}
-            min={from || undefined}
-            onChange={setTo}
-          />
+          <Field>
+            <FieldLabel htmlFor="period-from">Von</FieldLabel>
+            <DateInput
+              id="period-from"
+              value={from}
+              max={to || undefined}
+              required
+              onChange={(event) => setFrom(event.target.value)}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="period-to">Bis</FieldLabel>
+            <DateInput
+              id="period-to"
+              value={to}
+              min={from || undefined}
+              required
+              onChange={(event) => setTo(event.target.value)}
+            />
+          </Field>
         </div>
       ) : null}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={onDismiss}
-          className={largeSecondaryButtonClass}
-        >
+      <DrawerFooter orientation="horizontal">
+        <DrawerClose render={<Button variant="secondary" size="xl" />}>
           Abbrechen
-        </button>
-        <button
-          type="button"
-          onClick={apply}
+        </DrawerClose>
+        <Button
+          size="xl"
           disabled={draft === "custom" && !customValid}
-          className={primaryButtonClass}
+          onClick={() => {
+            if (draft === "all") apply({})
+            else if (draft === "custom") apply({ from, to })
+            else apply(yearPeriod(draft))
+          }}
         >
           Übernehmen
-        </button>
-      </div>
-    </BottomSheet>
-  )
-}
-
-function DateField({
-  label,
-  value,
-  min,
-  max,
-  onChange,
-}: {
-  label: string
-  value: string
-  min?: string
-  max?: string
-  onChange: (value: string) => void
-}) {
-  return (
-    <Field label={label}>
-      {(props) => (
-        <TextInput
-          {...props}
-          type="date"
-          value={value}
-          min={min}
-          max={max}
-          required
-          onChange={(event) => onChange(event.target.value)}
-          className="min-w-0 px-3 dark:[color-scheme:dark]"
-        />
-      )}
-    </Field>
+        </Button>
+      </DrawerFooter>
+    </>
   )
 }

@@ -1,8 +1,17 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useManagement } from "./-use-management"
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
-import { ChevronLeft, Settings, UserPlus } from "lucide-react"
-import { SegmentedTabs } from "@/components/segmented-tabs"
+import { Settings, UserPlus } from "lucide-react"
+import {
+  PageHeader,
+  PageHeaderAction,
+  PageHeaderActions,
+  PageHeaderBack,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@/components/page-header"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   groupGamesQuery,
   groupLeaderboardQuery,
@@ -72,72 +81,71 @@ function GroupPage() {
   if (!group) return null
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="grid h-15 shrink-0 grid-cols-[52px_minmax(0,1fr)_auto] items-center px-1">
-        <Link
-          to="/"
-          aria-label="Zur Startseite"
-          className="flex size-11 items-center justify-center justify-self-center rounded-xl"
-        >
-          <ChevronLeft className="size-6" aria-hidden="true" />
-        </Link>
-        <div className="flex min-w-0 flex-col">
-          <h1 className="truncate text-xl leading-tight font-bold">
-            {group.name}
-          </h1>
-          <span className="text-[13px] text-muted-foreground">
+      <PageHeader variant="start">
+        <PageHeaderBack render={<Link to="/" />} label="Zur Startseite" />
+        <PageHeaderContent>
+          <PageHeaderTitle>{group.name}</PageHeaderTitle>
+          <PageHeaderDescription>
             {group.players.length} Spieler
-          </span>
-        </div>
-        <div className="flex">
+          </PageHeaderDescription>
+        </PageHeaderContent>
+        <PageHeaderActions>
           {group.isAdmin ? (
-            <Link
-              to="/groups/$groupId/invite"
-              params={{ groupId: group.id }}
-              aria-label="In die Gruppe einladen"
-              className="flex size-11 items-center justify-center rounded-xl"
+            <PageHeaderAction
+              render={
+                <Link
+                  to="/groups/$groupId/invite"
+                  params={{ groupId: group.id }}
+                />
+              }
+              label="In die Gruppe einladen"
             >
-              <UserPlus className="size-6" aria-hidden="true" />
-            </Link>
+              <UserPlus />
+            </PageHeaderAction>
           ) : null}
-          <Link
-            to="/groups/$groupId/settings"
-            params={{ groupId: group.id }}
-            aria-label={group.isAdmin ? "Gruppe verwalten" : "Gruppe"}
-            className="flex size-11 items-center justify-center rounded-xl"
+          <PageHeaderAction
+            render={
+              <Link
+                to="/groups/$groupId/settings"
+                params={{ groupId: group.id }}
+              />
+            }
+            label={group.isAdmin ? "Gruppe verwalten" : "Gruppe"}
           >
-            <Settings className="size-6" aria-hidden="true" />
-          </Link>
-        </div>
-      </header>
+            <Settings />
+          </PageHeaderAction>
+        </PageHeaderActions>
+      </PageHeader>
 
-      <SegmentedTabs
-        label="Bereiche der Gruppe"
+      <Tabs
         value={tab}
-        onChange={(next) =>
+        onValueChange={(next) =>
           navigate({
-            search: (previous) => ({ ...previous, tab: next }),
+            search: (previous) => ({ ...previous, tab: next as Tab }),
             replace: true,
           })
         }
-        options={[
-          { value: "games", label: "Spiele" },
-          { value: "leaderboard", label: "Rangliste" },
-          { value: "players", label: "Spieler" },
-        ]}
-        className="mx-4 mt-1 mb-3"
-      />
-
-      {tab === "players" ? (
-        <PlayersTab group={group} management={management} />
-      ) : null}
-      {tab === "games" ? <GamesTab groupId={group.id} games={games} /> : null}
-      {tab === "leaderboard" ? (
-        <GroupLeaderboard
-          groupId={group.id}
-          metricId={search.metric}
-          period={{ from: search.from, to: search.to }}
-        />
-      ) : null}
+        className="flex-1 gap-3"
+      >
+        <TabsList aria-label="Bereiche der Gruppe" className="mx-4 mt-1 w-auto">
+          <TabsTrigger value="games">Spiele</TabsTrigger>
+          <TabsTrigger value="leaderboard">Rangliste</TabsTrigger>
+          <TabsTrigger value="players">Spieler</TabsTrigger>
+        </TabsList>
+        <TabsContent value="games" className="flex flex-col">
+          <GamesTab groupId={group.id} games={games} />
+        </TabsContent>
+        <TabsContent value="leaderboard">
+          <GroupLeaderboard
+            groupId={group.id}
+            metricId={search.metric}
+            period={{ from: search.from, to: search.to }}
+          />
+        </TabsContent>
+        <TabsContent value="players">
+          <PlayersTab group={group} management={management} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
