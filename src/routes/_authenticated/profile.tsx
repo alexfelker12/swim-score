@@ -1,7 +1,15 @@
 import { useRef, useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
-import { LogOut, Moon, Sun, SunMoon, Trash2 } from "lucide-react"
+import {
+  Download,
+  LogOut,
+  Moon,
+  Share,
+  Sun,
+  SunMoon,
+  Trash2,
+} from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { AvatarEditor } from "@/components/avatar-editor"
 import {
@@ -42,6 +50,7 @@ import { RadioGroup, RadioSegment } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { authClient } from "@/lib/auth-client"
+import { useInstallApp } from "@/lib/install-app"
 import { periodFromSearch } from "@/lib/period-search"
 import {
   playerProfileQuery,
@@ -332,6 +341,7 @@ function Details({ profile }: { profile: Profile }) {
           ))}
         </RadioGroup>
       </Field>
+      <InstallApp />
 
       <Separator />
       <Button variant="secondary" size="lg" onClick={signOut}>
@@ -357,6 +367,47 @@ function Details({ profile }: { profile: Profile }) {
       <DeleteAccountSheet open={deleting} onOpenChange={setDeleting} />
     </div>
   )
+}
+
+/**
+ * Offers to install Swim Score as an app, where the device can: Chrome's
+ * own dialog, or on iOS a pointer to the share menu. Hidden in the installed
+ * app and where nothing is known.
+ */
+function InstallApp() {
+  const { option, install } = useInstallApp()
+  if (option === "prompt") {
+    return (
+      <Field orientation="horizontal">
+        <FieldContent>
+          <FieldTitle>App</FieldTitle>
+          <FieldDescription>
+            Auf den Startbildschirm, ohne Browserleiste
+          </FieldDescription>
+        </FieldContent>
+        <Button variant="outline" size="sm" onClick={() => void install()}>
+          <Download />
+          Installieren
+        </Button>
+      </Field>
+    )
+  }
+  if (option === "ios") {
+    return (
+      <Field>
+        <FieldTitle>App</FieldTitle>
+        <FieldDescription>
+          Auf den Home-Bildschirm, ohne Browserleiste: In Safari auf{" "}
+          <Share
+            aria-label="Teilen"
+            className="inline size-4 align-text-bottom"
+          />{" "}
+          tippen, dann auf „Zum Home-Bildschirm“.
+        </FieldDescription>
+      </Field>
+    )
+  }
+  return null
 }
 
 /** "Konto löschen?": the last step before the account is gone. */

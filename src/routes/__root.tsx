@@ -10,6 +10,9 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
 import { SectionDescription, SectionTitle } from "@/components/section"
 import { Button } from "@/components/ui/button"
+import { appHeadLinks, appHeadMeta, themeColorTags } from "@/lib/pwa"
+// Catches the browser's install event early, see the module.
+import "@/lib/install-app"
 import { getViewer } from "@/server/functions"
 import type { RouterContext } from "@/router"
 
@@ -22,7 +25,7 @@ const systemThemeScript = `if(matchMedia("(prefers-color-scheme: dark)").matches
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async () => ({ viewer: await getViewer() }),
-  head: () => ({
+  head: ({ match }) => ({
     meta: [
       { charSet: "utf-8" },
       {
@@ -30,8 +33,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
       { title: "Swim Score" },
+      ...appHeadMeta(match.context.viewer?.theme ?? "dark"),
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [{ rel: "stylesheet", href: appCss }, ...appHeadLinks],
   }),
   notFoundComponent: () => (
     <main className="mx-auto flex max-w-[500px] flex-col items-start gap-2 p-6 pt-16">
@@ -65,6 +69,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {theme === "system" ? (
           <ScriptOnce>{systemThemeScript}</ScriptOnce>
         ) : null}
+        {themeColorTags(theme).map(({ color, media }) => (
+          <meta key={color} name="theme-color" content={color} media={media} />
+        ))}
       </head>
       <body>
         <div className="mx-auto min-h-svh max-w-[500px]">{children}</div>
