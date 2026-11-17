@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { Plus } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PersonAvatar } from "@/components/person-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,7 +21,6 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item"
-import { initialOf } from "@/lib/initial"
 import { groupChanged } from "@/lib/queries"
 import { addGuestFn, confirmClaimFn, rejectClaimFn } from "@/server/functions"
 import { mergeErrors } from "./-link-guest-sheet"
@@ -229,10 +228,11 @@ function PlayerRow({ player }: { player: GroupPlayer }) {
         }
       >
         <ItemMedia>
-          <Avatar variant={player.guest ? "guest" : "account"}>
-            {player.image ? <AvatarImage src={player.image} alt="" /> : null}
-            <AvatarFallback>{initialOf(player.name)}</AvatarFallback>
-          </Avatar>
+          <PersonAvatar
+            variant={player.guest ? "guest" : "account"}
+            name={player.name}
+            image={player.image}
+          />
         </ItemMedia>
         <ItemContent>
           <ItemTitle>

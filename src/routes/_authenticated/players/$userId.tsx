@@ -20,8 +20,7 @@ import {
   ProfileHeadingDescription,
   ProfileHeadingTitle,
 } from "@/components/profile-heading"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { initialOf } from "@/lib/initial"
+import { PersonAvatar } from "@/components/person-avatar"
 import { formatMonthYear } from "@/lib/dates"
 import { periodFromSearch } from "@/lib/period-search"
 import { playerProfileQuery } from "@/lib/queries"
@@ -64,10 +63,7 @@ function PlayerProfilePage() {
         ) : null}
       </PageHeader>
       <ProfileHeading size="lg" className="px-5 pt-1 pb-4">
-        <Avatar size="xl">
-          {profile.image ? <AvatarImage src={profile.image} alt="" /> : null}
-          <AvatarFallback>{initialOf(profile.name)}</AvatarFallback>
-        </Avatar>
+        <PersonAvatar size="xl" name={profile.name} image={profile.image} />
         <ProfileHeadingContent>
           <ProfileHeadingTitle as="h1">{profile.name}</ProfileHeadingTitle>
           <ProfileHeadingDescription>

@@ -1,12 +1,15 @@
 import { useEffect } from "react"
 import {
   HeadContent,
+  Link,
   ScriptOnce,
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
+import { SectionDescription, SectionTitle } from "@/components/section"
+import { Button } from "@/components/ui/button"
 import { getViewer } from "@/server/functions"
 import type { RouterContext } from "@/router"
 
@@ -31,14 +34,16 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     links: [{ rel: "stylesheet", href: appCss }],
   }),
   notFoundComponent: () => (
-    <main className="mx-auto flex max-w-[500px] flex-col gap-2 p-6 pt-16">
-      <h1 className="text-[30px] font-bold">Seite nicht gefunden</h1>
-      <p className="text-muted-foreground">
-        Diese Seite gibt es nicht.{" "}
-        <a href="/" className="font-semibold text-primary">
-          Zur Startseite
-        </a>
-      </p>
+    <main className="mx-auto flex max-w-[500px] flex-col items-start gap-2 p-6 pt-16">
+      <SectionTitle as="h1" variant="page">
+        Seite nicht gefunden
+      </SectionTitle>
+      <SectionDescription size="lg">
+        Diese Seite gibt es nicht.
+      </SectionDescription>
+      <Button variant="link" nativeButton={false} render={<Link to="/" />}>
+        Zur Startseite
+      </Button>
     </main>
   ),
   shellComponent: RootDocument,

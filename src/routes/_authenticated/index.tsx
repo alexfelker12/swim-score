@@ -12,10 +12,9 @@ import { PageHeader } from "@/components/page-header"
 import { Logo } from "@/components/logo"
 import { Section, SectionDescription, SectionTitle } from "@/components/section"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PersonAvatar } from "@/components/person-avatar"
 import { Button } from "@/components/ui/button"
 import { formatWhen } from "@/lib/dates"
-import { initialOf } from "@/lib/initial"
 import { homeQuery } from "@/lib/queries"
 import type { Home } from "@/server/home"
 
@@ -44,12 +43,12 @@ function StartHeader() {
   return (
     <PageHeader variant="brand">
       <Logo />
-      <Link to="/profile" aria-label="Profil öffnen" className="rounded-full">
-        <Avatar size="md">
-          {viewer.image ? <AvatarImage src={viewer.image} alt="" /> : null}
-          <AvatarFallback>{initialOf(viewer.name)}</AvatarFallback>
-        </Avatar>
-      </Link>
+      <PersonAvatar
+        size="md"
+        name={viewer.name}
+        image={viewer.image}
+        render={<Link to="/profile" aria-label="Profil öffnen" />}
+      />
     </PageHeader>
   )
 }

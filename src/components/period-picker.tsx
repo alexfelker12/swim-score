@@ -129,7 +129,7 @@ export function PeriodPickerTrigger({ className }: { className?: string }) {
         <Button
           variant="picker"
           size="sm"
-          className={cn("min-w-0 px-3 justify-start", className)}
+          className={cn("min-w-0 justify-start px-3", className)}
         />
       }
     >

@@ -12,10 +12,7 @@ function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
     <div
       role="list"
       data-slot="item-group"
-      className={cn(
-        "group/item-group flex w-full flex-col gap-4 has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2",
-        className
-      )}
+      className={cn("group/item-group flex w-full flex-col gap-4", className)}
       {...props}
     />
   )
@@ -41,8 +38,6 @@ const itemVariants = cva(
     variants: {
       variant: {
         default: "border-transparent",
-        outline: "border-border",
-        muted: "border-transparent bg-muted/50",
         /** List row: at least 56 px, 1 px divider at the bottom. */
         row: "min-h-14 rounded-none border-0 border-b border-border",
         /** A row as a card: 1.5 px border on `card`, radius 14 px. */
@@ -50,8 +45,6 @@ const itemVariants = cva(
       },
       size: {
         default: "gap-3.5 px-4 py-3.5",
-        sm: "gap-3.5 px-3.5 py-3",
-        xs: "gap-2 px-2.5 py-2 in-data-[slot=dropdown-menu-content]:p-0",
         /** Rows in lists: no side padding, 6 px top and bottom. */
         list: "gap-3 px-0 py-1.5",
         /**
@@ -110,9 +103,6 @@ const itemMediaVariants = cva(
     variants: {
       variant: {
         default: "bg-transparent",
-        icon: "[&_svg:not([class*='size-'])]:size-4",
-        image:
-          "size-10 overflow-hidden rounded-xl group-data-[size=sm]/item:size-8 group-data-[size=xs]/item:size-6 group-data-[size=xs]/item:rounded-lg [&_img]:size-full [&_img]:object-cover",
       },
     },
     defaultVariants: {
@@ -141,7 +131,7 @@ function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="item-content"
       className={cn(
-        "flex flex-1 flex-col gap-1 group-data-[size=xs]/item:gap-0.5 [&+[data-slot=item-content]]:flex-none",
+        "flex flex-1 flex-col gap-1 [&+[data-slot=item-content]]:flex-none",
         className
       )}
       {...props}

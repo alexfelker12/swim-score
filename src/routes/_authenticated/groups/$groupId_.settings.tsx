@@ -20,7 +20,7 @@ import {
 } from "@/components/page-header"
 import { Section, SectionDescription, SectionTitle } from "@/components/section"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PersonAvatar } from "@/components/person-avatar"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -54,7 +54,6 @@ import {
   RadioGroup,
 } from "@/components/ui/radio-group"
 import { formatMonth, isToday } from "@/lib/dates"
-import { initialOf } from "@/lib/initial"
 import {
   groupChanged,
   groupManagementQuery,
@@ -147,10 +146,11 @@ function AdminSettings({
           {group.players.map((p) => (
             <Item key={p.id} variant="row" size="list" role="listitem">
               <ItemMedia>
-                <Avatar variant={p.guest ? "guest" : "account"}>
-                  {p.image ? <AvatarImage src={p.image} alt="" /> : null}
-                  <AvatarFallback>{initialOf(p.name)}</AvatarFallback>
-                </Avatar>
+                <PersonAvatar
+                  variant={p.guest ? "guest" : "account"}
+                  name={p.name}
+                  image={p.image}
+                />
               </ItemMedia>
               <ItemContent className="min-w-0 gap-0.5">
                 <ItemTitle>

@@ -17,7 +17,7 @@ import {
   ProfileHeadingTitle,
 } from "@/components/profile-heading"
 import type { AvatarEditorStart } from "@/components/avatar-editor"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PersonAvatar } from "@/components/person-avatar"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -42,7 +42,6 @@ import { RadioGroup, RadioSegment } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { authClient } from "@/lib/auth-client"
-import { initialOf } from "@/lib/initial"
 import { periodFromSearch } from "@/lib/period-search"
 import {
   playerProfileQuery,
@@ -96,10 +95,7 @@ function ProfilePage() {
       </PageHeader>
 
       <ProfileHeading className="px-5 pt-1 pb-3.5">
-        <Avatar size="lg">
-          {profile.image ? <AvatarImage src={profile.image} alt="" /> : null}
-          <AvatarFallback>{initialOf(profile.name)}</AvatarFallback>
-        </Avatar>
+        <PersonAvatar size="lg" name={profile.name} image={profile.image} />
         <ProfileHeadingContent>
           <ProfileHeadingTitle>{profile.name}</ProfileHeadingTitle>
           <ProfileHeadingDescription>

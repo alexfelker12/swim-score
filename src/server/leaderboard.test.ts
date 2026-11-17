@@ -283,8 +283,8 @@ describe("the Group Leaderboard", () => {
     const unbreakable = await board(app, anna.headers, groupId, "unbreakable")
 
     expect(lines(unbreakable)).toEqual([
-      "1 Anna 1 als Schwimmer gewonnen",
-      "2 Ben 0 als Schwimmer gewonnen",
+      "1 Anna 1 Unbreakable",
+      "2 Ben 0 Unbreakable",
     ])
   })
 
@@ -306,8 +306,8 @@ describe("the Group Leaderboard", () => {
     const untouchable = await board(app, anna.headers, groupId, "untouchable")
 
     expect(lines(untouchable)).toEqual([
-      "1 Anna 2 ohne Lebensverlust",
-      "2 Ben 0 ohne Lebensverlust",
+      "1 Anna 2 Untouchable",
+      "2 Ben 0 Untouchable",
     ])
   })
 
