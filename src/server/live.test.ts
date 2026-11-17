@@ -119,35 +119,41 @@ describe("Game changed notifications", () => {
   it("do not go out for refused commands", async () => {
     const { app, anna, ben, gameId, ids } = await runningGame()
 
+    // Started one after another: a command started early would reject
+    // before it is awaited, which Vitest reports as an unhandled rejection.
     const refused = [
       // Not the Scorekeeper.
-      recordEvent(app, ben.headers, {
-        gameId,
-        expectedVersion: 0,
-        event: { type: "lost", loser: ids[1] },
-      }),
+      () =>
+        recordEvent(app, ben.headers, {
+          gameId,
+          expectedVersion: 0,
+          event: { type: "lost", loser: ids[1] },
+        }),
       // A version the Game is not at.
-      recordEvent(app, anna.headers, {
-        gameId,
-        expectedVersion: 5,
-        event: { type: "lost", loser: ids[1] },
-      }),
+      () =>
+        recordEvent(app, anna.headers, {
+          gameId,
+          expectedVersion: 5,
+          event: { type: "lost", loser: ids[1] },
+        }),
       // Against the rules: four are left.
-      recordEvent(app, anna.headers, {
-        gameId,
-        expectedVersion: 0,
-        event: { type: "extraRound" },
-      }),
-      undoEvent(app, anna.headers, { gameId, expectedVersion: 0 }),
-      addTiebreak(app, anna.headers, {
-        gameId,
-        expectedVersion: 0,
-        tiebreak: [ids[1], ids[2]],
-      }),
-      cancelGame(app, ben.headers, { gameId }),
+      () =>
+        recordEvent(app, anna.headers, {
+          gameId,
+          expectedVersion: 0,
+          event: { type: "extraRound" },
+        }),
+      () => undoEvent(app, anna.headers, { gameId, expectedVersion: 0 }),
+      () =>
+        addTiebreak(app, anna.headers, {
+          gameId,
+          expectedVersion: 0,
+          tiebreak: [ids[1], ids[2]],
+        }),
+      () => cancelGame(app, ben.headers, { gameId }),
     ]
     for (const command of refused) {
-      await expect(command).rejects.toHaveProperty("code")
+      await expect(command()).rejects.toHaveProperty("code")
     }
 
     expect(app.notifications).toEqual([])
