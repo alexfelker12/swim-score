@@ -59,6 +59,11 @@ const itemVariants = cva(
          * side padding.
          */
         menu: "min-h-14 gap-3.5 px-0 py-0 text-[17px] [&_[data-slot=item-media]_svg]:size-5.5",
+        /**
+         * Rows to open something (a Group on the start page): at least 68 px,
+         * title 17 px, description 15 px, a muted chevron in `ItemActions`.
+         */
+        lg: "min-h-17 gap-3 px-4 py-2.5 [&_[data-slot=item-actions]_svg]:size-5 [&_[data-slot=item-actions]_svg]:text-muted-foreground",
       },
       tone: {
         default: "",
@@ -144,13 +149,16 @@ function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/** 16 px / 600; in list rows (`size="list"`) 17 px / 500, in menus 17 px / 400. */
+/**
+ * 16 px / 600; in list rows (`size="list"`) 17 px / 500, in menus 17 px / 400,
+ * in `size="lg"` 17 px / 600.
+ */
 function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="item-title"
       className={cn(
-        "line-clamp-1 flex w-fit min-w-0 items-center gap-2 text-base leading-snug font-semibold underline-offset-4 group-data-[size=list]/item:text-[17px] group-data-[size=list]/item:font-medium group-data-[size=menu]/item:text-[17px] group-data-[size=menu]/item:font-normal",
+        "line-clamp-1 flex w-fit min-w-0 items-center gap-2 text-base leading-snug font-semibold underline-offset-4 group-data-[size=lg]/item:text-[17px] group-data-[size=list]/item:text-[17px] group-data-[size=list]/item:font-medium group-data-[size=menu]/item:text-[17px] group-data-[size=menu]/item:font-normal",
         className
       )}
       {...props}
@@ -163,7 +171,7 @@ function ItemDescription({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="item-description"
       className={cn(
-        "line-clamp-2 text-left text-[13px] font-normal text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        "line-clamp-2 text-left text-[13px] font-normal text-muted-foreground group-data-[size=lg]/item:text-[15px] [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
         className
       )}
       {...props}

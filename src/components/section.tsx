@@ -74,18 +74,34 @@ export function SectionTitle({
   )
 }
 
-/** 15 px, muted. `<strong>` inside stands out (a name). */
+/**
+ * 15 px, muted (`size="lg"`: 18 px, under a `page` title). `<strong>` inside
+ * stands out (a name).
+ */
+const sectionDescriptionVariants = cva(
+  "text-pretty text-muted-foreground [&_strong]:font-semibold [&_strong]:text-foreground",
+  {
+    variants: {
+      size: {
+        default: "text-[15px]",
+        /** Under a `page` title (the empty start page). */
+        lg: "text-lg",
+      },
+    },
+    defaultVariants: { size: "default" },
+  }
+)
+
 export function SectionDescription({
   className,
+  size = "default",
   ...props
-}: ComponentProps<"p">) {
+}: ComponentProps<"p"> & VariantProps<typeof sectionDescriptionVariants>) {
   return (
     <p
       data-slot="section-description"
-      className={cn(
-        "text-[15px] text-pretty text-muted-foreground [&_strong]:font-semibold [&_strong]:text-foreground",
-        className
-      )}
+      data-size={size}
+      className={cn(sectionDescriptionVariants({ size }), className)}
       {...props}
     />
   )

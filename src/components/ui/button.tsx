@@ -39,6 +39,14 @@ const buttonVariants = cva(
           "font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive-muted",
         /** The bomb: border and text `bomb` on `bomb-muted`. */
         bomb: "border-bomb bg-bomb-muted font-semibold text-bomb hover:bg-bomb-muted/70 active:bg-bomb-muted/70",
+        /** A chosen filter that opens its choices (the metric on the Leaderboard). */
+        selected:
+          "border-primary bg-primary-muted text-base font-semibold text-primary hover:bg-primary-muted/70 active:bg-primary-muted/70",
+        /** A filter that opens its choices, not highlighted (the Period): border, 16 px / 600, muted icons. */
+        picker:
+          "border-border text-base font-semibold hover:bg-muted active:bg-muted [&_svg]:text-muted-foreground",
+        /** Add something new ("Gruppe anlegen"): dashed border, `primary` text. */
+        add: "border-dashed border-border font-semibold text-primary hover:bg-muted active:bg-muted",
         /** Choosing the Swimmer: border `swimmer` on `swimmer-muted`. */
         swimmer:
           "border-swimmer bg-swimmer-muted font-semibold hover:bg-swimmer-muted/70 active:bg-swimmer-muted/70",
@@ -66,6 +74,8 @@ const buttonVariants = cva(
           "border border-google-stroke bg-google-fill font-google text-sm/5 font-medium text-google-text active:opacity-80",
       },
       size: {
+        /** The page's one main action (start page, "Neues Spiel in …"): 64 px, 17 px. */
+        "2xl": "h-16 rounded-[14px] px-4 text-[17px]",
         /** Main buttons, 56 px. */
         xl: "h-14 rounded-[14px] px-4 text-base",
         /** Main buttons where space is tight, 52 px. */

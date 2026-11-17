@@ -16,8 +16,8 @@ const pageHeaderVariants = cva("shrink-0", {
        * the right (the Group page).
        */
       start: "grid h-15 grid-cols-[52px_minmax(0,1fr)_auto] items-center px-1",
-      /** 64 px with the logo, for pages someone opens from a link. */
-      brand: "flex h-16 items-center px-5",
+      /** 64 px with the logo, for pages someone opens from a link; something on the right (the start page's avatar) sits at the end. */
+      brand: "flex h-16 items-center justify-between px-5",
     },
   },
   defaultVariants: { variant: "default" },
@@ -105,11 +105,14 @@ export function PageHeaderAction({
 /** Back (chevron) or, for a page opened on top, close (X), on the left. */
 export function PageHeaderBack({
   render,
+  onClick,
   label,
   icon = "back",
   className,
 }: {
-  render: ReactElement
+  /** A link to where back leads; or `onClick` (back in the history). */
+  render?: ReactElement
+  onClick?: () => void
   /** Where back leads, for screen readers ("Zurück zur Startseite"). */
   label: string
   icon?: "back" | "close"
@@ -118,6 +121,7 @@ export function PageHeaderBack({
   return (
     <PageHeaderAction
       render={render}
+      onClick={onClick}
       label={label}
       className={cn("col-start-1 justify-self-center", className)}
     >

@@ -28,6 +28,12 @@ const cardVariants = cva(
         default: "gap-3 p-4",
         /** Entries in a list (Games): 16 / 14 px inside, 4 px between. */
         sm: "gap-1 px-4 py-3.5",
+        /** Metric tiles: 14 / 12 px inside, 2 px between. */
+        xs: "gap-0.5 px-3.5 py-3",
+        /** A running Game among several on the start page: 16 px inside, radius 18. */
+        md: "gap-1 rounded-[18px] p-4",
+        /** The page's focus (a running Game alone on the start page): 20 px inside, radius 18. */
+        lg: "gap-1.5 rounded-[18px] p-5",
       },
     },
     defaultVariants: { variant: "default", size: "default" },
@@ -77,15 +83,34 @@ function CardLabel({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/** 17 px / 600. */
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+const cardTitleVariants = cva("text-pretty wrap-break-word", {
+  variants: {
+    size: {
+      /** 17 px / 600. */
+      default: "text-[17px] leading-snug font-semibold",
+      /** 22 px / 700 (a running Game among several). */
+      lg: "text-[22px] leading-snug font-bold",
+      /** 28 px / 700 (a running Game alone). */
+      xl: "text-[28px] leading-tight font-bold",
+    },
+  },
+  defaultVariants: { size: "default" },
+})
+
+function CardTitle({
+  className,
+  size = "default",
+  as: Tag = "div",
+  ...props
+}: Omit<React.ComponentProps<"div">, "ref"> &
+  VariantProps<typeof cardTitleVariants> & {
+    /** `h2` where the card is a section of the page with its title as heading. */
+    as?: "div" | "h2"
+  }) {
   return (
-    <div
+    <Tag
       data-slot="card-title"
-      className={cn(
-        "text-[17px] leading-snug font-semibold text-pretty wrap-break-word",
-        className
-      )}
+      className={cn(cardTitleVariants({ size }), className)}
       {...props}
     />
   )

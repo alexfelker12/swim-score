@@ -2,6 +2,7 @@
 
 import { Radio as RadioPrimitive } from "@base-ui/react/radio"
 import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group"
+import { CheckIcon } from "lucide-react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 import type * as React from "react"
@@ -16,6 +17,8 @@ const radioGroupVariants = cva("grid w-full", {
        * ("Darstellung": System / Hell / Dunkel). Options are `RadioSegment`s.
        */
       segmented: "auto-cols-fr grid-flow-col gap-1 rounded-[14px] bg-muted p-1",
+      /** Options as list rows in a sheet (Kennzahl, Zeitraum); see `RadioRow`. */
+      list: "gap-0",
     },
   },
   defaultVariants: { variant: "default" },
@@ -121,8 +124,120 @@ function RadioCardDescription({
   )
 }
 
+/**
+ * One option of a `RadioGroup variant="list"`: a list row with an optional
+ * icon tile, title and line under it, and a check when chosen.
+ *
+ * ```tsx
+ * <RadioRow value="wins">
+ *   <RadioRowMedia><Trophy /></RadioRowMedia>
+ *   <RadioRowContent>
+ *     <RadioRowTitle>Siege</RadioRowTitle>
+ *     <RadioRowDescription>Meiste Siege</RadioRowDescription>
+ *   </RadioRowContent>
+ *   <RadioRowIndicator />
+ * </RadioRow>
+ * ```
+ */
+function RadioRow({ className, ...props }: RadioPrimitive.Root.Props) {
+  return (
+    <RadioPrimitive.Root
+      data-slot="radio-row"
+      className={cn(
+        "group/radio-row flex min-h-14 w-full cursor-pointer items-center gap-3 border-b border-border px-1 py-1.5 text-left transition-colors outline-none select-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary active:bg-muted data-disabled:pointer-events-none data-disabled:opacity-40",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/** The icon on a 36 px tile; `primary` on `primary-muted` when chosen. */
+function RadioRowMedia({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="radio-row-media"
+      className={cn(
+        "flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-muted group-data-checked/radio-row:bg-primary-muted group-data-checked/radio-row:text-primary [&_svg]:size-5",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function RadioRowContent({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="radio-row-content"
+      className={cn("flex min-w-0 flex-1 flex-col", className)}
+      {...props}
+    />
+  )
+}
+
+const radioRowTitleVariants = cva("text-[17px]", {
+  variants: {
+    weight: {
+      /** 600 when chosen. */
+      default: "group-data-checked/radio-row:font-semibold",
+      /** 600 for every option (the metrics, whose names are the point of the list). */
+      strong: "font-semibold",
+    },
+  },
+  defaultVariants: { weight: "default" },
+})
+
+function RadioRowTitle({
+  className,
+  weight = "default",
+  ...props
+}: React.ComponentProps<"span"> & VariantProps<typeof radioRowTitleVariants>) {
+  return (
+    <span
+      data-slot="radio-row-title"
+      className={cn(radioRowTitleVariants({ weight }), className)}
+      {...props}
+    />
+  )
+}
+
+function RadioRowDescription({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="radio-row-description"
+      className={cn("text-[15px] text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+/** The check on the right of the chosen option. */
+function RadioRowIndicator({ className }: { className?: string }) {
+  return (
+    <RadioPrimitive.Indicator
+      data-slot="radio-row-indicator"
+      className={cn("mr-2 shrink-0 text-primary", className)}
+    >
+      <CheckIcon className="size-5.5" />
+    </RadioPrimitive.Indicator>
+  )
+}
+
 export {
   RadioGroup,
+  RadioRow,
+  RadioRowContent,
+  RadioRowDescription,
+  RadioRowIndicator,
+  RadioRowMedia,
+  RadioRowTitle,
   RadioGroupItem,
   RadioSegment,
   RadioCard,

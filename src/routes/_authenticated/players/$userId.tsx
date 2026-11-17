@@ -6,9 +6,22 @@ import {
   useCanGoBack,
   useRouter,
 } from "@tanstack/react-router"
-import { ChevronLeft, PenLine } from "lucide-react"
+import { PenLine } from "lucide-react"
+import {
+  PageHeader,
+  PageHeaderAction,
+  PageHeaderActions,
+  PageHeaderBack,
+} from "@/components/page-header"
 import { PersonalStats } from "@/components/personal-stats"
-import { UserAvatar } from "@/components/user-avatar"
+import {
+  ProfileHeading,
+  ProfileHeadingContent,
+  ProfileHeadingDescription,
+  ProfileHeadingTitle,
+} from "@/components/profile-heading"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { initialOf } from "@/lib/initial"
 import { formatMonthYear } from "@/lib/dates"
 import { periodFromSearch } from "@/lib/period-search"
 import { playerProfileQuery } from "@/lib/queries"
@@ -37,29 +50,31 @@ function PlayerProfilePage() {
   if (!profile) return null
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="flex h-14 shrink-0 items-center justify-between px-1">
+      <PageHeader>
         <BackButton />
         {profile.isMe ? (
-          <Link
-            to="/profile"
-            aria-label="Profil bearbeiten"
-            className="flex size-11 items-center justify-center rounded-xl"
-          >
-            <PenLine className="size-6" aria-hidden="true" />
-          </Link>
+          <PageHeaderActions>
+            <PageHeaderAction
+              render={<Link to="/profile" />}
+              label="Profil bearbeiten"
+            >
+              <PenLine />
+            </PageHeaderAction>
+          </PageHeaderActions>
         ) : null}
-      </header>
-      <div className="flex items-center gap-4 px-5 pt-1 pb-4">
-        <UserAvatar name={profile.name} image={profile.image} size={64} />
-        <div className="flex min-w-0 flex-col">
-          <h1 className="truncate text-[28px] leading-tight font-bold">
-            {profile.name}
-          </h1>
-          <span className="text-base text-muted-foreground">
+      </PageHeader>
+      <ProfileHeading size="lg" className="px-5 pt-1 pb-4">
+        <Avatar size="xl">
+          {profile.image ? <AvatarImage src={profile.image} alt="" /> : null}
+          <AvatarFallback>{initialOf(profile.name)}</AvatarFallback>
+        </Avatar>
+        <ProfileHeadingContent>
+          <ProfileHeadingTitle as="h1">{profile.name}</ProfileHeadingTitle>
+          <ProfileHeadingDescription>
             {subline(profile)}
-          </span>
-        </div>
-      </div>
+          </ProfileHeadingDescription>
+        </ProfileHeadingContent>
+      </ProfileHeading>
       <PersonalStats
         profile={profile}
         period={period}
@@ -86,20 +101,9 @@ function subline(profile: PlayerProfile): string {
 function BackButton() {
   const router = useRouter()
   const canGoBack = useCanGoBack()
-  const className = "flex size-11 items-center justify-center rounded-xl"
-  const icon = <ChevronLeft className="size-6" aria-hidden="true" />
   return canGoBack ? (
-    <button
-      type="button"
-      aria-label="Zurück"
-      onClick={() => router.history.back()}
-      className={className}
-    >
-      {icon}
-    </button>
+    <PageHeaderBack label="Zurück" onClick={() => router.history.back()} />
   ) : (
-    <Link to="/" aria-label="Zur Startseite" className={className}>
-      {icon}
-    </Link>
+    <PageHeaderBack render={<Link to="/" />} label="Zur Startseite" />
   )
 }

@@ -67,17 +67,22 @@ export function GameCardDate({
   )
 }
 
-/** "● Läuft, Runde 5": the running Game's first line, in the primary colour. */
+/**
+ * "● Läuft, Runde 5": the running Game's first line, in the primary colour.
+ * `size="lg"` ("● Spiel läuft" on the start page): 15 px, 10 px after the dot.
+ */
 export function GameCardStatus({
   className,
+  size = "default",
   children,
   ...props
-}: ComponentProps<"span">) {
+}: ComponentProps<"span"> & { size?: "default" | "lg" }) {
   return (
     <span
       data-slot="game-card-status"
       className={cn(
-        "flex items-center gap-2 font-semibold text-primary",
+        "flex items-center font-semibold text-primary",
+        size === "lg" ? "gap-2.5 text-[15px]" : "gap-2",
         className
       )}
       {...props}
@@ -90,15 +95,16 @@ export function GameCardStatus({
 
 export const GameCardDescription = CardDescription
 
-/** The Swimmer, in the Swimmer's blue. */
+/** The Swimmer, in the Swimmer's blue; `strong` in 600 (the standings on the start page). */
 export function GameCardSwimmer({
   className,
+  strong = false,
   ...props
-}: ComponentProps<"span">) {
+}: ComponentProps<"span"> & { strong?: boolean }) {
   return (
     <span
       data-slot="game-card-swimmer"
-      className={cn("text-swimmer", className)}
+      className={cn("text-swimmer", strong && "font-semibold", className)}
       {...props}
     />
   )
