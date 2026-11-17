@@ -112,7 +112,7 @@ export function MetricPickerTrigger({ className }: { className?: string }) {
         <Button
           variant="selected"
           size="sm"
-          className={cn("min-w-0 justify-start", className)}
+          className={cn("min-w-0 px-3 justify-start", className)}
         />
       }
     >

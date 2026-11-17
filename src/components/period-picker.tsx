@@ -129,7 +129,7 @@ export function PeriodPickerTrigger({ className }: { className?: string }) {
         <Button
           variant="picker"
           size="sm"
-          className={cn("min-w-0 px-3", className)}
+          className={cn("min-w-0 px-3 justify-start", className)}
         />
       }
     >
@@ -138,7 +138,7 @@ export function PeriodPickerTrigger({ className }: { className?: string }) {
         {periodLabel(period, { short: true })}
       </span>
       <span className="sr-only">{periodLabel(period)}, Zeitraum ändern</span>
-      <ChevronDown />
+      <ChevronDown className="ml-auto" aria-hidden="true" />
     </DrawerTrigger>
   )
 }
