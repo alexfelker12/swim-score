@@ -16,6 +16,11 @@ export default [
     },
   },
   {
+    // The service worker has its own TypeScript project (worker types).
+    files: ["src/service-worker/sw.ts"],
+    languageOptions: { parserOptions: { project: "./tsconfig.sw.json" } },
+  },
+  {
     // UI comes from shadcn/ui on Base UI (docs/adr/0009). Outside the
     // components in src/components/ui, use those instead of raw elements.
     files: ["src/**/*.tsx"],

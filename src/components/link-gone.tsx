@@ -1,4 +1,5 @@
 import { Unlink } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { cn } from "@/lib/utils"
 import type { ComponentProps } from "react"
@@ -58,15 +59,16 @@ export function LinkGoneContent({
   )
 }
 
-/** The heading with the broken-link icon left of it. */
+/** The heading with an icon left of it, the broken link unless given. */
 export function LinkGoneTitle({
   className,
   children,
+  icon: Icon = Unlink,
   ...props
-}: ComponentProps<"h1">) {
+}: ComponentProps<"h1"> & { icon?: LucideIcon }) {
   return (
     <div className="flex items-center gap-3">
-      <Unlink
+      <Icon
         className="size-8 shrink-0 text-muted-foreground"
         strokeWidth={1.8}
         aria-hidden="true"

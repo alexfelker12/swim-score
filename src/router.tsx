@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query"
 import { createRouter as createTanStackRouter } from "@tanstack/react-router"
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query"
+import { PageError } from "./components/page-error"
 import { routeTree } from "./routeTree.gen"
 
 export type RouterContext = { queryClient: QueryClient }
@@ -25,6 +26,8 @@ export function getRouter() {
     // Spiel" would start from that old data. Loaders take fresh data from the
     // query cache, so waiting for them only costs time when something changed.
     defaultStaleReloadMode: "blocking",
+    // "Keine Verbindung" instead of an error when the server can't be reached.
+    defaultErrorComponent: PageError,
   })
   // Sends the server's query data along with the page and wraps the app in a
   // QueryClientProvider.

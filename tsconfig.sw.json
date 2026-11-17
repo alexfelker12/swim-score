@@ -1,0 +1,11 @@
+{
+  // The service worker runs in a worker, not a page: worker types instead of
+  // the DOM ones, which can't be in the same program (ADR 0011).
+  "extends": "./tsconfig.json",
+  "include": ["src/service-worker/sw.ts"],
+  "exclude": [],
+  "compilerOptions": {
+    "lib": ["ES2022", "WebWorker"],
+    "types": []
+  }
+}

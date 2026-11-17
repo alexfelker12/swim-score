@@ -10,9 +10,11 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
 import { SectionDescription, SectionTitle } from "@/components/section"
 import { Button } from "@/components/ui/button"
+import { UpdateNotice } from "@/components/update-notice"
 import { appHeadLinks, appHeadMeta, themeColorTags } from "@/lib/pwa"
 // Catches the browser's install event early, see the module.
 import "@/lib/install-app"
+import { registerServiceWorker } from "@/lib/service-worker"
 import { getViewer } from "@/server/functions"
 import type { RouterContext } from "@/router"
 
@@ -58,6 +60,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     select: (context) => context.viewer?.theme ?? "dark",
   })
   useSystemTheme(theme === "system")
+  useEffect(registerServiceWorker, [])
   return (
     <html
       lang="de"
@@ -75,6 +78,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <div className="mx-auto min-h-svh max-w-[500px]">{children}</div>
+        <UpdateNotice />
         {import.meta.env.DEV ? (
           <TanStackDevtools
             config={{ position: "bottom-right" }}
