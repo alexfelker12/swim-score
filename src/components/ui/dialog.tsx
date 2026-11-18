@@ -4,10 +4,27 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
+import { useClosedByBack } from "@/lib/close-on-back"
 import { XIcon } from "lucide-react"
 
-function Dialog({ ...props }: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+function Dialog({
+  open,
+  defaultOpen,
+  onOpenChange,
+  actionsRef,
+  ...props
+}: DialogPrimitive.Root.Props) {
+  // "Zurück" closes the dialog (#54, ADR 0013).
+  const closedByBack = useClosedByBack({
+    open,
+    defaultOpen,
+    onOpenChange,
+    actionsRef,
+  })
+
+  return (
+    <DialogPrimitive.Root data-slot="dialog" {...closedByBack} {...props} />
+  )
 }
 
 function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {

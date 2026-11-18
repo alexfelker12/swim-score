@@ -77,6 +77,7 @@ Die Maße stammen aus den Quellen. In Klammern steht das Muster-Bild, danach die
   - Hintergrund `scrim`, Fläche `card`, Radius 24 px oben, Rand oben 1 px, Griff 40 × 4 px, Innenabstand 10 / 20 / 24 px, Abstand 14–16 px.
   - Titel 22 px / 600. Aktionen untereinander (`DrawerFooter`) oder nebeneinander (`DrawerFooter orientation="horizontal"`), Haupt-Aktion zuerst bzw. rechts.
   - Gewinner: `DrawerHeader align="center"` mit `DrawerTitle size="lg"` (Pokal 32 px, 34 px / 700). Warnung: `DrawerTitle tone="warning"` (Icon in `bomb`).
+  - „Zurück“ (Android-Taste/-Geste, iOS-Wischen vom Rand) schließt das oberste offene Sheet; das machen `Drawer` und `Dialog` selbst (ADR 0013), an der Aufrufstelle ist nichts zu tun.
   - Menü im Sheet („Spiel“): `Item variant="row" size="menu"` mit `ItemMedia` (Icon) und `ItemTitle`, als Button `render={<ItemButton … />}`, „Spiel abbrechen“ mit `tone="destructive"`; Ein/Aus → `Switch`.
   - Personen aus einem Raster wählen (Stechen) → `Toggle variant="seat"`, die feste Person daneben `TiebreakLoser`.
 - **Segmented Tabs:** Fläche `muted`, Innenabstand 4 px, Radius 14 px. Aktiver Tab `card` mit 600, inaktive `muted-foreground`. Höhe 40 px. (`i04-spieler`, `i03-profil`) → `Tabs`, `TabsList` (Standard-Variante `segmented`), `TabsTrigger`, `TabsContent`.

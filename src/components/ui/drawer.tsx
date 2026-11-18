@@ -2,6 +2,7 @@ import * as React from "react"
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
+import { useClosedByBack } from "@/lib/close-on-back"
 
 type DrawerContextProps = {
   hasSnapPoints: boolean
@@ -27,6 +28,10 @@ function Drawer({
   showSwipeHandle = true,
   snapPoints,
   swipeDirection = "down",
+  open,
+  defaultOpen,
+  onOpenChange,
+  actionsRef,
   ...props
 }: DrawerPrimitive.Root.Props & {
   showSwipeHandle?: boolean
@@ -36,6 +41,13 @@ function Drawer({
     () => ({ hasSnapPoints, modal, showSwipeHandle, swipeDirection }),
     [hasSnapPoints, modal, showSwipeHandle, swipeDirection]
   )
+  // "Zurück" closes the drawer (#54, ADR 0013).
+  const closedByBack = useClosedByBack({
+    open,
+    defaultOpen,
+    onOpenChange,
+    actionsRef,
+  })
 
   return (
     <DrawerContext.Provider value={contextValue}>
@@ -44,6 +56,7 @@ function Drawer({
         modal={modal}
         snapPoints={snapPoints}
         swipeDirection={swipeDirection}
+        {...closedByBack}
         {...props}
       />
     </DrawerContext.Provider>

@@ -2,12 +2,16 @@ import { QueryClient } from "@tanstack/react-query"
 import { createRouter as createTanStackRouter } from "@tanstack/react-router"
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query"
 import { PageError } from "./components/page-error"
+import { listenBeforeRouter } from "./lib/close-on-back"
 import { isUnreachable, keepQueriesOnDevice } from "./lib/kept-on-device"
 import { routeTree } from "./routeTree.gen"
 
 export type RouterContext = { queryClient: QueryClient }
 
 export function getRouter() {
+  // Before the router takes over the browser history: sheets keep their own
+  // entries in it, out of the router's sight (ADR 0013).
+  listenBeforeRouter()
   // A new client per request on the server, one for the session in the browser.
   const queryClient = new QueryClient({
     defaultOptions: {

@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useManagement } from "./-use-management"
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
-import { Settings, UserPlus } from "lucide-react"
+import { DicesIcon, PodiumIcon, Settings, UserGroupIcon, UserPlus } from "lucide-react"
 import {
   PageHeader,
   PageHeaderAction,
@@ -54,11 +54,11 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
       queryClient.query(groupGamesQuery(params.groupId)),
       deps.leaderboard
         ? queryClient.query(
-            groupLeaderboardQuery(params.groupId, {
-              from: deps.from,
-              to: deps.to,
-            })
-          )
+          groupLeaderboardQuery(params.groupId, {
+            from: deps.from,
+            to: deps.to,
+          })
+        )
         : null,
     ])
     if (!group) throw notFound()
@@ -128,9 +128,9 @@ function GroupPage() {
         className="flex-1 gap-3"
       >
         <TabsList aria-label="Bereiche der Gruppe" className="mx-4 mt-1 w-auto">
-          <TabsTrigger value="games">Spiele</TabsTrigger>
-          <TabsTrigger value="leaderboard">Rangliste</TabsTrigger>
-          <TabsTrigger value="players">Spieler</TabsTrigger>
+          <TabsTrigger value="games"><DicesIcon />Spiele</TabsTrigger>
+          <TabsTrigger value="leaderboard"><PodiumIcon />Rangliste</TabsTrigger>
+          <TabsTrigger value="players"><UserGroupIcon />Spieler</TabsTrigger>
         </TabsList>
         <TabsContent value="games" className="flex flex-col">
           <GamesTab groupId={group.id} games={games} />
