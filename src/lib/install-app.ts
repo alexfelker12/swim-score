@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react"
+import { isIos } from "@/lib/platform"
 
 // Whether and how Swim Score can be installed on this device, for the hint
 // in the profile. Chrome on Android announces it with `beforeinstallprompt`
@@ -48,14 +49,6 @@ function isStandalone() {
   return (
     matchMedia("(display-mode: standalone)").matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true
-  )
-}
-
-function isIos() {
-  return (
-    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    // iPads report themselves as a Mac.
-    (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1)
   )
 }
 

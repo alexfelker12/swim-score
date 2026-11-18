@@ -3,6 +3,10 @@ import { createRouter as createTanStackRouter } from "@tanstack/react-router"
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query"
 import { PageError } from "./components/page-error"
 import { listenBeforeRouter } from "./lib/close-on-back"
+import {
+  listenForBrowserAnimations,
+  pageTransition,
+} from "./lib/page-transitions"
 import { isUnreachable, keepQueriesOnDevice } from "./lib/kept-on-device"
 import { routeTree } from "./routeTree.gen"
 
@@ -12,6 +16,7 @@ export function getRouter() {
   // Before the router takes over the browser history: sheets keep their own
   // entries in it, out of the router's sight (ADR 0013).
   listenBeforeRouter()
+  listenForBrowserAnimations()
   // A new client per request on the server, one for the session in the browser.
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -44,6 +49,9 @@ export function getRouter() {
     defaultStaleReloadMode: "blocking",
     // "Keine Verbindung" instead of an error when the server can't be reached.
     defaultErrorComponent: PageError,
+    // Forward and back move like a stack (ADR 0014); only in the browser,
+    // on the server this is false.
+    defaultViewTransition: pageTransition(),
   })
   // Sends the server's query data along with the page and wraps the app in a
   // QueryClientProvider.

@@ -27,7 +27,7 @@ export function UpdateNotice() {
   if (!available || !online || stepsWaiting || dismissed) return null
 
   return (
-    <div className="fixed inset-x-0 top-0 z-50 mx-auto max-w-[500px] px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
+    <div className="fixed inset-x-0 top-0 z-50 mx-auto max-w-[500px] px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] [view-transition-name:update-notice]">
       <Alert variant="floating">
         <RefreshCw />
         <AlertTitle>Neue Version verfügbar</AlertTitle>

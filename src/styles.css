@@ -193,3 +193,59 @@
     @apply font-sans;
     }
 }
+
+/*
+ * Page changes move like a stack (ADR 0014). The router gives each
+ * transition a type, "forward" or "back" (src/lib/page-transitions.ts),
+ * and gives none for tabs, reduced motion or a step back the browser
+ * already animates.
+ */
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation-duration: 300ms;
+        animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    /* Forward: the new page comes in from the right over the old one. */
+    html:active-view-transition-type(forward)::view-transition-new(root) {
+        animation-name: page-in-from-right;
+    }
+    html:active-view-transition-type(forward)::view-transition-old(root) {
+        animation-name: page-out-to-left;
+    }
+    /* Back: the page goes out to the right and uncovers the one below. */
+    html:active-view-transition-type(back)::view-transition-old(root) {
+        z-index: 1;
+        animation-name: page-out-to-right;
+    }
+    html:active-view-transition-type(back)::view-transition-new(root) {
+        animation-name: page-in-from-left;
+    }
+}
+
+@keyframes page-in-from-right {
+    from {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes page-out-to-left {
+    to {
+        transform: translateX(-25%);
+        opacity: 0.6;
+    }
+}
+
+@keyframes page-out-to-right {
+    to {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes page-in-from-left {
+    from {
+        transform: translateX(-25%);
+        opacity: 0.6;
+    }
+}
+

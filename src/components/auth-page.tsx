@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
+import { backTransition } from "@/lib/page-transitions"
 import { cn } from "@/lib/utils"
 import { Logo } from "./logo"
 import type { ComponentProps, ReactNode } from "react"
@@ -43,7 +44,8 @@ export function AuthPage({
             variant="ghost"
             size="icon"
             nativeButton={false}
-            render={<Link to={back} />}
+            // Leads back up: moves like going back (ADR 0014).
+            render={<Link to={back} viewTransition={backTransition()} />}
             aria-label="Zurück zur Anmeldung"
           >
             <ChevronLeft className="size-6" />

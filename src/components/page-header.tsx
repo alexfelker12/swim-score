@@ -2,6 +2,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { ChevronLeft, X } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
+import { cloneElement } from "react"
+import { backTransition } from "@/lib/page-transitions"
 import { cn } from "@/lib/utils"
 import type { ComponentProps, ReactElement, ReactNode } from "react"
 
@@ -110,7 +112,10 @@ export function PageHeaderBack({
   icon = "back",
   className,
 }: {
-  /** A link to where back leads; or `onClick` (back in the history). */
+  /**
+   * A router `Link` to where back leads (it moves like going back, ADR 0014;
+   * its own `viewTransition` is replaced); or `onClick` (back in the history).
+   */
   render?: ReactElement
   onClick?: () => void
   /** Where back leads, for screen readers ("Zurück zur Startseite"). */
@@ -120,7 +125,13 @@ export function PageHeaderBack({
 }) {
   return (
     <PageHeaderAction
-      render={render}
+      render={
+        // The link leads back up: it moves like going back (ADR 0014).
+        render &&
+        cloneElement(render as ReactElement<{ viewTransition?: unknown }>, {
+          viewTransition: backTransition(),
+        })
+      }
       onClick={onClick}
       label={label}
       className={cn("col-start-1 justify-self-center", className)}
