@@ -1,5 +1,7 @@
 import { Unlink } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { Logo } from "@/components/logo"
+import { Page } from "@/components/page"
 import { cn } from "@/lib/utils"
 import type { ComponentProps } from "react"
 
@@ -22,22 +24,14 @@ import type { ComponentProps } from "react"
  * </LinkGone>
  * ```
  */
-export function LinkGone({
-  className,
-  children,
-  ...props
-}: ComponentProps<"div">) {
+export function LinkGone({ children, ...props }: ComponentProps<"div">) {
   return (
-    <div
-      data-slot="link-gone"
-      className={cn("flex min-h-svh flex-col", className)}
-      {...props}
-    >
+    <Page data-slot="link-gone" {...props}>
       <header className="flex h-14 shrink-0 items-center px-5">
         <Logo />
       </header>
       {children}
-    </div>
+    </Page>
   )
 }
 
@@ -58,15 +52,16 @@ export function LinkGoneContent({
   )
 }
 
-/** The heading with the broken-link icon left of it. */
+/** The heading with an icon left of it, the broken link unless given. */
 export function LinkGoneTitle({
   className,
   children,
+  icon: Icon = Unlink,
   ...props
-}: ComponentProps<"h1">) {
+}: ComponentProps<"h1"> & { icon?: LucideIcon }) {
   return (
     <div className="flex items-center gap-3">
-      <Unlink
+      <Icon
         className="size-8 shrink-0 text-muted-foreground"
         strokeWidth={1.8}
         aria-hidden="true"

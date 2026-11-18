@@ -2,6 +2,7 @@ import * as React from "react"
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
+import { useClosedByBack } from "@/lib/close-on-back"
 
 type DrawerContextProps = {
   hasSnapPoints: boolean
@@ -27,6 +28,10 @@ function Drawer({
   showSwipeHandle = true,
   snapPoints,
   swipeDirection = "down",
+  open,
+  defaultOpen,
+  onOpenChange,
+  actionsRef,
   ...props
 }: DrawerPrimitive.Root.Props & {
   showSwipeHandle?: boolean
@@ -36,6 +41,13 @@ function Drawer({
     () => ({ hasSnapPoints, modal, showSwipeHandle, swipeDirection }),
     [hasSnapPoints, modal, showSwipeHandle, swipeDirection]
   )
+  // "Zurück" closes the drawer (#54, ADR 0013).
+  const closedByBack = useClosedByBack({
+    open,
+    defaultOpen,
+    onOpenChange,
+    actionsRef,
+  })
 
   return (
     <DrawerContext.Provider value={contextValue}>
@@ -44,6 +56,7 @@ function Drawer({
         modal={modal}
         snapPoints={snapPoints}
         swipeDirection={swipeDirection}
+        {...closedByBack}
         {...props}
       />
     </DrawerContext.Provider>
@@ -123,6 +136,8 @@ function DrawerContent({
             "group/drawer-popup pointer-events-auto fixed z-50 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col border-border bg-card text-base text-card-foreground transition-[transform,height,opacity,filter] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [--drawer-bleed-background:transparent] [--drawer-inset:0px] [--drawer-stacked-shadow:0_-20px_25px_-5px_rgb(0_0_0/0.1),0_-8px_10px_-6px_rgb(0_0_0/0.1)] [interpolate-size:allow-keywords] data-[swipe-direction=down]:data-nested-drawer-open:shadow-(--drawer-stacked-shadow)",
             // Bottom sheet (docs/design/README.md › Bausteine): 24 px radius at the top, 1 px border on top, app width.
             "data-[swipe-direction=down]:mx-auto data-[swipe-direction=down]:max-w-[500px] data-[swipe-direction=down]:rounded-t-[24px] data-[swipe-direction=down]:border-t",
+            // Above the home indicator in the installed app (#56).
+            "data-[swipe-direction=down]:pb-[env(safe-area-inset-bottom)]",
             // Nested.
             "data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95",
             // Bleed.

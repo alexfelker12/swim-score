@@ -46,7 +46,7 @@ const SAVE_FAILED = "Das hat nicht geklappt. Versuch es noch einmal."
 const START_VIEW: View = { zoom: 1, dx: 0, dy: 0 }
 
 /** The square area keeps clear of header, previews and actions on short screens. */
-const AREA_WIDTH = "min(100%, calc(100svh - 380px))"
+const AREA_WIDTH = "min(100%, calc(var(--app-height) - 380px))"
 
 /**
  * Full-screen editor for the profile picture: move and zoom the image behind

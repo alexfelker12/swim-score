@@ -14,3 +14,13 @@ Optional:
 - `PROPS='{"dialog":"entfernen"}' OUTNAME=i12-spieler-entfernen ONLY=i12-verwaltung` rendert einen Screen mit eigenen Props unter eigenem Namen.
 
 `renderer.js` versteht genau die Teile des Formats, die die Quellen nutzen: Holes, `sc-if`, `sc-for`, `dc-import` und Props-Defaults. Events werden ignoriert. Fehler stehen in `../screens/_errors.txt`, diese Datei nicht committen.
+
+# App-Icons neu erzeugen
+
+`pwa-icons.py` erzeugt aus dem App-Zeichen Favicon, PWA-Icons (normal, maskable, monochrom), Apple-Touch-Icon und die iOS-Splash-Screens in `public/`. Nötig, wenn sich das Zeichen oder die Farben ändern. Braucht `rsvg-convert` und ImageMagick.
+
+```bash
+python3 docs/design/tools/pwa-icons.py .
+```
+
+Die Größen der Splash-Screens stehen zusätzlich als Links in `src/lib/pwa.ts`; bei neuen iPhone-Größen beide anpassen.

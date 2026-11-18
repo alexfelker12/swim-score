@@ -11,6 +11,9 @@ const alertVariants = cva(
         default: "bg-muted text-foreground *:[svg]:text-primary",
         /** A quiet tip beside the content ("Am Tisch geht es am schnellsten …"): 15 px, all muted. */
         note: "bg-muted text-[15px] text-muted-foreground *:[svg]:text-muted-foreground",
+        /** Floating above the page ("Neue Version verfügbar"), icon in `primary`. */
+        floating:
+          "bg-popover text-popover-foreground shadow-lg ring-1 ring-border *:[svg]:text-primary",
         /** Something went wrong. */
         destructive:
           "bg-destructive-muted text-destructive *:data-[slot=alert-description]:text-destructive *:[svg]:text-current",

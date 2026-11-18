@@ -4,8 +4,10 @@ import { ChevronLeft } from "lucide-react"
 import { GoogleIcon } from "@/components/icons/google-icon"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
+import { Page } from "@/components/page"
 import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
+import { backTransition } from "@/lib/page-transitions"
 import { cn } from "@/lib/utils"
 import { Logo } from "./logo"
 import type { ComponentProps, ReactNode } from "react"
@@ -31,7 +33,7 @@ export function AuthPage({
   children: ReactNode
 }) {
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <header
         className={cn(
           "flex h-18 shrink-0 items-center",
@@ -43,7 +45,8 @@ export function AuthPage({
             variant="ghost"
             size="icon"
             nativeButton={false}
-            render={<Link to={back} />}
+            // Leads back up: moves like going back (ADR 0014).
+            render={<Link to={back} viewTransition={backTransition()} />}
             aria-label="Zurück zur Anmeldung"
           >
             <ChevronLeft className="size-6" />
@@ -54,7 +57,7 @@ export function AuthPage({
       <main className="flex flex-1 flex-col gap-5 px-6 pt-3 pb-7">
         {children}
       </main>
-    </div>
+    </Page>
   )
 }
 

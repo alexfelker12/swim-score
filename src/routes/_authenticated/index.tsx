@@ -14,6 +14,7 @@ import { Section, SectionDescription, SectionTitle } from "@/components/section"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PersonAvatar } from "@/components/person-avatar"
 import { Button } from "@/components/ui/button"
+import { Page } from "@/components/page"
 import { formatWhen } from "@/lib/dates"
 import { homeQuery } from "@/lib/queries"
 import type { Home } from "@/server/home"
@@ -31,10 +32,10 @@ export const Route = createFileRoute("/_authenticated/")({
 function Start() {
   const { data: home } = useSuspenseQuery(homeQuery())
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <StartHeader />
       {home.groups.length === 0 ? <Empty /> : <Overview home={home} />}
-    </div>
+    </Page>
   )
 }
 
@@ -144,9 +145,9 @@ function Empty() {
 /** While the start page loads: its cards as quiet placeholders. */
 function StartLoading() {
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <StartHeader />
       <HomeSkeleton />
-    </div>
+    </Page>
   )
 }

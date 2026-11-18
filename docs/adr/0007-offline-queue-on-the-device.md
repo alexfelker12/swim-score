@@ -12,6 +12,6 @@ ADR 0003 lets the Scorekeeper keep recording without a connection. The steps not
 
 ## Consequences
 
-- Without a service worker (PWA, later) a page cannot be reloaded while offline; the queue is sent when the Game is opened again with a connection.
+- A Game page can be reloaded and opened offline from the app shell and the Game kept on the device (ADR 0011, ADR 0012); the queue lays its steps over the kept Game and is sent when there is a connection again.
 - The queue is keyed by account, so another account on the same browser never sends someone else's steps.
 - The queue logic is client-only; per `docs/agents/workflow.md` it is not unit-tested and was checked in the browser with a simulated dead zone.

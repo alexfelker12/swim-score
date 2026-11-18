@@ -1,5 +1,7 @@
 import type { GameEvent } from "@/rules-engine"
 import type { GameView } from "@/server/games"
+import { isUnreachable } from "@/lib/kept-on-device"
+import { reportWaitingSteps, waitingStepsPrefix } from "@/lib/waiting-steps"
 
 // The Scorekeeper's steps not yet taken by the server (ADR 0007): kept on
 // this device for the signed-in account, also across a reload, and sent one
@@ -197,7 +199,7 @@ export class StepQueue {
           ? { ok: true, version: baseVersion + 1 }
           : await this.need().send(step, baseVersion)
     } catch (error) {
-      if (error instanceof TypeError) return this.goneOffline()
+      if (isUnreachable(error)) return this.goneOffline()
       // A server error: neither the connection nor a refusal.
       this.set({ sending: false })
       if (++this.failures < MAX_FAILURES) return this.retryLater()
@@ -309,7 +311,7 @@ const queues = new Map<string, StepQueue>()
  */
 export function stepQueue(gameId: string, viewerId: string): StepQueue {
   if (typeof window === "undefined") return new StepQueue(null)
-  const key = `swim-score:steps:${viewerId}:${gameId}`
+  const key = `${waitingStepsPrefix}${viewerId}:${gameId}`
   let queue = queues.get(key)
   if (!queue) {
     queue = new StepQueue(key)
@@ -338,6 +340,7 @@ function save(key: string | null, state: QueueState) {
   } catch {
     // The queue still works for this page; it just will not survive a reload.
   }
+  reportWaitingSteps(key, state.steps.length > 0)
 }
 
 function load(key: string | null): Partial<QueueState> {

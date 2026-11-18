@@ -38,6 +38,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Page } from "@/components/page"
 import {
   Item,
   ItemActions,
@@ -99,7 +100,7 @@ function SettingsPage() {
   const management = useManagement(groupId, group?.isAdmin ?? false)
   if (!group) return null
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <PageHeader>
         <PageHeaderBack
           render={
@@ -122,7 +123,7 @@ function SettingsPage() {
           <MemberSettings group={group} />
         )}
       </main>
-    </div>
+    </Page>
   )
 }
 

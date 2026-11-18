@@ -13,6 +13,7 @@ import {
   PageHeaderTitle,
 } from "@/components/page-header"
 import { SectionDescription } from "@/components/section"
+import { Page } from "@/components/page"
 import { formatLongDay, formatTime } from "@/lib/dates"
 import {
   describeGameLength,
@@ -48,7 +49,7 @@ function HistoryPage() {
     name
   )
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <PageHeader>
         <PageHeaderBack
           render={<Link to="/games/$gameId" params={{ gameId }} />}
@@ -82,7 +83,7 @@ function HistoryPage() {
           </HistoryList>
         )}
       </main>
-    </div>
+    </Page>
   )
 }
 

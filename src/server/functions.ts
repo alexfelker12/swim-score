@@ -77,6 +77,9 @@ export const getViewer = createServerFn({ method: "GET" }).handler(async () => {
   return { id, name, image: image ?? null, theme: theme as Theme }
 })
 
+/** The signed-in account as `getViewer` answers it. */
+export type Viewer = NonNullable<Awaited<ReturnType<typeof getViewer>>>
+
 export const getProfileFn = createServerFn({ method: "GET" }).handler(() =>
   getProfile(getApp(), headers())
 )

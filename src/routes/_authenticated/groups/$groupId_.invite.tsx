@@ -12,6 +12,7 @@ import { QrCard, QrCode } from "@/components/qr-code"
 import { Section, SectionDescription, SectionTitle } from "@/components/section"
 import { Button } from "@/components/ui/button"
 import { FieldDescription, FieldError } from "@/components/ui/field"
+import { Page } from "@/components/page"
 import { groupQuery, inviteLinkQuery } from "@/lib/queries"
 import { useShareLink } from "@/lib/use-share-link"
 import { renewInviteFn } from "@/server/functions"
@@ -70,7 +71,7 @@ function InviteLink({
   }
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <PageHeader>
         <PageHeaderBack
           icon="close"
@@ -122,6 +123,6 @@ function InviteLink({
           Erneuern macht den alten Link und den alten Code ungültig.
         </FieldDescription>
       </PageFooter>
-    </div>
+    </Page>
   )
 }

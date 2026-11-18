@@ -24,6 +24,22 @@ Gebaut wird mit Nitro (`nitro/vite` in `vite.config.ts`). Auf Vercel erkennt Nit
 - **Migrationen** laufen nicht automatisch. Vor dem Deploy ausführen: `DATABASE_URL=… pnpm db:migrate`.
 - **Region der Functions** möglichst nah an der Neon-Region, z. B. `fra1` bei `aws-eu-central-1`.
 
+## Offline testen
+
+Service Worker und Offline-Start gibt es nur im Produktions-Build (ADR 0011, ADR 0012):
+
+```bash
+pnpm build
+node --env-file=.env.local .output/server/index.mjs
+```
+
+In Chrome-DevTools › Network auf „Offline“ stellen und neu laden. **Einschränkung:** Der lokale Node-Server liefert die App-Hülle `/_shell.html` nicht aus (Nitro legt seine statischen Dateien vor dem Prerender fest), dann zeigt der Service Worker offline nur `offline.html`. Für den echten Offline-Start die Hülle im Browser bereitstellen:
+
+- **DevTools:** Sources › Overrides einen Ordner wählen, dann `/_shell.html` mit dem Inhalt von `.output/public/_shell.html` anlegen.
+- **Playwright:** `context.route("**/_shell.html", (r) => r.fulfill({ contentType: "text/html", body: readFileSync(".output/public/_shell.html", "utf8") }))`.
+
+Auf Vercel wird die Hülle normal ausgeliefert. Vor dem Mergen einmal auf einer Preview prüfen: laufendes Spiel öffnen, Flugmodus an, App schließen und wieder öffnen.
+
 ## Datenbank
 
 - Schema: `src/server/db/schema.ts`

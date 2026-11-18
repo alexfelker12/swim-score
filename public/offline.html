@@ -1,0 +1,176 @@
+<!doctype html>
+<!--
+  Shown by the service worker for a page that can't be loaded without a
+  connection (ADR 0011). Stands alone, without the app's scripts and
+  styles; colours follow the device setting, the values are those of
+  src/styles.css (ADR 0010).
+-->
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Keine Verbindung · Swim Score</title>
+    <meta
+      name="theme-color"
+      content="#f3f7f7"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#131517"
+      media="(prefers-color-scheme: dark)"
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --background: #f3f7f7;
+        --foreground: #10212a;
+        --muted: #536970;
+        --primary: #147a93;
+        --on-primary: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: #131517;
+          --foreground: #eceef0;
+          --muted: #a1a8ae;
+          --primary: #5cc2d6;
+          --on-primary: #062a31;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--foreground);
+        font:
+          16px/1.5 system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+      }
+      .page {
+        display: flex;
+        flex-direction: column;
+        min-height: 100svh;
+        max-width: 500px;
+        margin: 0 auto;
+        padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 56px;
+        padding: 0 20px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      main {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        gap: 14px;
+        padding: 0 28px 80px;
+      }
+      h1 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0;
+        font-size: 26px;
+        line-height: 1.2;
+      }
+      h1 svg {
+        flex-shrink: 0;
+        color: var(--muted);
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+      footer {
+        padding: 0 16px 24px;
+      }
+      button {
+        width: 100%;
+        height: 56px;
+        border: 0;
+        border-radius: 14px;
+        background: var(--primary);
+        color: var(--on-primary);
+        font: inherit;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+          <rect width="28" height="28" rx="8" fill="var(--primary)" />
+          <g
+            fill="none"
+            stroke="var(--on-primary)"
+            stroke-width="2.2"
+            stroke-linecap="round"
+          >
+            <path
+              d="M6 11.5c1.4 0 2.1-1.5 4-1.5s2.6 1.5 4 1.5 2.1-1.5 4-1.5 2.6 1.5 4 1.5"
+            />
+            <path
+              d="M6 17c1.4 0 2.1-1.5 4-1.5s2.6 1.5 4 1.5 2.1-1.5 4-1.5 2.6 1.5 4 1.5"
+              opacity=".55"
+            />
+          </g>
+        </svg>
+        Swim Score
+      </header>
+      <main>
+        <h1>
+          <!-- lucide wifi-off -->
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 20h.01" />
+            <path d="M8.5 16.429a5 5 0 0 1 7 0" />
+            <path d="M5 12.859a10 10 0 0 1 5.17-2.69" />
+            <path d="M19 12.859a10 10 0 0 0-2.007-1.523" />
+            <path d="M2 8.82a15 15 0 0 1 4.177-2.643" />
+            <path d="M22 8.82a15 15 0 0 0-11.288-3.764" />
+            <path d="m2 2 20 20" />
+          </svg>
+          Keine Verbindung
+        </h1>
+        <p>
+          Diese Seite braucht eine Verbindung, und gerade kommt keine durch.
+          Sobald du wieder online bist, geht es von selbst weiter.
+        </p>
+      </main>
+      <footer>
+        <button type="button" onclick="location.reload()">
+          Erneut versuchen
+        </button>
+      </footer>
+    </div>
+    <script>
+      addEventListener("online", () => location.reload())
+    </script>
+  </body>
+</html>
