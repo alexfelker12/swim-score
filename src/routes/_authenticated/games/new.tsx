@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Page } from "@/components/page"
 import { standardRuleSet } from "@/rules-engine"
 import { groupChanged, newGameQuery } from "@/lib/queries"
 import { addGuestFn, startGameFn } from "@/server/functions"
@@ -107,7 +108,7 @@ function NewGameForm({ groupId, setup }: { groupId: string; setup: NewGame }) {
   }
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <PageHeader>
         <PageHeaderBack
           render={<Link to="/groups/$groupId" params={{ groupId }} />}
@@ -171,7 +172,7 @@ function NewGameForm({ groupId, setup }: { groupId: string; setup: NewGame }) {
           Spiel starten
         </Button>
       </PageFooter>
-    </div>
+    </Page>
   )
 }
 

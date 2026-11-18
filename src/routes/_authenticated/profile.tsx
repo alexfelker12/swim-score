@@ -49,6 +49,7 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioSegment } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Page } from "@/components/page"
 import { authClient } from "@/lib/auth-client"
 import { useInstallApp } from "@/lib/install-app"
 import { forgetAccount } from "@/lib/kept-on-device"
@@ -95,7 +96,7 @@ function ProfilePage() {
   const { tab = "details", from, to } = Route.useSearch()
   const navigate = Route.useNavigate()
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <PageHeader>
         <PageHeaderBack
           render={<Link to="/" />}
@@ -138,7 +139,7 @@ function ProfilePage() {
           <MyStats userId={profile.id} period={{ from, to }} />
         </TabsContent>
       </Tabs>
-    </div>
+    </Page>
   )
 }
 

@@ -21,6 +21,7 @@ import {
   PageHeaderTitle,
 } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
+import { Page } from "@/components/page"
 import { describeExtraRound, describeLastEvent, nameOf } from "@/lib/game-text"
 import { spectatorGameChanged, spectatorGameQuery } from "@/lib/queries"
 import { useLiveGame } from "@/lib/use-live-game"
@@ -68,7 +69,7 @@ function LiveGame({ game }: { game: SpectatorView }) {
   const { state } = game
   const name = nameOf(game.participants)
   return (
-    <div className="flex h-svh flex-col">
+    <Page height="screen">
       <PageHeader>
         <span className="justify-self-center">
           <AppMark />
@@ -100,7 +101,7 @@ function LiveGame({ game }: { game: SpectatorView }) {
           emptyText={`Noch keine Runde gezählt. ${name(state.dealer)} ist Dealer.`}
         />
       </div>
-    </div>
+    </Page>
   )
 }
 

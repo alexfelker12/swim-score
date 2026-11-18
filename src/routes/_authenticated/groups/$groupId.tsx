@@ -12,6 +12,7 @@ import {
   PageHeaderTitle,
 } from "@/components/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Page } from "@/components/page"
 import {
   groupGamesQuery,
   groupLeaderboardQuery,
@@ -80,7 +81,7 @@ function GroupPage() {
   const management = useManagement(groupId, group?.isAdmin ?? false)
   if (!group) return null
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <PageHeader variant="start">
         <PageHeaderBack render={<Link to="/" />} label="Zur Startseite" />
         <PageHeaderContent>
@@ -146,7 +147,7 @@ function GroupPage() {
           <PlayersTab group={group} management={management} />
         </TabsContent>
       </Tabs>
-    </div>
+    </Page>
   )
 }
 

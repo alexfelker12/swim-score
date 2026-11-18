@@ -18,6 +18,7 @@ import { PageHeader } from "@/components/page-header"
 import { Section, SectionDescription, SectionTitle } from "@/components/section"
 import { Button } from "@/components/ui/button"
 import { FieldDescription, FieldError } from "@/components/ui/field"
+import { Page } from "@/components/page"
 import {
   RadioCard,
   RadioCardDescription,
@@ -93,70 +94,72 @@ function AcceptInvite({ invite }: { invite: InviteView }) {
   }
 
   return (
-    <form onSubmit={join} className="flex h-svh flex-col">
-      <PageHeader variant="brand" />
-      <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto px-5 pt-4 pb-4">
-        <Section className="gap-1.5">
-          <SectionDescription>
-            Einladung von {invite.invitedBy}
-          </SectionDescription>
-          <SectionTitle variant="page" as="h1">
-            {invite.groupName}
-          </SectionTitle>
-          <SectionDescription>
-            {invite.playerCount} Spieler, {gameCount(invite.gameCount)}
-          </SectionDescription>
-        </Section>
-
-        {invite.guests.length > 0 ? (
-          <Section aria-labelledby="who">
-            <SectionTitle id="who" className="pb-2">
-              Wer bist du?
+    <Page height="screen">
+      <form onSubmit={join} className="flex min-h-0 flex-1 flex-col">
+        <PageHeader variant="brand" />
+        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto px-5 pt-4 pb-4">
+          <Section className="gap-1.5">
+            <SectionDescription>
+              Einladung von {invite.invitedBy}
+            </SectionDescription>
+            <SectionTitle variant="page" as="h1">
+              {invite.groupName}
             </SectionTitle>
-            <RadioGroup
-              aria-labelledby="who"
-              value={choice}
-              onValueChange={(value) => setChoice(value as string)}
-              className="gap-2"
-            >
-              <RadioCard value={NEW_PLAYER}>
-                <RadioCardTitle>Ich bin neu hier</RadioCardTitle>
-                <RadioCardDescription>
-                  Als neuer Spieler beitreten
-                </RadioCardDescription>
-              </RadioCard>
-              {invite.guests.map((g) => (
-                <RadioCard key={g.id} value={g.id}>
-                  <RadioCardTitle>Ich bin {g.name}</RadioCardTitle>
+            <SectionDescription>
+              {invite.playerCount} Spieler, {gameCount(invite.gameCount)}
+            </SectionDescription>
+          </Section>
+
+          {invite.guests.length > 0 ? (
+            <Section aria-labelledby="who">
+              <SectionTitle id="who" className="pb-2">
+                Wer bist du?
+              </SectionTitle>
+              <RadioGroup
+                aria-labelledby="who"
+                value={choice}
+                onValueChange={(value) => setChoice(value as string)}
+                className="gap-2"
+              >
+                <RadioCard value={NEW_PLAYER}>
+                  <RadioCardTitle>Ich bin neu hier</RadioCardTitle>
                   <RadioCardDescription>
-                    Gast, {gameCount(g.games)}
+                    Als neuer Spieler beitreten
                   </RadioCardDescription>
                 </RadioCard>
-              ))}
-            </RadioGroup>
-          </Section>
-        ) : (
-          <p className="text-pretty">
-            Du trittst als neuer Spieler bei. Alle in der Gruppe sehen deinen
-            Anzeigenamen und dein Profilbild, aber nicht deine E-Mail-Adresse.
-          </p>
-        )}
-      </main>
-      <PageFooter variant="bordered">
-        {error ? (
-          <FieldError>{error}</FieldError>
-        ) : (
-          <FieldDescription>
-            {guest
-              ? `${invite.invitedBy} bestätigt das. Danach gehören dir die bisherigen Spiele von ${guest.name}. Bis dahin bist du schon dabei.`
-              : "Du bist sofort Spieler der Gruppe und siehst Spiele und Rangliste."}
-          </FieldDescription>
-        )}
-        <Button type="submit" size="xl" disabled={pending}>
-          {guest ? "Anfrage senden und beitreten" : "Beitreten"}
-        </Button>
-      </PageFooter>
-    </form>
+                {invite.guests.map((g) => (
+                  <RadioCard key={g.id} value={g.id}>
+                    <RadioCardTitle>Ich bin {g.name}</RadioCardTitle>
+                    <RadioCardDescription>
+                      Gast, {gameCount(g.games)}
+                    </RadioCardDescription>
+                  </RadioCard>
+                ))}
+              </RadioGroup>
+            </Section>
+          ) : (
+            <p className="text-pretty">
+              Du trittst als neuer Spieler bei. Alle in der Gruppe sehen deinen
+              Anzeigenamen und dein Profilbild, aber nicht deine E-Mail-Adresse.
+            </p>
+          )}
+        </main>
+        <PageFooter variant="bordered">
+          {error ? (
+            <FieldError>{error}</FieldError>
+          ) : (
+            <FieldDescription>
+              {guest
+                ? `${invite.invitedBy} bestätigt das. Danach gehören dir die bisherigen Spiele von ${guest.name}. Bis dahin bist du schon dabei.`
+                : "Du bist sofort Spieler der Gruppe und siehst Spiele und Rangliste."}
+            </FieldDescription>
+          )}
+          <Button type="submit" size="xl" disabled={pending}>
+            {guest ? "Anfrage senden und beitreten" : "Beitreten"}
+          </Button>
+        </PageFooter>
+      </form>
+    </Page>
   )
 }
 

@@ -191,7 +191,40 @@
     }
   html {
     @apply font-sans;
+    /* No pull-to-refresh or bouncing of the whole page; lists and sheets
+       still scroll (#56). Only vertical: edge swipes stay. On body too:
+       depending on the browser either one is the page's scroller. */
+    overscroll-behavior-y: none;
     }
+  body {
+    overscroll-behavior-y: none;
+    }
+  /* Tapped like an app, not read like a page (#56, ADR 0015): a long press
+     selects nothing and opens no iOS callout. Fields and plain text stay
+     selectable. The same list is in src/lib/no-long-press-menu.ts. */
+  :where(a, button, [role="button"], [role="tab"], [data-slot="player-row"]) {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    }
+}
+
+/*
+ * The screen without the system's bars (#56). In the installed app the page
+ * reaches under the status bar and the home indicator (viewport-fit=cover,
+ * iOS black-translucent): the root container keeps them free, and pages are
+ * as high as what is left, not 100svh.
+ */
+:root {
+    --app-height: calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+
+@utility h-app {
+    height: var(--app-height);
+}
+
+@utility min-h-app {
+    min-height: var(--app-height);
 }
 
 /*

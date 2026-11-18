@@ -21,6 +21,7 @@ import {
   ProfileHeadingTitle,
 } from "@/components/profile-heading"
 import { PersonAvatar } from "@/components/person-avatar"
+import { Page } from "@/components/page"
 import { formatMonthYear } from "@/lib/dates"
 import { periodFromSearch } from "@/lib/period-search"
 import { playerProfileQuery } from "@/lib/queries"
@@ -48,7 +49,7 @@ function PlayerProfilePage() {
   const { data: profile } = useSuspenseQuery(playerProfileQuery(userId, period))
   if (!profile) return null
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <PageHeader>
         <BackButton />
         {profile.isMe ? (
@@ -76,7 +77,7 @@ function PlayerProfilePage() {
         period={period}
         onPeriodChange={(next) => navigate({ search: next, replace: true })}
       />
-    </div>
+    </Page>
   )
 }
 

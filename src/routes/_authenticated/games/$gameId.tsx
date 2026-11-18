@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/item"
 import { Switch } from "@/components/ui/switch"
 import { Toggle } from "@/components/ui/toggle"
+import { Page } from "@/components/page"
 import {
   describeEvent,
   describeGameLength,
@@ -83,6 +84,7 @@ import {
 } from "./-game-data"
 import { stepQueue } from "./-step-queue"
 import { useHideOut } from "./-hide-out"
+import { useWakeLock } from "@/lib/use-wake-lock"
 import type { ReactNode } from "react"
 import type { GameEvent } from "@/rules-engine"
 import type { GameParticipant, GameView } from "@/server/games"
@@ -169,6 +171,9 @@ const discardReasons: Partial<Record<string, string>> = {
 }
 
 function GameTable({ game, viewerId }: { game: GameView; viewerId: string }) {
+  // Only while there is something to count: not once the Game is decided,
+  // even if the server doesn't know yet (last round still queued).
+  useWakeLock(game.isScorekeeper && !game.state.finished)
   const [bombMode, setBombMode] = useState(false)
   const [sheet, setSheet] = useState<Sheet | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -306,7 +311,7 @@ function GameTable({ game, viewerId }: { game: GameView; viewerId: string }) {
     ? state.participants.filter((p) => p.status === "out").length
     : 0
   return (
-    <div className="flex h-svh flex-col">
+    <Page height="screen">
       <PageHeader>
         <BackToGroup groupId={game.groupId} />
         <PageHeaderContent>
@@ -563,7 +568,7 @@ function GameTable({ game, viewerId }: { game: GameView; viewerId: string }) {
           </DrawerFooter>
         </GameSheet>
       ) : null}
-    </div>
+    </Page>
   )
 }
 
@@ -726,7 +731,7 @@ function GameEnd({ game, viewerId }: { game: GameView; viewerId: string }) {
   })
   const minutesLeft = useMinutesLeft(game.undoableUntil)
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <PageHeader>
         <BackToGroup groupId={game.groupId} />
         <PageHeaderTitle>Spiel beendet</PageHeaderTitle>
@@ -797,7 +802,7 @@ function GameEnd({ game, viewerId }: { game: GameView; viewerId: string }) {
           Zur Gruppe
         </Button>
       </PageFooter>
-    </div>
+    </Page>
   )
 }
 
@@ -1118,7 +1123,7 @@ function Cancelled({ game, viewerId }: { game: GameView; viewerId: string }) {
   // Steps still queued for a cancelled Game can never be taken.
   useEffect(() => stepQueue(game.id, viewerId).clear(), [game.id, viewerId])
   return (
-    <div className="flex min-h-svh flex-col">
+    <Page>
       <PageHeader>
         <BackToGroup groupId={game.groupId} />
         <PageHeaderTitle>Spiel abgebrochen</PageHeaderTitle>
@@ -1127,6 +1132,6 @@ function Cancelled({ game, viewerId }: { game: GameView; viewerId: string }) {
       <SectionDescription className="px-6 pt-6">
         Dieses Spiel wurde abgebrochen und zählt in keiner Statistik.
       </SectionDescription>
-    </div>
+    </Page>
   )
 }

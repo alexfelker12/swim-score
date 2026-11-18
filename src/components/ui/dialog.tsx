@@ -71,7 +71,7 @@ const dialogContentVariants = cva(
          * by side.
          */
         fullscreen:
-          "inset-0 mx-auto flex max-w-[500px] flex-col bg-background text-foreground",
+          "inset-0 mx-auto flex max-w-[500px] flex-col bg-background pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-foreground",
       },
     },
     defaultVariants: { variant: "default" },

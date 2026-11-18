@@ -15,6 +15,7 @@ import { appHeadLinks, appHeadMeta, themeColorTags } from "@/lib/pwa"
 // Catches the browser's install event early, see the module.
 import "@/lib/install-app"
 import { orKept, rememberViewer, rememberedViewer } from "@/lib/kept-on-device"
+import { useNoLongPressMenu } from "@/lib/no-long-press-menu"
 import { registerServiceWorker } from "@/lib/service-worker"
 import { getViewer } from "@/server/functions"
 import type { RouterContext } from "@/router"
@@ -63,6 +64,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   useSystemTheme(theme === "system")
   useEffect(registerServiceWorker, [])
   useRememberHydratedViewer()
+  useNoLongPressMenu()
   return (
     <html
       lang="de"
@@ -79,7 +81,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         ))}
       </head>
       <body>
-        <div className="mx-auto min-h-svh max-w-[500px]">{children}</div>
+        <div className="mx-auto max-w-[500px] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+          {children}
+        </div>
         <UpdateNotice />
         {import.meta.env.DEV ? (
           <TanStackDevtools
