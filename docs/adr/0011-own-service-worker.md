@@ -23,11 +23,10 @@ A page loaded inside the running app calls server functions, which fail with a `
 ## Considered Options
 
 - **`vite-plugin-pwa` / Workbox:** rejected for now, see above. Worth another look if the caching rules grow beyond a fixed list.
-- **Keeping pages (HTML) in the cache:** not in #51. A rendered page holds the signed-in account's data; whether and how the Game page is kept for offline use is decided in #52.
+- **Keeping pages (HTML) in the cache:** rejected, a rendered page holds the signed-in account's data. The Game page opens offline from the app shell instead (ADR 0012).
 
 ## Consequences
 
 - In development there is no service worker (`import.meta.env.PROD`, plugin only for `vite build`); one left from a production build on the same address is unregistered.
-- Queries of TanStack Query pause instead of failing while the browser reports itself offline (`networkMode: "online"`). Pages still get "Keine Verbindung" because the root route asks the server for the Viewer on every navigation; #53 has to keep that in mind.
 - `offline.html` repeats the page and text colours of `src/styles.css` (like `src/lib/pwa.ts`, ADR 0010) and follows the device setting, not the account's look.
-- A Game page can't be reloaded offline yet; it shows `offline.html` (#53).
+- Pages without a connection get the app shell when there is one (ADR 0012), otherwise `offline.html`.

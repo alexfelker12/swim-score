@@ -15,7 +15,12 @@ const config = defineConfig(({ mode }) => {
     plugins: [
       devtools(),
       tailwindcss(),
-      tanstackStart(),
+      tanstackStart({
+        // Also prerenders an app shell without data (/_shell.html); the
+        // service worker answers pages with it when the server can't be
+        // reached. The server still renders every page (ADR 0012).
+        spa: { enabled: true, prerender: { outputPath: "/_shell" } },
+      }),
       nitro(),
       viteReact(),
       serviceWorker(),

@@ -1,5 +1,6 @@
 import type { GameEvent } from "@/rules-engine"
 import type { GameView } from "@/server/games"
+import { isUnreachable } from "@/lib/kept-on-device"
 import { reportWaitingSteps, waitingStepsPrefix } from "@/lib/waiting-steps"
 
 // The Scorekeeper's steps not yet taken by the server (ADR 0007): kept on
@@ -198,7 +199,7 @@ export class StepQueue {
           ? { ok: true, version: baseVersion + 1 }
           : await this.need().send(step, baseVersion)
     } catch (error) {
-      if (error instanceof TypeError) return this.goneOffline()
+      if (isUnreachable(error)) return this.goneOffline()
       // A server error: neither the connection nor a refusal.
       this.set({ sending: false })
       if (++this.failures < MAX_FAILURES) return this.retryLater()

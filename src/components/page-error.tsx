@@ -9,17 +9,15 @@ import {
   LinkGoneTitle,
 } from "@/components/link-gone"
 import { Button } from "@/components/ui/button"
+import { isUnreachable } from "@/lib/kept-on-device"
 
 /**
- * The error shown for a page: without a connection "Keine Verbindung" with
- * "Erneut versuchen" (#51), anything else as before. A server function that
- * can't reach the server fails with a `TypeError` (see ADR 0007).
+ * The error shown for a page: "Keine Verbindung" with "Erneut versuchen"
+ * when the server can't be reached (#51), anything else as before.
  */
 export function PageError(props: ErrorComponentProps) {
   const router = useRouter()
-  const offline =
-    props.error instanceof TypeError ||
-    (typeof navigator !== "undefined" && !navigator.onLine)
+  const offline = isUnreachable(props.error)
   if (!offline) return <ErrorComponent {...props} />
 
   return (

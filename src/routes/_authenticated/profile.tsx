@@ -51,6 +51,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { authClient } from "@/lib/auth-client"
 import { useInstallApp } from "@/lib/install-app"
+import { forgetAccount } from "@/lib/kept-on-device"
 import { periodFromSearch } from "@/lib/period-search"
 import {
   playerProfileQuery,
@@ -235,6 +236,8 @@ function Details({ profile }: { profile: Profile }) {
 
   async function signOut() {
     await authClient.signOut()
+    // Nothing of the account stays on this device (ADR 0012).
+    forgetAccount(profile.id)
     queryClient.clear()
     await router.invalidate()
     await router.navigate({ to: "/sign-in" })
@@ -364,7 +367,11 @@ function Details({ profile }: { profile: Profile }) {
           Ergebnisse der anderen bleiben gleich.
         </FieldDescription>
       </div>
-      <DeleteAccountSheet open={deleting} onOpenChange={setDeleting} />
+      <DeleteAccountSheet
+        accountId={profile.id}
+        open={deleting}
+        onOpenChange={setDeleting}
+      />
     </div>
   )
 }
@@ -412,9 +419,11 @@ function InstallApp() {
 
 /** "Konto löschen?": the last step before the account is gone. */
 function DeleteAccountSheet({
+  accountId,
   open,
   onOpenChange,
 }: {
+  accountId: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -438,6 +447,7 @@ function DeleteAccountSheet({
     }
     // The session is gone with the account; this clears its cookie.
     await authClient.signOut().catch(() => undefined)
+    forgetAccount(accountId)
     queryClient.clear()
     await router.invalidate()
     await router.navigate({ to: "/sign-in" })

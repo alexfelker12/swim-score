@@ -1,5 +1,7 @@
+import { orKept } from "@/lib/kept-on-device"
 import { queryOptions } from "@tanstack/react-query"
 import type { QueryClient } from "@tanstack/react-query"
+import type { GameStatus } from "@/server/db/schema"
 import {
   getGameFn,
   getGroupFn,
@@ -69,7 +71,14 @@ export const mutationKeys = {
 export function homeQuery() {
   return queryOptions({
     queryKey: queryKeys.home(),
-    queryFn: () => getHomeFn(),
+    queryFn: ({ client, queryKey }) =>
+      orKept(
+        () => getHomeFn(),
+        () => client.getQueryData(queryKey)
+      ),
+    // Without a connection the start page kept on the device stands in
+    // (ADR 0012).
+    meta: { keptOnDevice: {} },
   })
 }
 
@@ -146,7 +155,16 @@ export function inviteQuery(token: string) {
 export function gameQuery(gameId: string) {
   return queryOptions({
     queryKey: queryKeys.game(gameId),
-    queryFn: () => getGameFn({ data: { gameId } }),
+    queryFn: ({ client, queryKey }) =>
+      orKept(
+        () => getGameFn({ data: { gameId } }),
+        () => client.getQueryData(queryKey)
+      ),
+    // Without a connection the Game kept on the device stands in; a running
+    // one is never dropped to make room (ADR 0012).
+    meta: {
+      keptOnDevice: { pinnedWhen: { status: "running" satisfies GameStatus } },
+    },
   })
 }
 

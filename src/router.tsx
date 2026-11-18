@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query"
 import { createRouter as createTanStackRouter } from "@tanstack/react-router"
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query"
 import { PageError } from "./components/page-error"
+import { isUnreachable, keepQueriesOnDevice } from "./lib/kept-on-device"
 import { routeTree } from "./routeTree.gen"
 
 export type RouterContext = { queryClient: QueryClient }
@@ -9,9 +10,20 @@ export type RouterContext = { queryClient: QueryClient }
 export function getRouter() {
   // A new client per request on the server, one for the session in the browser.
   const queryClient = new QueryClient({
-    // Data loaded on the server counts as fresh in the browser for a moment,
-    // so it isn't fetched again right after the page appears.
-    defaultOptions: { queries: { staleTime: 5_000 } },
+    defaultOptions: {
+      queries: {
+        // Data loaded on the server counts as fresh in the browser for a
+        // moment, so it isn't fetched again right after the page appears.
+        staleTime: 5_000,
+        // Ask the server even when the browser reports itself offline:
+        // otherwise queries would pause and a page would wait forever,
+        // instead of showing what is kept or "Keine Verbindung" (ADR 0012).
+        networkMode: "always",
+        // While the server can't be reached, once more (a short gap) and not
+        // three times, so "Keine Verbindung" comes soon.
+        retry: (failures, error) => failures < (isUnreachable(error) ? 1 : 3),
+      },
+    },
   })
   const router = createTanStackRouter({
     routeTree,
@@ -32,6 +44,8 @@ export function getRouter() {
   // Sends the server's query data along with the page and wraps the app in a
   // QueryClientProvider.
   setupRouterSsrQueryIntegration({ router, queryClient })
+  // The start page and Games for opening without a connection (ADR 0012).
+  keepQueriesOnDevice(queryClient)
 
   return router
 }

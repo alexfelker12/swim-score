@@ -14,6 +14,8 @@ import type { Plugin, ResolvedConfig } from "vite"
 
 const entry = fileURLToPath(new URL("./sw.ts", import.meta.url))
 const fileName = "sw.js"
+/** The app shell TanStack Start prerenders (`spa` in vite.config.ts). */
+const appShell = "/_shell.html"
 
 /**
  * Public files the app needs to start, besides the built ones. The iOS start
@@ -63,6 +65,9 @@ export function serviceWorker(): Plugin {
         hash.update(await readFile(join(config.publicDir, file)))
       }
       const version = hash.digest("hex").slice(0, 12)
+      // The app shell is prerendered after this build step (ADR 0012); it
+      // only changes with the built files, whose names are in the version.
+      precache.push(appShell)
 
       const source = await readFile(entry, "utf8")
       if (/^\s*(import|export)\b/m.test(source)) {

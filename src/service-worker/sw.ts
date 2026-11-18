@@ -12,7 +12,12 @@ const precache = "__SWIM_SCORE_PRECACHE__" as unknown as Array<string>
 const version = "__SWIM_SCORE_VERSION__"
 
 const cacheName = `swim-score-${version}`
-/** Shown for a page that can't be loaded without a connection. */
+/**
+ * Answers a page that can't be loaded without a connection: the app shell,
+ * which starts the app with what is kept on the device (ADR 0012).
+ */
+const appShell = "/_shell.html"
+/** In its place where there is no app shell (e.g. the local Node server). */
 const offlinePage = "/offline.html"
 const precached = new Set(precache)
 /**
@@ -25,13 +30,18 @@ sw.addEventListener("install", (event) => {
   // No skipWaiting: a new version waits until the app asks for it
   // ("Neue Version verfügbar" → "Aktualisieren").
   event.waitUntil(
-    caches.open(cacheName).then((cache) =>
+    (async () => {
+      const cache = await caches.open(cacheName)
       // Past the browser's HTTP cache, so public files without a hash in
       // their name come fresh.
-      cache.addAll(
-        precache.map((path) => new Request(path, { cache: "reload" }))
+      const fresh = (path: string) => new Request(path, { cache: "reload" })
+      await cache.addAll(
+        precache.filter((path) => path !== appShell).map(fresh)
       )
-    )
+      // The app shell is optional: the local Node server doesn't serve it
+      // (ADR 0012), then offline.html stands in.
+      await cache.add(fresh(appShell)).catch(() => undefined)
+    })()
   )
 })
 
@@ -88,7 +98,9 @@ sw.addEventListener("fetch", (event) => {
 
 async function pageOrOffline(request: Request): Promise<Response> {
   const offline = async () =>
-    (await caches.match(offlinePage)) ?? Response.error()
+    (await caches.match(appShell)) ??
+    (await caches.match(offlinePage)) ??
+    Response.error()
   let timer: ReturnType<typeof setTimeout> | undefined
   const timeout = new Promise<Response>((resolve) => {
     timer = setTimeout(() => resolve(offline()), pageTimeoutMs)

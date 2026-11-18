@@ -14,6 +14,7 @@ import { UpdateNotice } from "@/components/update-notice"
 import { appHeadLinks, appHeadMeta, themeColorTags } from "@/lib/pwa"
 // Catches the browser's install event early, see the module.
 import "@/lib/install-app"
+import { orKept, rememberViewer, rememberedViewer } from "@/lib/kept-on-device"
 import { registerServiceWorker } from "@/lib/service-worker"
 import { getViewer } from "@/server/functions"
 import type { RouterContext } from "@/router"
@@ -26,7 +27,7 @@ import appCss from "../styles.css?url"
 const systemThemeScript = `if(matchMedia("(prefers-color-scheme: dark)").matches)document.documentElement.classList.add("dark")`
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  beforeLoad: async () => ({ viewer: await getViewer() }),
+  beforeLoad: async () => ({ viewer: await loadViewer() }),
   head: ({ match }) => ({
     meta: [
       { charSet: "utf-8" },
@@ -61,6 +62,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   })
   useSystemTheme(theme === "system")
   useEffect(registerServiceWorker, [])
+  useRememberHydratedViewer()
   return (
     <html
       lang="de"
@@ -107,4 +109,31 @@ function useSystemTheme(active: boolean) {
     query.addEventListener("change", apply)
     return () => query.removeEventListener("change", apply)
   }, [active])
+}
+
+/**
+ * The signed-in account. In the browser it is remembered on the device after
+ * every answer, and taken from there when the server can't be reached, so a
+ * running Game opens offline (ADR 0012).
+ */
+async function loadViewer() {
+  if (typeof window === "undefined") return getViewer()
+  return orKept(async () => {
+    const viewer = await getViewer()
+    rememberViewer(viewer)
+    return viewer
+  }, rememberedViewer)
+}
+
+/**
+ * A page loaded from the server brings its Viewer along, without the
+ * browser asking (its `beforeLoad` runs on the server): remember it too.
+ * Only an account, never null: the app shell starts with null from the build
+ * until the browser has asked the server or the device (ADR 0012).
+ */
+function useRememberHydratedViewer() {
+  const viewer = Route.useRouteContext({ select: (context) => context.viewer })
+  useEffect(() => {
+    if (viewer) rememberViewer(viewer)
+  }, [viewer])
 }
