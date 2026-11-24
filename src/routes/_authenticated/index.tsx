@@ -7,6 +7,7 @@ import {
   NewGameButton,
   RunningGameCard,
 } from "@/components/home"
+import { InstallHint } from "@/components/install-hint"
 import { PageFooter } from "@/components/page-footer"
 import { PageHeader } from "@/components/page-header"
 import { Logo } from "@/components/logo"
@@ -17,10 +18,12 @@ import { Button } from "@/components/ui/button"
 import { Page } from "@/components/page"
 import { formatWhen } from "@/lib/dates"
 import { homeQuery } from "@/lib/queries"
+import { loadPageData } from "@/lib/page-data"
 import type { Home } from "@/server/home"
 
 export const Route = createFileRoute("/_authenticated/")({
-  loader: ({ context }) => context.queryClient.query(homeQuery()),
+  loader: ({ context, cause }) =>
+    loadPageData(cause, () => context.queryClient.query(homeQuery())),
   pendingComponent: StartLoading,
   component: Start,
 })
@@ -35,6 +38,7 @@ function Start() {
     <Page>
       <StartHeader />
       {home.groups.length === 0 ? <Empty /> : <Overview home={home} />}
+      <InstallHint />
     </Page>
   )
 }

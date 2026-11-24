@@ -1,4 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority"
+import { Link, useCanGoBack, useRouter } from "@tanstack/react-router"
 import { ChevronLeft, X } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
@@ -138,6 +139,20 @@ export function PageHeaderBack({
     >
       {icon === "close" ? <X /> : <ChevronLeft />}
     </PageHeaderAction>
+  )
+}
+
+/**
+ * Back to where the page came from, in the history; on a page opened
+ * directly, to the start page (the Player Profile, a page still loading).
+ */
+export function PageHeaderBackInHistory() {
+  const router = useRouter()
+  const canGoBack = useCanGoBack()
+  return canGoBack ? (
+    <PageHeaderBack label="Zurück" onClick={() => router.history.back()} />
+  ) : (
+    <PageHeaderBack render={<Link to="/" />} label="Zur Startseite" />
   )
 }
 

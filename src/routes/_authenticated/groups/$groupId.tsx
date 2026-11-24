@@ -1,7 +1,13 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useManagement } from "./-use-management"
 import { Link, createFileRoute, notFound } from "@tanstack/react-router"
-import { DicesIcon, PodiumIcon, Settings, UserGroupIcon, UserPlus } from "lucide-react"
+import {
+  DicesIcon,
+  PodiumIcon,
+  Settings,
+  UserGroupIcon,
+  UserPlus,
+} from "lucide-react"
 import {
   PageHeader,
   PageHeaderAction,
@@ -13,12 +19,22 @@ import {
 } from "@/components/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Page } from "@/components/page"
+import { PageNotFound } from "@/components/page-not-found"
+import {
+  PageLoading,
+  PageLoadingContent,
+  PageLoadingDescription,
+  PageLoadingHeader,
+  PageLoadingTitle,
+} from "@/components/page-loading"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   groupGamesQuery,
   groupLeaderboardQuery,
   groupManagementQuery,
   groupQuery,
 } from "@/lib/queries"
+import { loadPageData } from "@/lib/page-data"
 import { periodFromSearch } from "@/lib/period-search"
 import { GamesTab } from "./-games-tab"
 import { LeaderboardTab } from "./-leaderboard-tab"
@@ -48,26 +64,28 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
     from: search.from,
     to: search.to,
   }),
-  loader: async ({ context, params, deps }) => {
-    const { queryClient } = context
-    const [group] = await Promise.all([
-      queryClient.query(groupQuery(params.groupId)),
-      queryClient.query(groupGamesQuery(params.groupId)),
-      deps.leaderboard
-        ? queryClient.query(
-          groupLeaderboardQuery(params.groupId, {
-            from: deps.from,
-            to: deps.to,
-          })
-        )
-        : null,
-    ])
-    if (!group) throw notFound()
-    // Open Claims; only the Group Admin gets them.
-    if (group.isAdmin) {
-      await queryClient.query(groupManagementQuery(params.groupId))
-    }
-  },
+  loader: ({ context, params, deps, cause }) =>
+    loadPageData(cause, async () => {
+      const { queryClient } = context
+      const [group] = await Promise.all([
+        queryClient.query(groupQuery(params.groupId)),
+        queryClient.query(groupGamesQuery(params.groupId)),
+        deps.leaderboard
+          ? queryClient.query(
+              groupLeaderboardQuery(params.groupId, {
+                from: deps.from,
+                to: deps.to,
+              })
+            )
+          : null,
+      ])
+      if (!group) throw notFound()
+      // Open Claims; only the Group Admin gets them.
+      if (group.isAdmin) {
+        await queryClient.query(groupManagementQuery(params.groupId))
+      }
+    }),
+  pendingComponent: GroupLoading,
   component: GroupPage,
 })
 
@@ -79,7 +97,7 @@ function GroupPage() {
   const group = useSuspenseQuery(groupQuery(groupId)).data
   const { data: games } = useSuspenseQuery(groupGamesQuery(groupId))
   const management = useManagement(groupId, group?.isAdmin ?? false)
-  if (!group) return null
+  if (!group) return <PageNotFound />
   return (
     <Page>
       <PageHeader variant="start">
@@ -129,9 +147,18 @@ function GroupPage() {
         className="flex-1 gap-3"
       >
         <TabsList aria-label="Bereiche der Gruppe" className="mx-4 mt-1 w-auto">
-          <TabsTrigger value="games"><DicesIcon />Spiele</TabsTrigger>
-          <TabsTrigger value="leaderboard"><PodiumIcon />Rangliste</TabsTrigger>
-          <TabsTrigger value="players"><UserGroupIcon />Spieler</TabsTrigger>
+          <TabsTrigger value="games">
+            <DicesIcon />
+            Spiele
+          </TabsTrigger>
+          <TabsTrigger value="leaderboard">
+            <PodiumIcon />
+            Rangliste
+          </TabsTrigger>
+          <TabsTrigger value="players">
+            <UserGroupIcon />
+            Spieler
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="games" className="flex flex-col">
           <GamesTab groupId={group.id} games={games} />
@@ -182,5 +209,25 @@ function GroupLeaderboard({
         })
       }
     />
+  )
+}
+
+/** While the Group loads: its header, the tabs and the Games as placeholders. */
+function GroupLoading() {
+  return (
+    <PageLoading>
+      <PageLoadingHeader variant="start">
+        <PageHeaderContent>
+          <PageLoadingTitle />
+          <PageLoadingDescription />
+        </PageHeaderContent>
+      </PageLoadingHeader>
+      <PageLoadingContent className="pt-1">
+        <Skeleton className="h-12" />
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} variant="card" className="h-20" />
+        ))}
+      </PageLoadingContent>
+    </PageLoading>
   )
 }

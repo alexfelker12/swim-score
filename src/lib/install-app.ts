@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from "react"
 import { isIos } from "@/lib/platform"
 
-// Whether and how Swim Score can be installed on this device, for the hint
-// in the profile. Chrome on Android announces it with `beforeinstallprompt`
+// Whether and how Swim Score can be installed on this device, for the hints
+// on the start page and in the profile. Chrome on Android announces it with `beforeinstallprompt`
 // and shows its own dialog when asked; iOS has no such event, there it only
 // works through "Teilen → Zum Home-Bildschirm".
 //
-// The event can come before the profile is open, so it is caught as soon as
+// The event can come before the hints are shown, so it is caught as soon as
 // this module loads (it is imported by the root route).
 
 /** Chrome's install event, not in the DOM typings. */
@@ -33,7 +33,7 @@ function notify() {
 
 if (typeof window !== "undefined") {
   window.addEventListener("beforeinstallprompt", (event) => {
-    // Keep the browser's own mini bar away; the profile offers it instead.
+    // Keep the browser's own mini bar away; the app offers it instead.
     event.preventDefault()
     deferredPrompt = event as BeforeInstallPromptEvent
     notify()
@@ -83,6 +83,47 @@ export function useInstallApp() {
       deferredPrompt = null
       if (outcome === "accepted") installed = true
       notify()
+    },
+  }
+}
+
+// The hint at the bottom of the start page (#58) can be closed for good on
+// this device; the profile keeps offering the app.
+
+const hintClosedKey = "swim-score:install-hint:closed"
+const hintListeners = new Set<() => void>()
+
+/** Closed while storage is blocked, until the page loads again. */
+let closedForThisPage = false
+
+function hintClosed() {
+  if (closedForThisPage) return true
+  try {
+    return localStorage.getItem(hintClosedKey) !== null
+  } catch {
+    return false
+  }
+}
+
+function subscribeHint(listener: () => void) {
+  hintListeners.add(listener)
+  return () => hintListeners.delete(listener)
+}
+
+/** Whether the install hint was closed on this device, and closing it. */
+export function useInstallHintClosed() {
+  // Closed on the server, so it appears only once the device is known.
+  const closed = useSyncExternalStore(subscribeHint, hintClosed, () => true)
+  return {
+    closed,
+    close() {
+      try {
+        localStorage.setItem(hintClosedKey, new Date().toISOString())
+      } catch {
+        // Storage blocked: closed until the page loads again.
+      }
+      closedForThisPage = true
+      for (const listener of hintListeners) listener()
     },
   }
 }

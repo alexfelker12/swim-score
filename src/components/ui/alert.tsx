@@ -18,9 +18,19 @@ const alertVariants = cva(
         destructive:
           "bg-destructive-muted text-destructive *:data-[slot=alert-description]:text-destructive *:[svg]:text-current",
       },
+      size: {
+        default: "",
+        /**
+         * One title and a short line, 15/13 px, one or two actions centred on
+         * the right (the install hint at the bottom of the start page).
+         */
+        compact:
+          "items-center py-3 pl-3.5 text-[15px] has-data-[slot=alert-action]:pr-14 has-[[data-slot=alert-action]>:nth-child(2)]:pr-42 has-[>svg]:gap-x-3 *:data-[slot=alert-description]:text-[13px] *:data-[slot=alert-description]:text-muted-foreground *:[svg]:mt-0",
+      },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
     },
   }
 )
@@ -29,14 +39,16 @@ const alertVariants = cva(
 function Alert({
   className,
   variant,
+  size = "default",
   role = variant === "destructive" ? "alert" : "status",
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
   return (
     <div
       data-slot="alert"
+      data-size={size}
       role={role}
-      className={cn(alertVariants({ variant }), className)}
+      className={cn(alertVariants({ variant, size }), className)}
       {...props}
     />
   )
@@ -75,7 +87,10 @@ function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-action"
-      className={cn("absolute top-2.5 right-3", className)}
+      className={cn(
+        "absolute top-2.5 right-3 flex items-center gap-1 group-data-[size=compact]/alert:top-1/2 group-data-[size=compact]/alert:right-1.5 group-data-[size=compact]/alert:-translate-y-1/2",
+        className
+      )}
       {...props}
     />
   )

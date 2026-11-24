@@ -1,4 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import type { ComponentProps } from "react"
 
@@ -89,5 +90,28 @@ export function ProfileHeadingDescription({
       )}
       {...props}
     />
+  )
+}
+
+/** While the profile loads: picture, name and line as placeholders. */
+export function ProfileHeadingSkeleton({
+  className,
+  size = "default",
+  ...props
+}: ComponentProps<"div"> & VariantProps<typeof profileHeadingVariants>) {
+  return (
+    <ProfileHeading size={size} className={className} {...props}>
+      <Skeleton
+        variant="circle"
+        className="size-14 shrink-0 group-data-[size=lg]/profile-heading:size-16"
+      />
+      <ProfileHeadingContent className="gap-2.5">
+        <Skeleton
+          variant="line"
+          className="h-5.5 w-36 group-data-[size=lg]/profile-heading:h-7 group-data-[size=lg]/profile-heading:w-32"
+        />
+        <Skeleton variant="line" className="h-3.5 w-28" />
+      </ProfileHeadingContent>
+    </ProfileHeading>
   )
 }

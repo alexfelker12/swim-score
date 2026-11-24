@@ -6,6 +6,8 @@ const skeletonVariants = cva("animate-pulse", {
     variant: {
       /** A block (a button, a card without content): `muted`, radius 14 px. */
       block: "rounded-[14px] bg-muted",
+      /** A profile picture: `muted`, round. */
+      circle: "rounded-full bg-muted",
       /** A line of text: `muted`, round ends. */
       line: "rounded-full bg-muted",
       /** A card in `card` that holds lines and blocks; does not pulse itself. */

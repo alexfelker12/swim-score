@@ -8,6 +8,7 @@ import {
   pageTransition,
 } from "./lib/page-transitions"
 import { isUnreachable, keepQueriesOnDevice } from "./lib/kept-on-device"
+import { onViewerChange } from "./lib/viewer"
 import { routeTree } from "./routeTree.gen"
 
 export type RouterContext = { queryClient: QueryClient }
@@ -47,6 +48,12 @@ export function getRouter() {
     // Spiel" would start from that old data. Loaders take fresh data from the
     // query cache, so waiting for them only costs time when something changed.
     defaultStaleReloadMode: "blocking",
+    // Loaders don't hold up a page change in the browser (#58,
+    // `loadPageData`): the page changes at once with one transition and
+    // shows its `pendingComponent` through Suspense until its data is there.
+    // The router's own pending state would swap to it without a transition
+    // and hold the transition back until the data arrives.
+    defaultPendingMs: Infinity,
     // "Keine Verbindung" instead of an error when the server can't be reached.
     defaultErrorComponent: PageError,
     // Forward and back move like a stack (ADR 0014); only in the browser,
@@ -58,6 +65,11 @@ export function getRouter() {
   setupRouterSsrQueryIntegration({ router, queryClient })
   // The start page and Games for opening without a connection (ADR 0012).
   keepQueriesOnDevice(queryClient)
+  // Signed out or renamed on another device: load again with the account
+  // the server answers with (#58).
+  if (typeof window !== "undefined") {
+    onViewerChange(() => void router.invalidate())
+  }
 
   return router
 }

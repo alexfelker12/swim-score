@@ -16,6 +16,7 @@ import {
 import {
   PageHeader,
   PageHeaderBack,
+  PageHeaderContent,
   PageHeaderTitle,
 } from "@/components/page-header"
 import { Section, SectionDescription, SectionTitle } from "@/components/section"
@@ -39,6 +40,14 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Page } from "@/components/page"
+import { PageNotFound } from "@/components/page-not-found"
+import {
+  PageLoading,
+  PageLoadingContent,
+  PageLoadingHeader,
+  PageLoadingTitle,
+} from "@/components/page-loading"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Item,
   ItemActions,
@@ -55,13 +64,13 @@ import {
   RadioGroup,
 } from "@/components/ui/radio-group"
 import { formatMonth, isToday } from "@/lib/dates"
+import { loadPageData } from "@/lib/page-data"
 import {
   groupChanged,
   groupManagementQuery,
   groupQuery,
   leftGroup,
 } from "@/lib/queries"
-import { useManagement } from "./-use-management"
 import { useSheet } from "@/lib/use-sheet"
 import {
   handOverAdminFn,
@@ -80,13 +89,15 @@ import type { GroupManagement } from "@/server/invites"
 export const Route = createFileRoute(
   "/_authenticated/groups/$groupId_/settings"
 )({
-  loader: async ({ context, params }) => {
-    const group = await context.queryClient.query(groupQuery(params.groupId))
-    if (!group) throw notFound()
-    if (group.isAdmin) {
-      await context.queryClient.query(groupManagementQuery(params.groupId))
-    }
-  },
+  loader: ({ context, params, cause }) =>
+    loadPageData(cause, async () => {
+      const group = await context.queryClient.query(groupQuery(params.groupId))
+      if (!group) throw notFound()
+      if (group.isAdmin) {
+        await context.queryClient.query(groupManagementQuery(params.groupId))
+      }
+    }),
+  pendingComponent: SettingsLoading,
   component: SettingsPage,
 })
 
@@ -97,8 +108,7 @@ const nameErrors: Partial<Record<string, string>> = {
 function SettingsPage() {
   const { groupId } = Route.useParams()
   const group = useSuspenseQuery(groupQuery(groupId)).data
-  const management = useManagement(groupId, group?.isAdmin ?? false)
-  if (!group) return null
+  if (!group) return <PageNotFound />
   return (
     <Page>
       <PageHeader>
@@ -117,13 +127,26 @@ function SettingsPage() {
         </PageHeaderTitle>
       </PageHeader>
       <main className="flex flex-col gap-7 px-4 pt-3 pb-8">
-        {group.isAdmin && management ? (
-          <AdminSettings group={group} management={management} />
+        {group.isAdmin ? (
+          <SettingsOfGroupAdmin group={group} />
         ) : (
           <MemberSettings group={group} />
         )}
       </main>
     </Page>
+  )
+}
+
+/**
+ * The Group Admin's settings, once their Claims and link candidates are
+ * there; the member's if the server no longer counts them as Group Admin.
+ */
+function SettingsOfGroupAdmin({ group }: { group: GroupView }) {
+  const management = useSuspenseQuery(groupManagementQuery(group.id)).data
+  return management ? (
+    <AdminSettings group={group} management={management} />
+  ) : (
+    <MemberSettings group={group} />
   )
 }
 
@@ -582,4 +605,25 @@ function leftLabel(p: FormerPlayer): string {
   if (p.reason === "deleted") return "Konto gelöscht"
   const when = formatMonth(p.leftAt)
   return p.reason === "left" ? `ausgetreten im ${when}` : `entfernt im ${when}`
+}
+
+/** While the Group loads: its settings as placeholders. */
+function SettingsLoading() {
+  return (
+    <PageLoading>
+      <PageLoadingHeader>
+        <PageHeaderContent>
+          <PageLoadingTitle />
+        </PageHeaderContent>
+      </PageLoadingHeader>
+      <PageLoadingContent className="gap-2 pt-3">
+        <Skeleton variant="line" className="mx-1 h-4 w-28" />
+        <Skeleton className="h-12" />
+        <Skeleton variant="line" className="mx-1 mt-5 h-4 w-24" />
+        <Skeleton variant="card" className="h-16" />
+        <Skeleton variant="card" className="h-16" />
+        <Skeleton variant="card" className="h-16" />
+      </PageLoadingContent>
+    </PageLoading>
+  )
 }

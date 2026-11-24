@@ -27,6 +27,7 @@ import { authClient } from "@/lib/auth-client"
 import { authError } from "@/lib/auth-messages"
 import { safeRedirect } from "@/lib/safe-redirect"
 import { getPasswordResetAvailableFn } from "@/server/functions"
+import { reloadViewer } from "@/lib/viewer"
 
 type Search = {
   redirect?: string
@@ -83,7 +84,7 @@ function SignIn() {
     queryClient.clear()
     // Reloading the route runs its beforeLoad, which now sends the signed-in
     // account on to the original page.
-    await router.invalidate()
+    await reloadViewer(router)
   }
 
   return (

@@ -14,6 +14,15 @@ import {
 } from "@/components/page-header"
 import { SectionDescription } from "@/components/section"
 import { Page } from "@/components/page"
+import { PageNotFound } from "@/components/page-not-found"
+import {
+  PageLoading,
+  PageLoadingContent,
+  PageLoadingDescription,
+  PageLoadingHeader,
+} from "@/components/page-loading"
+import { Skeleton } from "@/components/ui/skeleton"
+import { loadPageData } from "@/lib/page-data"
 import { formatLongDay, formatTime } from "@/lib/dates"
 import {
   describeGameLength,
@@ -25,17 +34,19 @@ import type { GameView } from "@/server/games"
 
 /** "Spielverlauf": the Game Round by Round, for every Player of the Group. */
 export const Route = createFileRoute("/_authenticated/games/$gameId_/history")({
-  loader: async ({ context, params }) => {
-    const game = await context.queryClient.query(gameQuery(params.gameId))
-    if (!game) throw notFound()
-  },
+  loader: ({ context, params, cause }) =>
+    loadPageData(cause, async () => {
+      const game = await context.queryClient.query(gameQuery(params.gameId))
+      if (!game) throw notFound()
+    }),
+  pendingComponent: HistoryLoading,
   component: HistoryPage,
 })
 
 function HistoryPage() {
   const { gameId } = Route.useParams()
   const game = useSuspenseQuery(gameQuery(gameId)).data
-  if (!game) return null
+  if (!game) return <PageNotFound />
   const names = new Map(game.participants.map((p) => [p.id, p.name]))
   const name = (id: string) => names.get(id) ?? ""
   const entries = withTakeovers(
@@ -118,4 +129,23 @@ function describeTime(game: GameView): string {
   return game.finishedAt
     ? `${day}, ${from} bis ${formatTime(game.finishedAt)}`
     : `${day}, seit ${from}`
+}
+
+/** While the Game loads: its Rounds as placeholders. */
+function HistoryLoading() {
+  return (
+    <PageLoading>
+      <PageLoadingHeader>
+        <PageHeaderContent>
+          <PageHeaderTitle>Spielverlauf</PageHeaderTitle>
+          <PageLoadingDescription />
+        </PageHeaderContent>
+      </PageLoadingHeader>
+      <PageLoadingContent>
+        {Array.from({ length: 6 }, (_, i) => (
+          <Skeleton key={i} variant="card" className="h-14" />
+        ))}
+      </PageLoadingContent>
+    </PageLoading>
+  )
 }
