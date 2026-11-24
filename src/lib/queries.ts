@@ -1,4 +1,5 @@
 import { orKept } from "@/lib/kept-on-device"
+import { pagedQueryOptions } from "@/lib/paged-query"
 import { queryOptions } from "@tanstack/react-query"
 import type { QueryClient } from "@tanstack/react-query"
 import type { GameStatus } from "@/server/db/schema"
@@ -15,6 +16,8 @@ import {
   getProfileFn,
   getSpectatorGameFn,
   listGamesFn,
+  listGroupPlayersFn,
+  listHomeGroupsFn,
 } from "@/server/functions"
 
 /**
@@ -23,12 +26,14 @@ import {
  * with that one prefix.
  */
 export const queryKeys = {
-  /** The start page: running Games, "Neues Spiel", "Meine Gruppen". */
+  /** The start page: running Games, "Neues Spiel"; prefix of "Meine Gruppen". */
   home: () => ["home"] as const,
+  homeGroups: () => ["home", "groups"] as const,
   /** Prefix of everything about one Group. */
   group: (groupId: string) => ["group", groupId] as const,
   groupView: (groupId: string) => ["group", groupId, "view"] as const,
   groupGames: (groupId: string) => ["group", groupId, "games"] as const,
+  groupPlayers: (groupId: string) => ["group", groupId, "players"] as const,
   /** Every metric at once, for one period; `""` for an open end. */
   groupLeaderboard: (groupId: string, from = "", to = "") =>
     ["group", groupId, "leaderboard", from, to] as const,
@@ -60,13 +65,14 @@ export const mutationKeys = {
   cancelGame: (gameId: string) => ["cancelGame", gameId] as const,
 }
 
-// Routes load these in their loader with `queryClient.query(...)`, which
-// takes fresh data from the cache and loads stale or invalidated data again
-// before the page renders, and read them with `useSuspenseQuery`.
+// Routes load these in their loader with `queryClient.query(...)` (lists:
+// `fetchInfiniteQuery`), which takes fresh data from the cache and loads
+// stale or invalidated data again, and read them with `useSuspenseQuery`
+// (lists: `usePagedQuery`).
 
 /**
- * The start page: running Games the viewer plays in, the Group for "Neues
- * Spiel" and "Meine Gruppen".
+ * The start page: running Games the viewer plays in and the Group for
+ * "Neues Spiel"; "Meine Gruppen" in `homeGroupsQuery`.
  */
 export function homeQuery() {
   return queryOptions({
@@ -82,6 +88,18 @@ export function homeQuery() {
   })
 }
 
+/**
+ * "Meine Gruppen" on the start page, 15 at a time (#59). Without a
+ * connection the Groups kept on the device stand in, as for the start page.
+ */
+export function homeGroupsQuery() {
+  return pagedQueryOptions({
+    queryKey: queryKeys.homeGroups(),
+    queryFn: (page) => listHomeGroupsFn({ data: { page } }),
+    keptOnDevice: {},
+  })
+}
+
 /** The Group with its Players, or null when the viewer may not see it. */
 export function groupQuery(groupId: string) {
   return queryOptions({
@@ -90,11 +108,20 @@ export function groupQuery(groupId: string) {
   })
 }
 
-/** The Group's Games, newest first. */
+/** The Group's Games, newest first, 15 at a time (#59). */
 export function groupGamesQuery(groupId: string) {
-  return queryOptions({
+  return pagedQueryOptions({
     queryKey: queryKeys.groupGames(groupId),
-    queryFn: () => listGamesFn({ data: { groupId } }),
+    queryFn: (page) => listGamesFn({ data: { groupId, page } }),
+  })
+}
+
+/** The Group's current Players by name, 25 at a time (#59). */
+export function groupPlayersQuery(groupId: string) {
+  return pagedQueryOptions({
+    queryKey: queryKeys.groupPlayers(groupId),
+    queryFn: (page) => listGroupPlayersFn({ data: { groupId, page } }),
+    pageSize: 25,
   })
 }
 

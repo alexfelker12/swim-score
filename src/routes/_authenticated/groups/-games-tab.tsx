@@ -9,20 +9,23 @@ import {
   GameCardSwimmer,
   GameCardTitle,
 } from "@/components/game-card"
+import { ListEnd } from "@/components/list-end"
 import { PageFooter } from "@/components/page-footer"
 import { Section, SectionDescription, SectionTitle } from "@/components/section"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formatDay, formatMonth, formatStarted, monthKey } from "@/lib/dates"
+import { usePagedQuery } from "@/lib/paged-query"
+import { groupGamesQuery } from "@/lib/queries"
 import type { GameListEntry } from "@/server/games"
 
-/** Tab "Spiele": the running Games on top, then the others by month. */
-export function GamesTab({
-  groupId,
-  games,
-}: {
-  groupId: string
-  games: Array<GameListEntry>
-}) {
+/**
+ * Tab "Spiele": the running Games on top, then the others by month; more
+ * load at the end of the list (#59).
+ */
+export function GamesTab({ groupId }: { groupId: string }) {
+  const list = usePagedQuery(groupGamesQuery(groupId))
+  const games = list.items
   const running = games.filter((g) => g.status === "running")
   const past = games.filter((g) => g.status !== "running")
   const months: Array<{ key: string; label: string; games: typeof past }> = []
@@ -54,6 +57,10 @@ export function GamesTab({
             ))}
           </Section>
         ))}
+        <ListEnd
+          list={list}
+          placeholder={<Skeleton variant="card" className="h-20" />}
+        />
         {games.length === 0 ? (
           <SectionDescription className="px-1 py-2">
             Noch keine Spiele in dieser Gruppe.

@@ -9,3 +9,4 @@ Pages used to load their data in router loaders and read the loader's return val
 - A change followed by navigating elsewhere only marks queries as stale (`later: true`); the next page's loader loads what it needs, so nobody waits for a reload that is thrown away.
 - The session and the Viewer stay in the router's `beforeLoad`, because redirects depend on them; changes to them (signing in or out, the own name, picture or theme) still go through `router.invalidate()`, since #58 through `reloadViewer` (ADR 0016). Signing in, signing up, signing out and deleting the account also clear the query cache, so no account sees what was loaded for another.
 - New pages and changes add their keys and reload helpers to `src/lib/queries.ts` rather than writing keys inline.
+- Lists are infinite queries loaded a page at a time (ADR 0017).

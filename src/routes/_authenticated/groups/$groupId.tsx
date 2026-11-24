@@ -30,6 +30,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   groupGamesQuery,
+  groupPlayersQuery,
   groupLeaderboardQuery,
   groupManagementQuery,
   groupQuery,
@@ -61,6 +62,7 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   }),
   loaderDeps: ({ search }) => ({
     leaderboard: search.tab === "leaderboard",
+    players: search.tab === "players",
     from: search.from,
     to: search.to,
   }),
@@ -69,7 +71,10 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
       const { queryClient } = context
       const [group] = await Promise.all([
         queryClient.query(groupQuery(params.groupId)),
-        queryClient.query(groupGamesQuery(params.groupId)),
+        queryClient.fetchInfiniteQuery(groupGamesQuery(params.groupId)),
+        deps.players
+          ? queryClient.fetchInfiniteQuery(groupPlayersQuery(params.groupId))
+          : null,
         deps.leaderboard
           ? queryClient.query(
               groupLeaderboardQuery(params.groupId, {
@@ -95,7 +100,6 @@ function GroupPage() {
   const { tab = "games" } = search
   const navigate = Route.useNavigate()
   const group = useSuspenseQuery(groupQuery(groupId)).data
-  const { data: games } = useSuspenseQuery(groupGamesQuery(groupId))
   const management = useManagement(groupId, group?.isAdmin ?? false)
   if (!group) return <PageNotFound />
   return (
@@ -161,7 +165,7 @@ function GroupPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="games" className="flex flex-col">
-          <GamesTab groupId={group.id} games={games} />
+          <GamesTab groupId={group.id} />
         </TabsContent>
         <TabsContent value="leaderboard">
           <GroupLeaderboard

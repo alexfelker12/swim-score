@@ -19,6 +19,8 @@ import {
 } from "@/rules-engine"
 import { game, gameEvent, participant, player, takeover } from "./db/schema"
 import { CommandError } from "./errors"
+import { pageOfRows, readPage } from "./paging"
+import type { Page, PageRequest } from "./paging"
 import {
   isCurrentPlayer,
   getGroup,
@@ -676,17 +678,30 @@ export type GameListEntry = {
   swimmer: string | null
 }
 
-/** The Group's Games, newest first. */
+/**
+ * The Group's Games, a page at a time (#59): running ones first, then newest
+ * first; Games started in the same millisecond by id.
+ */
 export async function listGames(
   app: App,
   headers: Headers,
-  input: { groupId: string }
-): Promise<Array<GameListEntry>> {
+  input: { groupId: string; page?: PageRequest }
+): Promise<Page<GameListEntry>> {
   const me = await requireUser(app, headers)
   await requirePlayer(app, input.groupId, me.id)
+  const { size, after } = readPage(input.page, ["number", "number", "string"])
+  // Imported Games may carry microseconds; the cursor counts milliseconds.
+  const running = sql`(case when ${game.status} = 'running' then 1 else 0 end)`
+  const started = sql`date_trunc('milliseconds', ${game.startedAt})`
   const rows = await app.db.query.game.findMany({
-    where: eq(game.groupId, input.groupId),
-    orderBy: desc(game.startedAt),
+    where: and(
+      eq(game.groupId, input.groupId),
+      after
+        ? sql`(${running}, ${started}, ${game.id}) < (${after[0]}, ${new Date(Number(after[1])).toISOString()}::timestamp, ${after[2]})`
+        : undefined
+    ),
+    orderBy: [desc(running), desc(started), desc(game.id)],
+    limit: size + 1,
     with: {
       scorekeeper: { columns: { name: true } },
       participants: {
@@ -702,23 +717,31 @@ export async function listGames(
       events: { orderBy: (e, { asc }) => asc(e.version) },
     },
   })
-  return rows.map((row) => {
-    const state = replayGame(row)
-    const nameOf = (id: string | null) => {
-      const found = row.participants.find((p) => p.id === id)
-      return found ? playerName(found.player) : null
-    }
-    return {
-      id: row.id,
-      status: row.status,
-      startedAt: row.startedAt,
-      participantCount: row.participants.length,
-      round: state.round,
-      scorekeeper: row.scorekeeper?.name ?? null,
-      winner: nameOf(state.winner),
-      swimmer: nameOf(state.swimmer),
-    }
-  })
+  const page = pageOfRows(rows, size, (row) => [
+    row.status === "running" ? 1 : 0,
+    row.startedAt.getTime(),
+    row.id,
+  ])
+  return {
+    next: page.next,
+    items: page.items.map((row) => {
+      const state = replayGame(row)
+      const nameOf = (id: string | null) => {
+        const found = row.participants.find((p) => p.id === id)
+        return found ? playerName(found.player) : null
+      }
+      return {
+        id: row.id,
+        status: row.status,
+        startedAt: row.startedAt,
+        participantCount: row.participants.length,
+        round: state.round,
+        scorekeeper: row.scorekeeper?.name ?? null,
+        winner: nameOf(state.winner),
+        swimmer: nameOf(state.swimmer),
+      }
+    }),
+  }
 }
 
 /**

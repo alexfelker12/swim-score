@@ -7,7 +7,7 @@ import {
   startGame,
 } from "./games"
 import { addGuest, createGroup, getGroup, leaveGroup } from "./groups"
-import { getHome } from "./home"
+import { getHome, listHomeGroups } from "./home"
 import { joinViaInvite } from "./testing/groups"
 import { createTestApp, signUp } from "./testing/test-app"
 import type { TestApp } from "./testing/test-app"
@@ -66,6 +66,52 @@ async function lose(
   }
 }
 
+describe("the Groups on the start page, page by page", () => {
+  it("come played most recently first, newest joined first without a Game, as many as asked for", async () => {
+    const app = await createTestApp()
+    const anna = await signUp(app.auth, { username: "Anna" })
+    const ids: Array<string> = []
+    for (let i = 0; i < 18; i++) {
+      const { id } = await createGroup(app, anna.headers, {
+        name: `Runde ${i}`,
+      })
+      ids.push(id)
+    }
+    const [annaIn5] = (await getGroup(app, anna.headers, { groupId: ids[5] }))
+      .players
+    await addGuest(app, anna.headers, { groupId: ids[5], name: "Ben" })
+    const ben = (
+      await getGroup(app, anna.headers, { groupId: ids[5] })
+    ).players.find((p) => p.name === "Ben")!
+    await startGame(app, anna.headers, {
+      groupId: ids[5],
+      playerIds: [annaIn5.id, ben.id],
+    })
+
+    const first = await listHomeGroups(app, anna.headers, {
+      page: { size: 15 },
+    })
+    const second = await listHomeGroups(app, anna.headers, {
+      page: { size: 15, after: first.next },
+    })
+
+    expect(first.items).toHaveLength(15)
+    expect(second).toMatchObject({ next: null })
+    expect([...first.items, ...second.items].map((g) => g.id)).toEqual([
+      ids[5],
+      ...ids.filter((id) => id !== ids[5]).reverse(),
+    ])
+  })
+
+  it("are only for signed-in accounts", async () => {
+    const app = await createTestApp()
+
+    await expect(listHomeGroups(app, new Headers())).rejects.toMatchObject({
+      code: "notSignedIn",
+    })
+  })
+})
+
 describe("the start page", () => {
   it("is empty without a Group", async () => {
     const app = await createTestApp()
@@ -74,7 +120,10 @@ describe("the start page", () => {
     expect(await getHome(app, erik.headers)).toEqual({
       runningGames: [],
       newGame: null,
-      groups: [],
+    })
+    expect(await listHomeGroups(app, erik.headers)).toEqual({
+      items: [],
+      next: null,
     })
   })
 
@@ -89,7 +138,7 @@ describe("the start page", () => {
       groupName: "Familie am See",
       lastPlayedAt: null,
     })
-    expect(home.groups).toEqual([
+    expect((await listHomeGroups(app, anna.headers)).items).toEqual([
       {
         id: family,
         name: "Familie am See",
@@ -138,7 +187,11 @@ describe("the start page", () => {
         ],
       },
     ])
-    expect(home.groups.find((g) => g.id === thursday)).toMatchObject({
+    expect(
+      (await listHomeGroups(app, anna.headers)).items.find(
+        (g) => g.id === thursday
+      )
+    ).toMatchObject({
       running: true,
       lastPlayedAt: new Date("2026-11-05T19:00:00Z"),
     })
@@ -236,7 +289,7 @@ describe("the start page", () => {
       groupName: "Donnerstagsrunde",
       lastPlayedAt: new Date("2026-11-05T19:00:00Z"),
     })
-    expect(home.groups).toEqual([
+    expect((await listHomeGroups(app, anna.headers)).items).toEqual([
       expect.objectContaining({
         id: thursday,
         running: false,
@@ -262,7 +315,9 @@ describe("the start page", () => {
 
     expect(home.newGame?.groupId).toBe(thursday)
     expect(home.runningGames).toEqual([])
-    expect(home.groups.map((g) => g.id)).toEqual([thursday, family])
+    expect(
+      (await listHomeGroups(app, anna.headers)).items.map((g) => g.id)
+    ).toEqual([thursday, family])
   })
 
   it("forgets Groups I have left", async () => {
@@ -277,7 +332,9 @@ describe("the start page", () => {
 
     expect(home.runningGames.map((g) => g.id)).not.toContain(gameId)
     expect(home.newGame?.groupId).toBe(thursday)
-    expect(home.groups.map((g) => g.id)).toEqual([thursday])
+    expect(
+      (await listHomeGroups(app, ben.headers)).items.map((g) => g.id)
+    ).toEqual([thursday])
   })
 
   it("is only for signed-in accounts", async () => {

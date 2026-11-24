@@ -271,7 +271,7 @@ describe("confirming a Claim", () => {
       ["Ben", false],
       ["Anna", false],
     ])
-    const games = await listGames(app, ben.headers, { groupId })
+    const games = (await listGames(app, ben.headers, { groupId })).items
     expect(games.map((g) => [g.id, g.winner])).toEqual([
       [lost, "Hakan"],
       [won, "Ben"],
