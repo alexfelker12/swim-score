@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router"
 import {
   Ban,
   Clock,
+  FilterX,
   Info,
   Layers,
   PencilLine,
@@ -15,13 +16,14 @@ import {
   GameCard,
   GameCardDate,
   GameCardFact,
+  GameCardFactRow,
   GameCardFacts,
   GameCardHeader,
   GameCardName,
   GameCardStatus,
   GameCardTitle,
 } from "@/components/game-card"
-import { ChipRow } from "@/components/chip-row"
+import { ChipRow, ChipRowAction, ChipRowChips } from "@/components/chip-row"
 import { ListEnd } from "@/components/list-end"
 import { PageFooter } from "@/components/page-footer"
 import { Section, SectionDescription, SectionTitle } from "@/components/section"
@@ -130,8 +132,8 @@ export function GamesTab({
 }
 
 /**
- * The filters as chips, each on or off, all combined; "Zurücksetzen" once
- * one is on. A chip shows its new state at once, while the Games for it
+ * The filters as chips, each on or off, all combined; once one is on,
+ * "Filter zurücksetzen" next to them, in reach however far they scrolled. A chip shows its new state at once, while the Games for it
  * load; give it the filter as `key`, so it starts afresh from the page's.
  */
 function GameFilters({
@@ -147,44 +149,65 @@ function GameFilters({
     onChange(next)
   }
   return (
-    <ChipRow aria-label="Spiele filtern" className="px-4 pb-3">
-      {GAME_FILTERS.map(({ key, label }) => (
-        <Toggle
-          key={key}
-          variant="chip"
-          pressed={shown[key] === true}
-          onPressedChange={(on) => change({ ...shown, [key]: on })}
-        >
-          {label}
-        </Toggle>
-      ))}
+    <ChipRow aria-label="Spiele filtern" className="pb-3">
+      <ChipRowChips>
+        {GAME_FILTERS.map(({ key, label }) => (
+          <Toggle
+            key={key}
+            variant="chip"
+            pressed={shown[key] === true}
+            onPressedChange={(on) => change({ ...shown, [key]: on })}
+          >
+            {label}
+          </Toggle>
+        ))}
+      </ChipRowChips>
       {hasGameFilter(shown) ? (
-        <Button variant="ghost" size="xs" onClick={() => change({})}>
-          Zurücksetzen
-        </Button>
+        <ChipRowAction>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Filter zurücksetzen"
+            onClick={() => change({})}
+          >
+            <FilterX />
+          </Button>
+        </ChipRowAction>
       ) : null}
     </ChipRow>
   )
 }
 
 function RunningCard({ game }: { game: GameListEntry }) {
+  const since = formatDuration(game.startedAt, new Date())
   return (
     <GameCard
       status="running"
       render={<Link to="/games/$gameId" params={{ gameId: game.id }} />}
     >
       <GameCardHeader>
-        <GameCardStatus>Läuft, Runde {game.round}</GameCardStatus>
+        <GameCardStatus>
+          <span className="sr-only">Läuft, </span>Runde {game.round}
+        </GameCardStatus>
         <GameCardDate>{formatStarted(game.startedAt)}</GameCardDate>
       </GameCardHeader>
       <GameCardFacts>
-        <ParticipantsFact count={game.participantCount} />
-        {game.scorekeeper ? (
-          <GameCardFact icon={PencilLine} label="Zähler">
-            {game.scorekeeper}
-          </GameCardFact>
-        ) : null}
-        <SwimmerFact name={game.swimmer} />
+        <GameCardFactRow>
+          <ParticipantsFact count={game.participantCount} />
+          {game.scorekeeper ? (
+            <GameCardFact icon={PencilLine} label="Zähler">
+              {game.scorekeeper}
+            </GameCardFact>
+          ) : null}
+        </GameCardFactRow>
+        <GameCardFactRow>
+          <SwimmerFact name={game.swimmer} none="noch kein Schwimmer" />
+          {since ? (
+            <GameCardFact icon={Clock} label="Dauer">
+              seit {since}
+            </GameCardFact>
+          ) : null}
+        </GameCardFactRow>
       </GameCardFacts>
     </GameCard>
   )
@@ -192,9 +215,7 @@ function RunningCard({ game }: { game: GameListEntry }) {
 
 function PastCard({ game }: { game: GameListEntry }) {
   const cancelled = game.status === "cancelled"
-  const duration = cancelled
-    ? null
-    : formatDuration(game.startedAt, game.finishedAt)
+  const duration = formatDuration(game.startedAt, game.finishedAt)
   return (
     <GameCard
       status={cancelled ? "cancelled" : "finished"}
@@ -209,43 +230,49 @@ function PastCard({ game }: { game: GameListEntry }) {
         ) : (
           <GameCardTitle>
             <Trophy aria-hidden="true" />
-            <GameCardName>{game.winner}</GameCardName> gewinnt
+            <GameCardName>{game.winner}</GameCardName>
+            <span className="sr-only"> gewinnt</span>
           </GameCardTitle>
         )}
         <GameCardDate>{formatDay(game.startedAt)}</GameCardDate>
       </GameCardHeader>
       <GameCardFacts>
-        <ParticipantsFact count={game.participantCount} />
-        <GameCardFact icon={Layers}>
-          {game.rounds} {game.rounds === 1 ? "Runde" : "Runden"}
-        </GameCardFact>
-        {duration ? (
-          <GameCardFact icon={Clock} label="Dauer">
-            {duration}
+        <GameCardFactRow>
+          <ParticipantsFact count={game.participantCount} />
+          <GameCardFact icon={Layers}>
+            {game.rounds} {game.rounds === 1 ? "Runde" : "Runden"}
           </GameCardFact>
-        ) : null}
-        {cancelled ? (
-          <GameCardFact icon={Info}>zählt nicht</GameCardFact>
-        ) : (
-          <SwimmerFact name={game.swimmer} />
-        )}
+        </GameCardFactRow>
+        <GameCardFactRow>
+          {cancelled ? (
+            <GameCardFact icon={Info}>zählt nicht</GameCardFact>
+          ) : (
+            <SwimmerFact name={game.swimmer} none="ohne Schwimmer" />
+          )}
+          {duration ? (
+            <GameCardFact icon={Clock} label="Dauer">
+              {duration}
+            </GameCardFact>
+          ) : null}
+        </GameCardFactRow>
       </GameCardFacts>
     </GameCard>
   )
 }
 
 function ParticipantsFact({ count }: { count: number }) {
-  return (
-    <GameCardFact icon={Users} label="Teilnehmer">
-      {count}
-    </GameCardFact>
-  )
+  return <GameCardFact icon={Users}>{count} Teilnehmer</GameCardFact>
 }
 
-function SwimmerFact({ name }: { name: string | null }) {
+/** The Swimmer in blue, or quietly that there is none (`none`). */
+function SwimmerFact({ name, none }: { name: string | null; none: string }) {
   return name ? (
-    <GameCardFact icon={Waves} label="Schwimmer" swimmer>
+    <GameCardFact icon={Waves} label="Schwimmer" tone="swimmer">
       {name}
     </GameCardFact>
-  ) : null
+  ) : (
+    <GameCardFact icon={Waves} tone="quiet">
+      {none}
+    </GameCardFact>
+  )
 }

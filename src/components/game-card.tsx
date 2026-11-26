@@ -6,20 +6,29 @@ import type { ComponentProps } from "react"
 /**
  * A Game in the Group's list (`i05-gruppe-spiele`): a running Game in the
  * primary colour, a finished one plain, a cancelled one dashed. Rendered as
- * a link through `render`. Under the title its facts with icons, each on its
- * own, so a long name shortens instead of breaking the line (#60).
+ * a link through `render`. Under the title its facts with icons in a fixed
+ * grid, so every card is the same height and a long name shortens instead
+ * of breaking the line (#60).
  *
  * ```tsx
  * <GameCard status="finished" render={<Link to="/games/$gameId" … />}>
  *   <GameCardHeader>
  *     <GameCardTitle>
- *       <Trophy /> <GameCardName>Carla</GameCardName> gewinnt
+ *       <Trophy /> <GameCardName>Carla</GameCardName>
  *     </GameCardTitle>
  *     <GameCardDate>Do., 29. Okt.</GameCardDate>
  *   </GameCardHeader>
  *   <GameCardFacts>
- *     <GameCardFact icon={Users} label="Teilnehmer">7</GameCardFact>
- *     <GameCardFact icon={Waves} label="Schwimmer" swimmer>Ben</GameCardFact>
+ *     <GameCardFactRow>
+ *       <GameCardFact icon={Users}>7 Teilnehmer</GameCardFact>
+ *       <GameCardFact icon={Layers}>12 Runden</GameCardFact>
+ *     </GameCardFactRow>
+ *     <GameCardFactRow>
+ *       <GameCardFact icon={Waves} label="Schwimmer" tone="swimmer">
+ *         Ben
+ *       </GameCardFact>
+ *       <GameCardFact icon={Clock} label="Dauer">47 Min.</GameCardFact>
+ *     </GameCardFactRow>
  *   </GameCardFacts>
  * </GameCard>
  * ```
@@ -78,13 +87,35 @@ export function GameCardName({ className, ...props }: ComponentProps<"span">) {
   )
 }
 
-/** The facts under the title, side by side, wrapping between them. */
+/**
+ * The facts under the title in two rows of two columns: on the left who
+ * (Participants, Swimmer), on the right the numbers (Rounds, how long),
+ * right-aligned under the date. Every card has both rows, so all cards are
+ * the same height, and a long name shortens instead of wrapping.
+ */
 export function GameCardFacts({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="game-card-facts"
       className={cn(
-        "flex flex-wrap items-center gap-x-3.5 gap-y-1 text-sm text-muted-foreground",
+        "grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 text-sm text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/** One row of the facts: a fact on the left, one (or none) on the right. */
+export function GameCardFactRow({
+  className,
+  ...props
+}: ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="game-card-fact-row"
+      className={cn(
+        "col-span-2 grid grid-cols-subgrid items-center *:nth-2:justify-self-end",
         className
       )}
       {...props}
@@ -93,28 +124,29 @@ export function GameCardFacts({ className, ...props }: ComponentProps<"div">) {
 }
 
 /**
- * One fact with its icon ("7", "12 Runden"); `label` names it for screen
- * readers where the icon alone says it. `swimmer`: in the Swimmer's blue.
- * A long value (a name) shortens.
+ * One fact with its icon ("7 Teilnehmer", "12 Runden"); `label` names it
+ * for screen readers where the icon alone says it. `tone`: `swimmer` in the
+ * Swimmer's blue, `quiet` for a fact that says there is none ("noch kein
+ * Schwimmer"). A long value (a name) shortens.
  */
 export function GameCardFact({
   icon: Icon,
   label,
-  swimmer = false,
+  tone = "default",
   className,
   children,
   ...props
 }: ComponentProps<"span"> & {
   icon: LucideIcon
   label?: string
-  swimmer?: boolean
+  tone?: "default" | "swimmer" | "quiet"
 }) {
   return (
     <span
       data-slot="game-card-fact"
-      data-swimmer={swimmer || undefined}
+      data-tone={tone}
       className={cn(
-        "flex max-w-full min-w-0 items-center gap-1.5 data-swimmer:text-swimmer",
+        "flex max-w-full min-w-0 items-center gap-1.5 whitespace-nowrap data-[tone=quiet]:text-muted-foreground/70 data-[tone=swimmer]:text-swimmer",
         className
       )}
       {...props}
@@ -134,7 +166,7 @@ export function GameCardDate({
   return (
     <CardAction
       className={cn(
-        "row-span-1 pt-0.5 text-sm text-muted-foreground",
+        "row-span-1 pt-0.5 text-sm whitespace-nowrap text-muted-foreground",
         className
       )}
       {...props}
@@ -143,8 +175,10 @@ export function GameCardDate({
 }
 
 /**
- * "● Läuft, Runde 5": the running Game's first line, in the primary colour.
- * `size="lg"` ("● Spiel läuft" on the start page): 15 px, 10 px after the dot.
+ * "● Runde 5": the running Game's first line, in the primary colour; the dot
+ * pulses calmly between full and half opacity (not with reduced motion), so
+ * the line says "läuft" without the word. `size="lg"` ("● Spiel läuft" on
+ * the start page): 15 px, 10 px after the dot.
  */
 export function GameCardStatus({
   className,
@@ -156,14 +190,17 @@ export function GameCardStatus({
     <span
       data-slot="game-card-status"
       className={cn(
-        "flex items-center font-semibold text-primary",
+        "flex min-w-0 items-center font-semibold whitespace-nowrap text-primary",
         size === "lg" ? "gap-2.5 text-[15px]" : "gap-2",
         className
       )}
       {...props}
     >
-      <span aria-hidden="true" className="size-2 rounded-full bg-primary" />
-      {children}
+      <span
+        aria-hidden="true"
+        className="size-2 shrink-0 animate-pulse rounded-full bg-primary motion-reduce:animate-none"
+      />
+      <span className="truncate">{children}</span>
     </span>
   )
 }
