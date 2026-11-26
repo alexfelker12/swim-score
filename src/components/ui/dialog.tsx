@@ -72,6 +72,12 @@ const dialogContentVariants = cva(
          */
         fullscreen:
           "inset-0 mx-auto flex max-w-[500px] flex-col bg-background pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-foreground",
+        /**
+         * A picture on black over the whole screen (the zoomed profile
+         * picture, #62), centred, the close button white at the top right.
+         */
+        viewer:
+          "inset-0 mx-auto flex max-w-[500px] items-center justify-center bg-black pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white [&>[data-slot=dialog-close]]:top-[calc(env(safe-area-inset-top)+0.75rem)] [&>[data-slot=dialog-close]]:text-white [&>[data-slot=dialog-close]]:hover:bg-white/10 [&>[data-slot=dialog-close]]:active:bg-white/15",
       },
     },
     defaultVariants: { variant: "default" },
@@ -82,7 +88,7 @@ function DialogContent({
   className,
   children,
   variant = "default",
-  showCloseButton = variant === "default",
+  showCloseButton = variant === "default" || variant === "viewer",
   ...props
 }: DialogPrimitive.Popup.Props &
   VariantProps<typeof dialogContentVariants> & {

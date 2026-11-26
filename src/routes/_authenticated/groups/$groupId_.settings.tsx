@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import {
   Link,
   createFileRoute,
   notFound,
+  useLocation,
   useNavigate,
 } from "@tanstack/react-router"
 import {
@@ -16,6 +17,7 @@ import {
 import {
   PageHeader,
   PageHeaderBack,
+  PageHeaderContent,
   PageHeaderTitle,
 } from "@/components/page-header"
 import { Section, SectionDescription, SectionTitle } from "@/components/section"
@@ -23,11 +25,18 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PersonAvatar } from "@/components/person-avatar"
 import { Button } from "@/components/ui/button"
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import {
   Drawer,
   DrawerClose,
+  DrawerBody,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
+  DrawerForm,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer"
@@ -39,6 +48,14 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Page } from "@/components/page"
+import { PageNotFound } from "@/components/page-not-found"
+import {
+  PageLoading,
+  PageLoadingContent,
+  PageLoadingHeader,
+  PageLoadingTitle,
+} from "@/components/page-loading"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Item,
   ItemActions,
@@ -55,13 +72,13 @@ import {
   RadioGroup,
 } from "@/components/ui/radio-group"
 import { formatMonth, isToday } from "@/lib/dates"
+import { loadPageData } from "@/lib/page-data"
 import {
   groupChanged,
   groupManagementQuery,
   groupQuery,
   leftGroup,
 } from "@/lib/queries"
-import { useManagement } from "./-use-management"
 import { useSheet } from "@/lib/use-sheet"
 import {
   handOverAdminFn,
@@ -80,13 +97,15 @@ import type { GroupManagement } from "@/server/invites"
 export const Route = createFileRoute(
   "/_authenticated/groups/$groupId_/settings"
 )({
-  loader: async ({ context, params }) => {
-    const group = await context.queryClient.query(groupQuery(params.groupId))
-    if (!group) throw notFound()
-    if (group.isAdmin) {
-      await context.queryClient.query(groupManagementQuery(params.groupId))
-    }
-  },
+  loader: ({ context, params, cause }) =>
+    loadPageData(cause, async () => {
+      const group = await context.queryClient.query(groupQuery(params.groupId))
+      if (!group) throw notFound()
+      if (group.isAdmin) {
+        await context.queryClient.query(groupManagementQuery(params.groupId))
+      }
+    }),
+  pendingComponent: SettingsLoading,
   component: SettingsPage,
 })
 
@@ -97,8 +116,7 @@ const nameErrors: Partial<Record<string, string>> = {
 function SettingsPage() {
   const { groupId } = Route.useParams()
   const group = useSuspenseQuery(groupQuery(groupId)).data
-  const management = useManagement(groupId, group?.isAdmin ?? false)
-  if (!group) return null
+  if (!group) return <PageNotFound />
   return (
     <Page>
       <PageHeader>
@@ -117,13 +135,26 @@ function SettingsPage() {
         </PageHeaderTitle>
       </PageHeader>
       <main className="flex flex-col gap-7 px-4 pt-3 pb-8">
-        {group.isAdmin && management ? (
-          <AdminSettings group={group} management={management} />
+        {group.isAdmin ? (
+          <SettingsOfGroupAdmin group={group} />
         ) : (
           <MemberSettings group={group} />
         )}
       </main>
     </Page>
+  )
+}
+
+/**
+ * The Group Admin's settings, once their Claims and link candidates are
+ * there; the member's if the server no longer counts them as Group Admin.
+ */
+function SettingsOfGroupAdmin({ group }: { group: GroupView }) {
+  const management = useSuspenseQuery(groupManagementQuery(group.id)).data
+  return management ? (
+    <AdminSettings group={group} management={management} />
+  ) : (
+    <MemberSettings group={group} />
   )
 }
 
@@ -151,6 +182,7 @@ function AdminSettings({
                   variant={p.guest ? "guest" : "account"}
                   name={p.name}
                   image={p.image}
+                  zoomable
                 />
               </ItemMedia>
               <ItemContent className="min-w-0 gap-0.5">
@@ -340,24 +372,43 @@ function RenameForm({ group }: { group: GroupView }) {
   )
 }
 
+/**
+ * "Ehemalige Spieler (3)", closed until opened (#61): they matter rarely
+ * and would push "Gruppe verlassen" far down. Open, and scrolled to, when
+ * the page was opened for them (`#former`, from the Players tab).
+ */
 function FormerPlayers({ players }: { players: Array<FormerPlayer> }) {
+  const openedForThem = useLocation({ select: (l) => l.hash === "former" })
+  const heading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    if (openedForThem) heading.current?.scrollIntoView({ block: "start" })
+  }, [openedForThem])
   if (players.length === 0) return null
   return (
-    <Section aria-labelledby="former" className="gap-1">
-      <SectionTitle id="former">Ehemalige Spieler</SectionTitle>
-      <ItemGroup className="gap-0">
-        {players.map((p) => (
-          <Item key={p.id} variant="row" size="list" role="listitem">
-            <ItemContent className="min-w-0 gap-0.5">
-              <ItemTitle>
-                <span className="truncate">{p.name}</span>
-              </ItemTitle>
-              <ItemDescription>{leftLabel(p)}</ItemDescription>
-            </ItemContent>
-          </Item>
-        ))}
-      </ItemGroup>
-    </Section>
+    <Collapsible
+      defaultOpen={openedForThem}
+      render={<Section aria-labelledby="former" className="gap-1" />}
+    >
+      <SectionTitle ref={heading} className="scroll-mt-16">
+        <CollapsibleTrigger id="former">
+          Ehemalige Spieler ({players.length})
+        </CollapsibleTrigger>
+      </SectionTitle>
+      <CollapsibleContent>
+        <ItemGroup className="gap-0">
+          {players.map((p) => (
+            <Item key={p.id} variant="row" size="list" role="listitem">
+              <ItemContent className="min-w-0 gap-0.5">
+                <ItemTitle>
+                  <span className="truncate">{p.name}</span>
+                </ItemTitle>
+                <ItemDescription>{leftLabel(p)}</ItemDescription>
+              </ItemContent>
+            </Item>
+          ))}
+        </ItemGroup>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 
@@ -447,13 +498,12 @@ function HandOverSheet({
 
   return (
     <Drawer {...sheet.drawer}>
-      <DrawerContent>
-        <form
+      <DrawerContent scroll="body">
+        <DrawerForm
           onSubmit={(event) => {
             event.preventDefault()
             if (choice) void sheet.run(() => handOver(choice))
           }}
-          className="flex flex-col gap-4"
         >
           <DrawerHeader>
             <DrawerTitle>Verwalterrolle übergeben</DrawerTitle>
@@ -462,29 +512,33 @@ function HandOverSheet({
               Gruppe.
             </DrawerDescription>
           </DrawerHeader>
-          {accounts.length === 0 ? (
-            <Alert>
-              <Info />
-              <AlertDescription>
-                Noch ist außer dir niemand mit Konto in der Gruppe. Lade
-                jemanden ein, dann kannst du die Rolle übergeben.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <RadioGroup
-              aria-label="Spieler mit Konto"
-              value={choice}
-              onValueChange={(value) => setChoice(value as string)}
-              className="gap-2"
-            >
-              {accounts.map((p) => (
-                <RadioCard key={p.id} value={p.id}>
-                  <RadioCardTitle>{p.name}</RadioCardTitle>
-                  <RadioCardDescription>Spieler mit Konto</RadioCardDescription>
-                </RadioCard>
-              ))}
-            </RadioGroup>
-          )}
+          <DrawerBody>
+            {accounts.length === 0 ? (
+              <Alert>
+                <Info />
+                <AlertDescription>
+                  Noch ist außer dir niemand mit Konto in der Gruppe. Lade
+                  jemanden ein, dann kannst du die Rolle übergeben.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <RadioGroup
+                aria-label="Spieler mit Konto"
+                value={choice}
+                onValueChange={(value) => setChoice(value as string)}
+                className="gap-2"
+              >
+                {accounts.map((p) => (
+                  <RadioCard key={p.id} value={p.id}>
+                    <RadioCardTitle>{p.name}</RadioCardTitle>
+                    <RadioCardDescription>
+                      Spieler mit Konto
+                    </RadioCardDescription>
+                  </RadioCard>
+                ))}
+              </RadioGroup>
+            )}
+          </DrawerBody>
           <FieldError>{sheet.error}</FieldError>
           <DrawerFooter orientation="horizontal">
             <DrawerClose
@@ -497,7 +551,7 @@ function HandOverSheet({
               Übergeben
             </Button>
           </DrawerFooter>
-        </form>
+        </DrawerForm>
       </DrawerContent>
     </Drawer>
   )
@@ -582,4 +636,25 @@ function leftLabel(p: FormerPlayer): string {
   if (p.reason === "deleted") return "Konto gelöscht"
   const when = formatMonth(p.leftAt)
   return p.reason === "left" ? `ausgetreten im ${when}` : `entfernt im ${when}`
+}
+
+/** While the Group loads: its settings as placeholders. */
+function SettingsLoading() {
+  return (
+    <PageLoading>
+      <PageLoadingHeader>
+        <PageHeaderContent>
+          <PageLoadingTitle />
+        </PageHeaderContent>
+      </PageLoadingHeader>
+      <PageLoadingContent className="gap-2 pt-3">
+        <Skeleton variant="line" className="mx-1 h-4 w-28" />
+        <Skeleton className="h-12" />
+        <Skeleton variant="line" className="mx-1 mt-5 h-4 w-24" />
+        <Skeleton variant="card" className="h-16" />
+        <Skeleton variant="card" className="h-16" />
+        <Skeleton variant="card" className="h-16" />
+      </PageLoadingContent>
+    </PageLoading>
+  )
 }

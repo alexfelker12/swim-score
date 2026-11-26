@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { cancelGame, getGame, recordEvent, startGame } from "./games"
 import { createGroup, getGroup, leaveGroup } from "./groups"
+import { getLeaderboard } from "./leaderboard"
 import { getPlayerProfile } from "./player-profile"
 import { joinViaInvite } from "./testing/groups"
 import { createTestApp, signUp } from "./testing/test-app"
@@ -73,6 +74,33 @@ async function win(
   return gameId
 }
 
+/**
+ * Two players: the first throws two Bombs and wins, the second loses his
+ * last two Lives. Returns the Game's id.
+ */
+async function winWithBombs(
+  app: TestApp,
+  headers: Headers,
+  groupId: string,
+  [winner, loser]: [string, string]
+) {
+  const { id: gameId } = await startGame(app, headers, {
+    groupId,
+    playerIds: [winner, loser],
+  })
+  const { participants } = await getGame(app, headers, { gameId })
+  const events = [
+    { type: "bomb", thrower: participants[0].id },
+    { type: "bomb", thrower: participants[0].id },
+    { type: "lost", loser: participants[1].id },
+    { type: "lost", loser: participants[1].id },
+  ] as const
+  for (const [version, event] of events.entries()) {
+    await recordEvent(app, headers, { gameId, expectedVersion: version, event })
+  }
+  return gameId
+}
+
 function totals(profile: PlayerProfile) {
   return Object.fromEntries(profile.totals.map((t) => [t.id, t.value]))
 }
@@ -107,22 +135,60 @@ describe("Player Profile", () => {
       unbreakable: 0,
       untouchable: 2,
     })
+    // Below the Leaderboard's 5 Games there are no rates yet (#62).
     expect(profile.groups).toEqual([
       {
         groupId: thursday,
         name: "Donnerstagsrunde",
         games: 2,
-        wins: 1,
-        winRate: 0.5,
+        winRate: null,
+        swimRate: null,
+        bombsPerGame: null,
       },
       {
         groupId: family,
         name: "Familie am See",
         games: 1,
-        wins: 1,
-        winRate: 1,
+        winRate: null,
+        swimRate: null,
+        bombsPerGame: null,
       },
     ])
+  })
+
+  it("rates each Group like the Group Leaderboard does (#62)", async () => {
+    const { app, anna, thursday, inThursday } = await circles()
+    const { Anna, Ben } = inThursday
+    for (let i = 0; i < 3; i++) {
+      await winWithBombs(app, anna.headers, thursday, [Anna, Ben])
+    }
+    for (let i = 0; i < 2; i++) {
+      await win(app, anna.headers, thursday, [Ben, Anna])
+    }
+
+    const profile = await getPlayerProfile(app, anna.headers, {
+      userId: anna.user.id,
+    })
+    const board = await getLeaderboard(app, anna.headers, {
+      groupId: thursday,
+    })
+    const onBoard = (id: string) =>
+      board.metrics
+        .find((m) => m.id === id)
+        ?.ranked.find((p) => p.playerId === Anna)?.value
+
+    const group = profile.groups.find((g) => g.groupId === thursday)
+    expect(group).toMatchObject({
+      games: 5,
+      winRate: 0.6,
+      swimRate: 0.4,
+      bombsPerGame: 1.2,
+    })
+    expect(group).toMatchObject({
+      winRate: onBoard("winRate"),
+      swimRate: onBoard("swimRate"),
+      bombsPerGame: onBoard("bombsPerGame"),
+    })
   })
 
   it("shows another account's totals over all their Groups, but only shared Groups apart", async () => {
@@ -150,8 +216,9 @@ describe("Player Profile", () => {
         groupId: thursday,
         name: "Donnerstagsrunde",
         games: 1,
-        wins: 1,
-        winRate: 1,
+        winRate: null,
+        swimRate: null,
+        bombsPerGame: null,
       },
     ])
   })

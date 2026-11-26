@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest"
-import { addGuest, createGroup, getGroup, listMyGroups } from "./groups"
+import {
+  addGuest,
+  createGroup,
+  getGroup,
+  listGroupPlayers,
+  listMyGroups,
+} from "./groups"
 import { joinViaInvite } from "./testing/groups"
 import { createTestApp, signUp } from "./testing/test-app"
 import type { App } from "./app"
@@ -208,6 +214,53 @@ describe("my Groups", () => {
     const anna = await signUp(app.auth, { username: "anna" })
 
     expect(await listMyGroups(app, anna.headers)).toEqual([])
+  })
+})
+
+describe("the Group's Players, page by page", () => {
+  it("come by name, as many as asked for, and go on where they stopped when a Guest joins in between", async () => {
+    const app = await createTestApp()
+    const anna = await signUp(app.auth, { username: "Anna" })
+    const { id: groupId } = await createGroup(app, anna.headers, {
+      name: "Große Runde",
+    })
+    for (let i = 1; i <= 29; i++) {
+      await addGuest(app, anna.headers, { groupId, name: `Gast ${i}` })
+    }
+
+    const first = await listGroupPlayers(app, anna.headers, {
+      groupId,
+      page: { size: 25 },
+    })
+    await addGuest(app, anna.headers, { groupId, name: "Aaron" })
+    const second = await listGroupPlayers(app, anna.headers, {
+      groupId,
+      page: { size: 25, after: first.next },
+    })
+
+    expect(first.items.map((p) => p.name)).toEqual([
+      "Anna",
+      ...Array.from({ length: 24 }, (_, i) => `Gast ${i + 1}`),
+    ])
+    expect(second).toMatchObject({ next: null })
+    expect(second.items.map((p) => p.name)).toEqual([
+      "Gast 25",
+      "Gast 26",
+      "Gast 27",
+      "Gast 28",
+      "Gast 29",
+    ])
+  })
+
+  it("are refused to an outsider", async () => {
+    const app = await createTestApp()
+    const anna = await signUp(app.auth, { username: "Anna" })
+    const mallory = await signUp(app.auth, { username: "Mallory" })
+    const { id: groupId } = await createGroup(app, anna.headers, { name: "X" })
+
+    await expect(
+      listGroupPlayers(app, mallory.headers, { groupId })
+    ).rejects.toMatchObject({ code: "groupNotFound" })
   })
 })
 

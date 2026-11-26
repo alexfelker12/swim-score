@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { ChevronRight } from "lucide-react"
+import { Bomb, ChevronRight, Trophy, Waves } from "lucide-react"
 import {
   PeriodPicker,
   PeriodPickerContent,
@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { formatMetricValue } from "@/lib/metric-format"
+import type { LucideIcon } from "lucide-react"
 import type { ComponentProps, ReactNode } from "react"
 import type { PlayerProfile } from "@/server/player-profile"
 import type { Period } from "@/server/stats"
@@ -84,18 +85,31 @@ export function PersonalStats({
                       <LeaderboardHint />
                     </CardAction>
                   </CardHeader>
-                  <CardContent className="grid grid-cols-3">
+                  <CardContent className="grid grid-cols-3 gap-2">
                     <GroupFigure
-                      value={String(group.games)}
-                      label={group.games === 1 ? "Spiel" : "Spiele"}
-                    />
-                    <GroupFigure
-                      value={String(group.wins)}
-                      label={group.wins === 1 ? "Sieg" : "Siege"}
-                    />
-                    <GroupFigure
+                      icon={Trophy}
                       value={formatMetricValue(group.winRate, "percent")}
                       label="Winrate"
+                    />
+                    <GroupFigure
+                      icon={Waves}
+                      tone="swimmer"
+                      value={formatMetricValue(group.swimRate, "percent")}
+                      label={
+                        <>
+                          <span className="sr-only">Schwimmer-</span>Quote
+                        </>
+                      }
+                    />
+                    <GroupFigure
+                      icon={Bomb}
+                      tone="bomb"
+                      value={formatMetricValue(group.bombsPerGame, "decimal")}
+                      label={
+                        <>
+                          <span className="sr-only">Bomben </span>pro Spiel
+                        </>
+                      }
                     />
                   </CardContent>
                 </Card>
@@ -141,13 +155,36 @@ function LeaderboardHint() {
   )
 }
 
-function GroupFigure({ value, label }: { value: string; label: string }) {
+/**
+ * One rate of a Group (#62): the value with its icon ("20 % 🏆"), what it
+ * is under it, short, since the icon says the rest ("Winrate", "Quote",
+ * "pro Spiel"). The icon in the colour of what it stands for: trophy
+ * `primary`, Swimmer blue, Bomb yellow.
+ */
+function GroupFigure({
+  icon: Icon,
+  tone = "primary",
+  value,
+  label,
+}: {
+  icon: LucideIcon
+  tone?: "primary" | "swimmer" | "bomb"
+  value: string
+  label: ReactNode
+}) {
   return (
-    <span className="flex flex-col">
-      <span className="text-lg leading-tight font-bold tabular-nums">
+    <span className="flex min-w-0 flex-col">
+      <span className="flex items-center gap-1.5 text-lg leading-tight font-bold tabular-nums">
         {value}
+        <Icon
+          aria-hidden="true"
+          data-tone={tone}
+          className="size-4.5 shrink-0 data-[tone=bomb]:text-bomb data-[tone=primary]:text-primary data-[tone=swimmer]:text-swimmer"
+        />
       </span>
-      <span className="text-[15px] text-muted-foreground">{label}</span>
+      <span className="text-sm leading-snug text-muted-foreground">
+        {label}
+      </span>
     </span>
   )
 }

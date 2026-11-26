@@ -7,6 +7,8 @@ import {
   NewGameButton,
   RunningGameCard,
 } from "@/components/home"
+import { InstallHint } from "@/components/install-hint"
+import { ListEnd } from "@/components/list-end"
 import { PageFooter } from "@/components/page-footer"
 import { PageHeader } from "@/components/page-header"
 import { Logo } from "@/components/logo"
@@ -14,13 +16,22 @@ import { Section, SectionDescription, SectionTitle } from "@/components/section"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PersonAvatar } from "@/components/person-avatar"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Page } from "@/components/page"
 import { formatWhen } from "@/lib/dates"
-import { homeQuery } from "@/lib/queries"
+import { usePagedQuery } from "@/lib/paged-query"
+import { homeGroupsQuery, homeQuery } from "@/lib/queries"
+import { loadPageData } from "@/lib/page-data"
 import type { Home } from "@/server/home"
 
 export const Route = createFileRoute("/_authenticated/")({
-  loader: ({ context }) => context.queryClient.query(homeQuery()),
+  loader: ({ context, cause }) =>
+    loadPageData(cause, () =>
+      Promise.all([
+        context.queryClient.query(homeQuery()),
+        context.queryClient.fetchInfiniteQuery(homeGroupsQuery()),
+      ])
+    ),
   pendingComponent: StartLoading,
   component: Start,
 })
@@ -34,7 +45,9 @@ function Start() {
   return (
     <Page>
       <StartHeader />
-      {home.groups.length === 0 ? <Empty /> : <Overview home={home} />}
+      {/* "Neues Spiel" needs a Group: none without. */}
+      {home.newGame === null ? <Empty /> : <Overview home={home} />}
+      <InstallHint />
     </Page>
   )
 }
@@ -91,9 +104,7 @@ function Overview({ home }: { home: Home }) {
         <SectionTitle id="my-groups" className="mx-1 mb-1">
           Meine Gruppen
         </SectionTitle>
-        {home.groups.map((group) => (
-          <GroupRow key={group.id} group={group} />
-        ))}
+        <MyGroups />
         <Button
           variant="add"
           size="xl"
@@ -106,6 +117,22 @@ function Overview({ home }: { home: Home }) {
         </Button>
       </Section>
     </main>
+  )
+}
+
+/** "Meine Gruppen", more loading at the end of the list (#59). */
+function MyGroups() {
+  const groups = usePagedQuery(homeGroupsQuery())
+  return (
+    <>
+      {groups.items.map((group) => (
+        <GroupRow key={group.id} group={group} />
+      ))}
+      <ListEnd
+        list={groups}
+        placeholder={<Skeleton variant="card" className="h-17" />}
+      />
+    </>
   )
 }
 

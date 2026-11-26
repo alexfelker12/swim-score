@@ -148,7 +148,7 @@ function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="item-title"
       className={cn(
-        "line-clamp-1 flex w-fit min-w-0 items-center gap-2 text-base leading-snug font-semibold underline-offset-4 group-data-[size=lg]/item:text-[17px] group-data-[size=list]/item:text-[17px] group-data-[size=list]/item:font-medium group-data-[size=menu]/item:text-[17px] group-data-[size=menu]/item:font-normal",
+        "line-clamp-1 flex w-fit max-w-full min-w-0 items-center gap-2 text-base leading-snug font-semibold underline-offset-4 group-data-[size=lg]/item:text-[17px] group-data-[size=list]/item:text-[17px] group-data-[size=list]/item:font-medium group-data-[size=menu]/item:text-[17px] group-data-[size=menu]/item:font-normal",
         className
       )}
       {...props}

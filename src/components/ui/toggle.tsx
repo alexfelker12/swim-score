@@ -9,6 +9,11 @@ const toggleVariants = cva(
       variant: {
         default: "bg-transparent",
         /**
+         * A filter in a row of chips (the Group's Games): 36 px pill with a
+         * 1.5 px border, pressed in `primary` on `primary-muted`.
+         */
+        chip: "shrink-0 rounded-full border-[1.5px] border-border bg-transparent px-3.5 text-sm text-foreground active:scale-[0.97] aria-pressed:bg-transparent data-pressed:border-primary data-pressed:bg-primary-muted data-pressed:text-primary data-pressed:hover:bg-primary-muted motion-reduce:active:scale-100",
+        /**
          * Picking people from a grid (the Tiebreak): 52 px cell with a 1.5 px
          * border, pressed in `primary` on `primary-muted` with a check.
          */
@@ -21,6 +26,7 @@ const toggleVariants = cva(
     },
     compoundVariants: [
       { variant: "seat", className: "h-13 min-w-0 rounded-xl px-3.5" },
+      { variant: "chip", className: "h-9" },
     ],
     defaultVariants: {
       variant: "default",

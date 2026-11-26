@@ -107,7 +107,7 @@ describe("removing a Player", () => {
       ids.Emil,
     ])
     const before = await getGame(app, anna.headers, { gameId })
-    const listed = await listGames(app, anna.headers, { groupId })
+    const listed = (await listGames(app, anna.headers, { groupId })).items
 
     await removePlayer(app, anna.headers, { groupId, playerId: ids.Ben })
     await removePlayer(app, anna.headers, { groupId, playerId: ids.Emil })
@@ -116,7 +116,9 @@ describe("removing a Player", () => {
       ...before,
       serverTime: expect.any(Date),
     })
-    expect(await listGames(app, anna.headers, { groupId })).toEqual(listed)
+    expect((await listGames(app, anna.headers, { groupId })).items).toEqual(
+      listed
+    )
   })
 
   it("takes them out of the choice for new Games, the last Seating Order included", async () => {
@@ -313,7 +315,7 @@ describe("deleting an account", () => {
       ids.Anna,
     ])
     const before = await getGame(app, anna.headers, { gameId })
-    const [listed] = await listGames(app, anna.headers, { groupId })
+    const [listed] = (await listGames(app, anna.headers, { groupId })).items
 
     await deleteAccount(app, ben.headers)
 
@@ -324,7 +326,7 @@ describe("deleting an account", () => {
         p.playerId === ids.Ben ? { ...p, name: "Ehemaliger Spieler 1" } : p
       ),
     })
-    expect(await listGames(app, anna.headers, { groupId })).toEqual([
+    expect((await listGames(app, anna.headers, { groupId })).items).toEqual([
       { ...listed, winner: "Ehemaliger Spieler 1" },
     ])
   })

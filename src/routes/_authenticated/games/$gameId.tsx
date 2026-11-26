@@ -59,6 +59,16 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Toggle } from "@/components/ui/toggle"
 import { Page } from "@/components/page"
+import { PageNotFound } from "@/components/page-not-found"
+import {
+  PageLoading,
+  PageLoadingContent,
+  PageLoadingDescription,
+  PageLoadingHeader,
+  PageLoadingTitle,
+} from "@/components/page-loading"
+import { Skeleton } from "@/components/ui/skeleton"
+import { loadPageData } from "@/lib/page-data"
 import {
   describeEvent,
   describeGameLength,
@@ -90,10 +100,12 @@ import type { GameEvent } from "@/rules-engine"
 import type { GameParticipant, GameView } from "@/server/games"
 
 export const Route = createFileRoute("/_authenticated/games/$gameId")({
-  loader: async ({ context, params }) => {
-    const game = await context.queryClient.query(gameQuery(params.gameId))
-    if (!game) throw notFound()
-  },
+  loader: ({ context, params, cause }) =>
+    loadPageData(cause, async () => {
+      const game = await context.queryClient.query(gameQuery(params.gameId))
+      if (!game) throw notFound()
+    }),
+  pendingComponent: GameLoading,
   component: GamePage,
 })
 
@@ -122,7 +134,7 @@ function GamePage() {
     // Participants with an account let the server know they are here.
     present: Boolean(game && (game.isScorekeeper || game.canTakeOver)),
   })
-  if (!game) return null
+  if (!game) return <PageNotFound />
   if (game.status === "finished") {
     return <GameEnd game={game} viewerId={viewer.id} />
   }
@@ -1133,5 +1145,28 @@ function Cancelled({ game, viewerId }: { game: GameView; viewerId: string }) {
         Dieses Spiel wurde abgebrochen und zählt in keiner Statistik.
       </SectionDescription>
     </Page>
+  )
+}
+
+/** While the Game loads: the Participants' rows as placeholders. */
+function GameLoading() {
+  return (
+    <PageLoading height="screen">
+      <PageLoadingHeader>
+        <PageHeaderContent>
+          <PageLoadingTitle />
+          <PageLoadingDescription />
+        </PageHeaderContent>
+      </PageLoadingHeader>
+      <PageLoadingContent className="flex-1 gap-1.5 pb-4">
+        <Skeleton className="h-10" />
+        <Skeleton variant="line" className="mx-1 my-3 h-4 w-48" />
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} variant="card" className="h-22" />
+        ))}
+        <Skeleton className="mt-auto h-14" />
+        <Skeleton className="mt-1.5 h-14" />
+      </PageLoadingContent>
+    </PageLoading>
   )
 }

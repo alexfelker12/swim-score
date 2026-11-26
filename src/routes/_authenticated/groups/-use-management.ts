@@ -4,8 +4,8 @@ import type { GroupManagement } from "@/server/invites"
 
 /**
  * Open Claims and link candidates, for the Group Admin only; null for anyone
- * else, without asking the server. The loader has already loaded them for
- * the Group Admin, so this never waits.
+ * else, without asking the server. The loader starts loading them for the
+ * Group Admin; the page doesn't wait for them, the Claims appear when there.
  */
 export function useManagement(
   groupId: string,

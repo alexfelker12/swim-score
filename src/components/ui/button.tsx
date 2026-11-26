@@ -8,13 +8,14 @@ import { cn } from "cn"
  *
  * Touch screens never show `hover:` (Tailwind only applies it on devices
  * that can hover), so every variant also reacts to `active:` and the button
- * shrinks a little while pressed.
+ * shrinks a little while pressed. The pressed state shows at once (a tap is
+ * often shorter than a transition) and eases back on release (#61).
  *
  * A link that looks like a button: `<Button nativeButton={false}
  * render={<Link to="…" />}>`.
  */
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center gap-2 border-[1.5px] border-transparent bg-clip-padding whitespace-nowrap transition-[color,background-color,border-color,opacity,scale] duration-100 outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40 motion-reduce:active:scale-100 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
+  "group/button inline-flex shrink-0 items-center justify-center gap-2 border-[1.5px] border-transparent bg-clip-padding whitespace-nowrap transition-[color,background-color,border-color,opacity,scale] duration-100 outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.97] active:duration-0 disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40 motion-reduce:active:scale-100 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
     variants: {
       variant: {
@@ -36,7 +37,7 @@ const buttonVariants = cva(
           "border-border bg-card font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive-muted",
         /** Removes something, as text ("Spiel abbrechen", "Konto löschen"). */
         "destructive-ghost":
-          "font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive-muted",
+          "font-semibold text-destructive hover:bg-destructive-muted active:bg-destructive/20",
         /** The bomb: border and text `bomb` on `bomb-muted`. */
         bomb: "border-bomb bg-bomb-muted font-semibold text-bomb hover:bg-bomb-muted/70 active:bg-bomb-muted/70",
         /** A chosen filter that opens its choices (the metric on the Leaderboard). */
@@ -61,7 +62,7 @@ const buttonVariants = cva(
           "bg-background font-semibold text-primary hover:bg-background/70 active:bg-background/70",
         /** An icon action in a row in the primary colour (link a Guest). */
         "primary-ghost":
-          "font-semibold text-primary hover:bg-primary-muted active:bg-primary-muted",
+          "font-semibold text-primary hover:bg-primary-muted active:bg-primary/20",
         /** A quiet text action ("2 ehemalige Spieler"). */
         muted:
           "font-normal text-muted-foreground hover:bg-muted active:bg-muted",

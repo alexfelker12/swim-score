@@ -8,10 +8,16 @@ export const Route = createFileRoute("/api/avatar/$userId")({
     handlers: {
       GET: async ({ request, params }) => {
         try {
+          // `?size=large`: the zoomed picture (#62).
+          const size =
+            new URL(request.url).searchParams.get("size") === "large"
+              ? "large"
+              : "small"
           const image = await getAvatar(
             getApp(),
             request.headers,
-            params.userId
+            params.userId,
+            size
           )
           if (!image) return new Response(null, { status: 404 })
           return new Response(new Uint8Array(image.data), {

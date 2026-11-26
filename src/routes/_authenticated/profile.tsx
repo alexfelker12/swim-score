@@ -22,6 +22,7 @@ import {
   ProfileHeading,
   ProfileHeadingContent,
   ProfileHeadingDescription,
+  ProfileHeadingSkeleton,
   ProfileHeadingTitle,
 } from "@/components/profile-heading"
 import type { AvatarEditorStart } from "@/components/avatar-editor"
@@ -50,10 +51,18 @@ import { RadioGroup, RadioSegment } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Page } from "@/components/page"
+import {
+  PageLoading,
+  PageLoadingContent,
+  PageLoadingHeader,
+} from "@/components/page-loading"
+import { Skeleton } from "@/components/ui/skeleton"
+import { loadPageData } from "@/lib/page-data"
 import { authClient } from "@/lib/auth-client"
 import { useInstallApp } from "@/lib/install-app"
 import { forgetAccount } from "@/lib/kept-on-device"
 import { periodFromSearch } from "@/lib/period-search"
+import { reloadViewer } from "@/lib/viewer"
 import {
   playerProfileQuery,
   profileChanged,
@@ -80,14 +89,16 @@ export const Route = createFileRoute("/_authenticated/profile")({
     from: search.from,
     to: search.to,
   }),
-  loader: async ({ context, deps }) => {
-    const profile = await context.queryClient.query(profileQuery())
-    if (deps.stats) {
-      await context.queryClient.query(
-        playerProfileQuery(profile.id, { from: deps.from, to: deps.to })
-      )
-    }
-  },
+  loader: ({ context, deps, cause }) =>
+    loadPageData(cause, async () => {
+      const profile = await context.queryClient.query(profileQuery())
+      if (deps.stats) {
+        await context.queryClient.query(
+          playerProfileQuery(profile.id, { from: deps.from, to: deps.to })
+        )
+      }
+    }),
+  pendingComponent: ProfileLoading,
   component: ProfilePage,
 })
 
@@ -106,7 +117,12 @@ function ProfilePage() {
       </PageHeader>
 
       <ProfileHeading className="px-5 pt-1 pb-3.5">
-        <PersonAvatar size="lg" name={profile.name} image={profile.image} />
+        <PersonAvatar
+          size="lg"
+          name={profile.name}
+          image={profile.image}
+          zoomable
+        />
         <ProfileHeadingContent>
           <ProfileHeadingTitle>{profile.name}</ProfileHeadingTitle>
           <ProfileHeadingDescription>
@@ -189,7 +205,7 @@ function Details({ profile }: { profile: Profile }) {
   /** The own name, e-mail or picture changed; the Viewer (header) via the router. */
   async function reloadAfterChange() {
     await profileChanged(queryClient)
-    await router.invalidate()
+    await reloadViewer(router)
   }
   const fileInput = useRef<HTMLInputElement>(null)
   const [name, setName] = useState(profile.name)
@@ -232,7 +248,7 @@ function Details({ profile }: { profile: Profile }) {
     await setThemeFn({ data: { theme } })
     await queryClient.invalidateQueries({ queryKey: queryKeys.profile() })
     // The theme comes with the Viewer.
-    await router.invalidate()
+    await reloadViewer(router)
   }
 
   async function signOut() {
@@ -240,7 +256,7 @@ function Details({ profile }: { profile: Profile }) {
     // Nothing of the account stays on this device (ADR 0012).
     forgetAccount(profile.id)
     queryClient.clear()
-    await router.invalidate()
+    await reloadViewer(router)
     await router.navigate({ to: "/sign-in" })
   }
 
@@ -450,7 +466,7 @@ function DeleteAccountSheet({
     await authClient.signOut().catch(() => undefined)
     forgetAccount(accountId)
     queryClient.clear()
-    await router.invalidate()
+    await reloadViewer(router)
     await router.navigate({ to: "/sign-in" })
   }
 
@@ -493,5 +509,26 @@ function DeleteAccountSheet({
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
+  )
+}
+
+/** While the profile loads: picture, name and the details as placeholders. */
+function ProfileLoading() {
+  return (
+    <PageLoading>
+      <PageLoadingHeader>
+        <PageHeaderTitle>Profil</PageHeaderTitle>
+      </PageLoadingHeader>
+      <PageLoadingContent className="gap-2.5 pt-1">
+        <ProfileHeadingSkeleton className="px-1 pb-1.5" />
+        <Skeleton className="h-12" />
+        <Skeleton variant="line" className="mx-1 mt-4 h-4 w-24" />
+        <Skeleton className="h-12" />
+        <Skeleton variant="line" className="mx-1 mt-4 h-4 w-32" />
+        <Skeleton className="h-12" />
+        <Skeleton variant="line" className="mx-1 mt-4 h-4 w-28" />
+        <Skeleton className="h-12" />
+      </PageLoadingContent>
+    </PageLoading>
   )
 }

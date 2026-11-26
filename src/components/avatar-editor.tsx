@@ -17,6 +17,7 @@ import {
   imageBox,
   loadImage,
   renderAvatar,
+  renderLarge,
   renderSource,
   viewToCrop,
   zoomAround,
@@ -286,7 +287,8 @@ export function AvatarEditor({
 }
 
 /**
- * Renders avatar and source in the browser and uploads both with the crop.
+ * Renders avatar, large picture and source in the browser and uploads them
+ * with the crop.
  * Fails with UNREADABLE when the picture can't be encoded (or the server
  * says it isn't an image), otherwise with SAVE_FAILED.
  */
@@ -294,10 +296,11 @@ async function uploadPicture(
   picture: Picture,
   crop: ReturnType<typeof viewToCrop>
 ) {
-  let files: [Blob, Blob]
+  let files: [Blob, Blob, Blob]
   try {
     files = await Promise.all([
       renderAvatar(picture.image, crop),
+      renderLarge(picture.image, crop),
       sourceBlob(picture),
     ])
   } catch {
@@ -305,7 +308,8 @@ async function uploadPicture(
   }
   const form = new FormData()
   form.set("avatar", files[0], "avatar")
-  form.set("source", files[1], "source")
+  form.set("large", files[1], "large")
+  form.set("source", files[2], "source")
   form.set("crop", JSON.stringify(crop))
   const result = await setAvatarFn({ data: form })
   if (!result.ok) {

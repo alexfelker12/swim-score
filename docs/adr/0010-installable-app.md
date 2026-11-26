@@ -8,6 +8,7 @@ At the table people open Swim Score from their phone's home screen, not from a b
 - **The manifest stays dark.** A manifest can't follow a per-account setting; `theme_color` and `background_color` are the dark background, so the Android start screen is dark also for "Hell". The page's `theme-color` takes over once the app runs.
 - **iOS status bar:** iOS has only a style, read when the app starts. "Dunkel" uses `black-translucent` (page behind the bar, white text), "Hell" and "System" use `default` (light bar, dark text): with "System" the server can't know the device setting, and white text over the light look would be unreadable. A changed look reaches the status bar after restarting the app. With `black-translucent` the page needs the safe-area insets (#56).
 - **Install hint in the profile, not the browser's.** `beforeinstallprompt` is caught as soon as the app loads and the browser's own mini bar is suppressed; the profile offers "Installieren" instead, and on iOS, which has no such event, explains "Teilen → Zum Home-Bildschirm". In the installed app nothing is shown.
+- **And floating on the start page** (#58), since the profile alone is easy to miss: compact at the bottom, with "Installieren" or the way through the share menu, and a close button. Closed, it stays closed on the device (localStorage); the profile keeps its entry. Only on the start page, because other pages have their main action at the bottom (the Game's bar, "Neues Spiel").
 
 ## Consequences
 

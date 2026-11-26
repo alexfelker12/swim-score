@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm"
 import { describe, expect, it } from "vitest"
 import {
   getAvatar,
@@ -117,7 +118,7 @@ describe("the profile", () => {
 
 describe("the profile picture", () => {
   const crop = { x: 0.1, y: 0.2, size: 0.5 }
-  const picture = { avatar: png, source: webp, crop }
+  const picture = { avatar: png, large: webp, source: webp, crop }
 
   it("is stored in the database and served to signed-in players", async () => {
     const app = await createTestApp()
@@ -132,6 +133,52 @@ describe("the profile picture", () => {
       contentType: "image/png",
       data: png,
     })
+  })
+
+  it("keeps a large version for the zoomed picture (#62)", async () => {
+    const app = await createTestApp()
+    const anna = await signUp(app.auth, { username: "anna" })
+    const ben = await signUp(app.auth, { username: "ben" })
+
+    await setAvatar(app, anna.headers, picture)
+
+    expect(await getAvatar(app, ben.headers, anna.user.id, "large")).toEqual({
+      contentType: "image/webp",
+      data: webp,
+    })
+    expect(await getAvatar(app, ben.headers, anna.user.id)).toMatchObject({
+      contentType: "image/png",
+    })
+  })
+
+  it("zooms into the small picture where there is no large one yet", async () => {
+    const app = await createTestApp()
+    const { user, headers } = await signUp(app.auth, { username: "anna" })
+    await setAvatar(app, headers, picture)
+    // As stored before #62.
+    await app.db
+      .update(avatarTable)
+      .set({ large: null, largeContentType: null })
+      .where(eq(avatarTable.userId, user.id))
+
+    expect(await getAvatar(app, headers, user.id, "large")).toEqual({
+      contentType: "image/png",
+      data: png,
+    })
+  })
+
+  it("refuses a large version that isn't an image or is too big", async () => {
+    const app = await createTestApp()
+    const { headers } = await signUp(app.auth, { username: "anna" })
+
+    for (const large of [
+      new Uint8Array([1, 2, 3]),
+      new Uint8Array([...webp, ...new Uint8Array(1024 * 1024)]),
+    ]) {
+      await expect(
+        setAvatar(app, headers, { ...picture, large })
+      ).rejects.toMatchObject({ code: "invalidImage" })
+    }
   })
 
   it("keeps the source image and the crop so its owner can adjust it later", async () => {
@@ -152,7 +199,12 @@ describe("the profile picture", () => {
     await setAvatar(app, headers, picture)
 
     const newCrop = { x: 0, y: 0, size: 1 }
-    await setAvatar(app, headers, { avatar: webp, source: png, crop: newCrop })
+    await setAvatar(app, headers, {
+      avatar: webp,
+      large: webp,
+      source: png,
+      crop: newCrop,
+    })
 
     expect(await getAvatar(app, headers, user.id)).toMatchObject({
       contentType: "image/webp",
@@ -302,6 +354,7 @@ describe("every profile command", () => {
       run: (app, headers) =>
         setAvatar(app, headers, {
           avatar: png,
+          large: png,
           source: png,
           crop: { x: 0, y: 0, size: 1 },
         }),

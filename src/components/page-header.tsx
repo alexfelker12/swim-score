@@ -1,4 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority"
+import { Link, useCanGoBack, useRouter } from "@tanstack/react-router"
 import { ChevronLeft, X } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
@@ -7,19 +8,21 @@ import { backTransition } from "@/lib/page-transitions"
 import { cn } from "@/lib/utils"
 import type { ComponentProps, ReactElement, ReactNode } from "react"
 
-const pageHeaderVariants = cva("shrink-0", {
+// Every header is 60 px high, with back 8 px from the left edge and the last
+// action 8 px from the right one: going from page to page, nothing in it
+// moves.
+const pageHeaderVariants = cva("h-15 shrink-0 items-center", {
   variants: {
     variant: {
-      /** 56 px: back on the left, the title centred, actions on the right. */
-      default:
-        "grid h-14 grid-cols-[52px_minmax(0,1fr)_52px] items-center px-1",
+      /** Back on the left, the title centred, an action on the right. */
+      default: "grid grid-cols-[44px_minmax(0,1fr)_44px] gap-x-1 px-2",
       /**
-       * 60 px: back, then title and a line under it on the left, actions on
-       * the right (the Group page).
+       * Back, then title and a line under it on the left, actions on the
+       * right (the Group page).
        */
-      start: "grid h-15 grid-cols-[52px_minmax(0,1fr)_auto] items-center px-1",
-      /** 64 px with the logo, for pages someone opens from a link; something on the right (the start page's avatar) sits at the end. */
-      brand: "flex h-16 items-center justify-between px-5",
+      start: "grid grid-cols-[44px_minmax(0,1fr)_auto] gap-x-1 px-2",
+      /** With the logo, for pages someone opens from a link; something on the right (the start page's avatar, 44 px) sits where the actions do. */
+      brand: "flex justify-between pr-2 pl-5",
     },
   },
   defaultVariants: { variant: "default" },
@@ -97,7 +100,7 @@ export function PageHeaderAction({
       render={render}
       onClick={onClick}
       aria-label={label}
-      className={cn("justify-self-center [&_svg]:size-6!", className)}
+      className={cn("col-start-3 justify-self-end [&_svg]:size-6!", className)}
     >
       {children}
     </Button>
@@ -134,10 +137,24 @@ export function PageHeaderBack({
       }
       onClick={onClick}
       label={label}
-      className={cn("col-start-1 justify-self-center", className)}
+      className={cn("col-start-1 justify-self-start", className)}
     >
       {icon === "close" ? <X /> : <ChevronLeft />}
     </PageHeaderAction>
+  )
+}
+
+/**
+ * Back to where the page came from, in the history; on a page opened
+ * directly, to the start page (the Player Profile, a page still loading).
+ */
+export function PageHeaderBackInHistory() {
+  const router = useRouter()
+  const canGoBack = useCanGoBack()
+  return canGoBack ? (
+    <PageHeaderBack label="Zurück" onClick={() => router.history.back()} />
+  ) : (
+    <PageHeaderBack render={<Link to="/" />} label="Zur Startseite" />
   )
 }
 

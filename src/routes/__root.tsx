@@ -1,23 +1,20 @@
 import { useEffect } from "react"
 import {
   HeadContent,
-  Link,
   ScriptOnce,
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
-import { SectionDescription, SectionTitle } from "@/components/section"
-import { Button } from "@/components/ui/button"
+import { PageNotFound } from "@/components/page-not-found"
 import { UpdateNotice } from "@/components/update-notice"
 import { appHeadLinks, appHeadMeta, themeColorTags } from "@/lib/pwa"
 // Catches the browser's install event early, see the module.
 import "@/lib/install-app"
-import { orKept, rememberViewer, rememberedViewer } from "@/lib/kept-on-device"
 import { useNoLongPressMenu } from "@/lib/no-long-press-menu"
 import { registerServiceWorker } from "@/lib/service-worker"
-import { getViewer } from "@/server/functions"
+import { keepViewer, loadViewer } from "@/lib/viewer"
 import type { RouterContext } from "@/router"
 
 import appCss from "../styles.css?url"
@@ -41,19 +38,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     ],
     links: [{ rel: "stylesheet", href: appCss }, ...appHeadLinks],
   }),
-  notFoundComponent: () => (
-    <main className="mx-auto flex max-w-[500px] flex-col items-start gap-2 p-6 pt-16">
-      <SectionTitle as="h1" variant="page">
-        Seite nicht gefunden
-      </SectionTitle>
-      <SectionDescription size="lg">
-        Diese Seite gibt es nicht.
-      </SectionDescription>
-      <Button variant="link" nativeButton={false} render={<Link to="/" />}>
-        Zur Startseite
-      </Button>
-    </main>
-  ),
+  notFoundComponent: PageNotFound,
   shellComponent: RootDocument,
 })
 
@@ -120,15 +105,6 @@ function useSystemTheme(active: boolean) {
  * every answer, and taken from there when the server can't be reached, so a
  * running Game opens offline (ADR 0012).
  */
-async function loadViewer() {
-  if (typeof window === "undefined") return getViewer()
-  return orKept(async () => {
-    const viewer = await getViewer()
-    rememberViewer(viewer)
-    return viewer
-  }, rememberedViewer)
-}
-
 /**
  * A page loaded from the server brings its Viewer along, without the
  * browser asking (its `beforeLoad` runs on the server): remember it too.
@@ -138,6 +114,6 @@ async function loadViewer() {
 function useRememberHydratedViewer() {
   const viewer = Route.useRouteContext({ select: (context) => context.viewer })
   useEffect(() => {
-    if (viewer) rememberViewer(viewer)
+    keepViewer(viewer)
   }, [viewer])
 }

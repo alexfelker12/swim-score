@@ -13,6 +13,14 @@ import { Section, SectionDescription, SectionTitle } from "@/components/section"
 import { Button } from "@/components/ui/button"
 import { FieldDescription, FieldError } from "@/components/ui/field"
 import { Page } from "@/components/page"
+import { PageNotFound } from "@/components/page-not-found"
+import {
+  PageLoading,
+  PageLoadingContent,
+  PageLoadingHeader,
+} from "@/components/page-loading"
+import { Skeleton } from "@/components/ui/skeleton"
+import { loadPageData } from "@/lib/page-data"
 import { groupQuery, inviteLinkQuery } from "@/lib/queries"
 import { useShareLink } from "@/lib/use-share-link"
 import { renewInviteFn } from "@/server/functions"
@@ -20,13 +28,15 @@ import { renewInviteFn } from "@/server/functions"
 /** "In die Gruppe einladen": the Group's Invite as QR code and link; Group Admin only. */
 export const Route = createFileRoute("/_authenticated/groups/$groupId_/invite")(
   {
-    loader: async ({ context, params }) => {
-      const [group, link] = await Promise.all([
-        context.queryClient.query(groupQuery(params.groupId)),
-        context.queryClient.query(inviteLinkQuery(params.groupId)),
-      ])
-      if (!group || !link) throw notFound()
-    },
+    loader: ({ context, params, cause }) =>
+      loadPageData(cause, async () => {
+        const [group, link] = await Promise.all([
+          context.queryClient.query(groupQuery(params.groupId)),
+          context.queryClient.query(inviteLinkQuery(params.groupId)),
+        ])
+        if (!group || !link) throw notFound()
+      }),
+    pendingComponent: InviteLoading,
     component: InvitePage,
   }
 )
@@ -35,8 +45,8 @@ function InvitePage() {
   const { groupId } = Route.useParams()
   const group = useSuspenseQuery(groupQuery(groupId)).data
   const link = useSuspenseQuery(inviteLinkQuery(groupId)).data
-  // The loader lets only the Group Admin of an existing Group get here.
-  if (!group || !link) return null
+  // Only the Group Admin of an existing Group gets the Invite.
+  if (!group || !link) return <PageNotFound />
   return (
     <InviteLink groupId={groupId} groupName={group.name} token={link.token} />
   )
@@ -124,5 +134,23 @@ function InviteLink({
         </FieldDescription>
       </PageFooter>
     </Page>
+  )
+}
+
+/** While the Invite loads: QR code and link as placeholders. */
+function InviteLoading() {
+  return (
+    <PageLoading>
+      <PageLoadingHeader>
+        <PageHeaderTitle>In die Gruppe einladen</PageHeaderTitle>
+      </PageLoadingHeader>
+      <PageLoadingContent className="items-center gap-2.5 px-5 pt-3">
+        <Skeleton variant="line" className="h-4 w-72" />
+        <Skeleton variant="line" className="h-4 w-64" />
+        <Skeleton variant="card" className="mt-3 size-62" />
+        <Skeleton variant="line" className="mt-3 h-6 w-48" />
+        <Skeleton className="mt-2 h-12 self-stretch" />
+      </PageLoadingContent>
+    </PageLoading>
   )
 }

@@ -10,6 +10,8 @@ import {
 } from "drizzle-orm"
 import { claim, group, player } from "./db/schema"
 import { CommandError } from "./errors"
+import { pageOfSorted } from "./paging"
+import type { Page, PageRequest } from "./paging"
 import { requireUser } from "./session"
 import type { App } from "./app"
 import type { LeaveReason } from "./db/schema"
@@ -146,6 +148,25 @@ export async function getGroup(
   }
 }
 
+/**
+ * The Group's current Players by name, a page at a time (#59); Players of
+ * the same name by id. Only the Group's own Players may see them.
+ */
+export async function listGroupPlayers(
+  app: App,
+  headers: Headers,
+  input: { groupId: string; page?: PageRequest }
+): Promise<Page<GroupPlayer>> {
+  const { players } = await getGroup(app, headers, input)
+  return pageOfSorted(players, input.page, {
+    shape: ["string", "string"],
+    keyOf: (p) => [p.name, p.id],
+    compare: (a, b) =>
+      byName.compare(String(a[0]), String(b[0])) ||
+      String(a[1]).localeCompare(String(b[1])),
+  })
+}
+
 /** Adds a Guest to the Group; any Player with an account may do this. */
 export async function addGuest(
   app: App,
@@ -181,13 +202,24 @@ export async function listMyGroups(
   headers: Headers
 ): Promise<Array<MyGroup>> {
   const me = await requireUser(app, headers)
+  const groups = await myGroupRows(app, me.id)
+  return groups.map(({ id, name, playerCount }) => ({ id, name, playerCount }))
+}
+
+/** The account's Groups with when it joined them, most recently joined first. */
+export function myGroupRows(app: App, userId: string) {
   const mine = aliasedTable(player, "mine")
   return app.db
-    .select({ id: group.id, name: group.name, playerCount: count(player.id) })
+    .select({
+      id: group.id,
+      name: group.name,
+      playerCount: count(player.id),
+      joinedAt: mine.createdAt,
+    })
     .from(mine)
     .innerJoin(group, eq(group.id, mine.groupId))
     .innerJoin(player, and(eq(player.groupId, group.id), isCurrentPlayer))
-    .where(and(eq(mine.userId, me.id), isNull(mine.leftAt)))
+    .where(and(eq(mine.userId, userId), isNull(mine.leftAt)))
     .groupBy(group.id, mine.createdAt)
     .orderBy(desc(mine.createdAt))
 }

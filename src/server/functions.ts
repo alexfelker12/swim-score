@@ -6,6 +6,7 @@ import {
   createGroup,
   getGroup,
   handOverAdmin,
+  listGroupPlayers,
   leaveGroup,
   removePlayer,
   renameGroup,
@@ -23,7 +24,7 @@ import {
   undoEvent,
 } from "./games"
 import { canSendEmail, getApp } from "./instance"
-import { getHome } from "./home"
+import { getHome, listHomeGroups } from "./home"
 import { getLeaderboard } from "./leaderboard"
 import { getPasswordResetAccount } from "./password-reset"
 import { getPlayerProfile } from "./player-profile"
@@ -47,6 +48,9 @@ import {
   updateProfile,
 } from "./profile"
 import type { GameEvent } from "@/rules-engine"
+import type { App } from "./app"
+import type { GameFilter } from "./games"
+import type { Page, PageRequest } from "./paging"
 import type { AvatarCrop, Theme } from "./profile"
 
 // Thin adapters from TanStack Start server functions to the server commands.
@@ -66,6 +70,35 @@ async function outcome<T>(run: () => Promise<T>): Promise<Outcome<T>> {
   } catch (error) {
     if (error instanceof CommandError) return { ok: false, code: error.code }
     throw error
+  }
+}
+
+// Lists come a page at a time (#59, `./paging`). A list function takes its
+// input with a `page` (`pagedInput`) and answers with its page, or with an
+// empty one when the viewer may not see the list (`pageOrNone`):
+//
+//   export const listThingsFn = createServerFn({ method: "GET" })
+//     .validator(pagedInput<{ groupId: string }>())
+//     .handler(pageOrNone(listThings))
+
+/** The input of a list function: its own fields and the page asked for. */
+function pagedInput<T extends object>() {
+  return (input: T & { page: PageRequest }) => input
+}
+
+/**
+ * A list command as a handler: its page, or an empty one when the viewer
+ * may not see the list. A page request that makes no sense (`invalidPage`)
+ * is a mistake of the client and fails.
+ */
+function pageOrNone<TInput extends object, TItem>(
+  list: (app: App, headers: Headers, input: TInput) => Promise<Page<TItem>>
+) {
+  return async ({ data }: { data: TInput }): Promise<Page<TItem>> => {
+    const result = await outcome(() => list(getApp(), headers(), data))
+    if (result.ok) return result.value
+    if (result.code === "invalidPage") throw new CommandError(result.code)
+    return { items: [], next: null }
   }
 }
 
@@ -98,22 +131,25 @@ export const setThemeFn = createServerFn({ method: "POST" })
 export const setAvatarFn = createServerFn({ method: "POST" })
   .validator((input: FormData) => {
     const avatar = input.get("avatar")
+    const large = input.get("large")
     const source = input.get("source")
     const crop = input.get("crop")
     if (
       !(avatar instanceof File) ||
+      !(large instanceof File) ||
       !(source instanceof File) ||
       typeof crop !== "string"
     ) {
-      throw new Error("avatar, source and crop are required")
+      throw new Error("avatar, large, source and crop are required")
     }
     // The command checks the crop's shape; malformed JSON becomes no crop.
-    return { avatar, source, crop: parseJson(crop) as AvatarCrop }
+    return { avatar, large, source, crop: parseJson(crop) as AvatarCrop }
   })
   .handler(({ data }) =>
     outcome(async () =>
       setAvatar(getApp(), headers(), {
         avatar: new Uint8Array(await data.avatar.arrayBuffer()),
+        large: new Uint8Array(await data.large.arrayBuffer()),
         source: new Uint8Array(await data.source.arrayBuffer()),
         crop: data.crop,
       })
@@ -227,13 +263,23 @@ export const getSpectatorGameFn = createServerFn({ method: "GET" })
   .validator((input: { token: string }) => input)
   .handler(({ data }) => outcome(() => getSpectatorGame(getApp(), data)))
 
-/** The Group's Games, or none when the viewer is not its Player. */
+/**
+ * The Group's Games, running ones and then the newest first, as `filter`
+ * keeps them; none when the viewer is not its Player.
+ */
 export const listGamesFn = createServerFn({ method: "GET" })
-  .validator((input: { groupId: string }) => input)
-  .handler(async ({ data }) => {
-    const result = await outcome(() => listGames(getApp(), headers(), data))
-    return result.ok ? result.value : []
-  })
+  .validator(pagedInput<{ groupId: string; filter?: GameFilter }>())
+  .handler(pageOrNone(listGames))
+
+/** The Group's current Players by name, or none when the viewer is not one. */
+export const listGroupPlayersFn = createServerFn({ method: "GET" })
+  .validator(pagedInput<{ groupId: string }>())
+  .handler(pageOrNone(listGroupPlayers))
+
+/** "Meine Gruppen" on the start page of the signed-in account. */
+export const listHomeGroupsFn = createServerFn({ method: "GET" })
+  .validator(pagedInput<object>())
+  .handler(pageOrNone(listHomeGroups))
 
 /**
  * The Group Leaderboard for a period (`YYYY-MM-DD`, both ends included; all

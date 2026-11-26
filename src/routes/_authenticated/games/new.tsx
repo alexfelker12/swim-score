@@ -31,6 +31,15 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Page } from "@/components/page"
+import { PageNotFound } from "@/components/page-not-found"
+import {
+  PageLoading,
+  PageLoadingContent,
+  PageLoadingDescription,
+  PageLoadingHeader,
+} from "@/components/page-loading"
+import { Skeleton } from "@/components/ui/skeleton"
+import { dropIfStale, loadPageData } from "@/lib/page-data"
 import { standardRuleSet } from "@/rules-engine"
 import { groupChanged, newGameQuery } from "@/lib/queries"
 import { addGuestFn, startGameFn } from "@/server/functions"
@@ -50,14 +59,18 @@ export const Route = createFileRoute("/_authenticated/games/new")({
     groupId: search.groupId,
     fromGame: search.fromGame,
   }),
-  // The form starts from the preselection it renders with; `query` loads
-  // it again whenever it is stale or invalidated, e.g. by a Game started.
-  loader: async ({ context, deps }) => {
-    const setup = await context.queryClient.query(
-      newGameQuery(deps.groupId, deps.fromGame)
-    )
-    if (!setup) throw notFound()
+  // The form starts from the preselection it renders with: a stale or
+  // invalidated one (e.g. after a Game started) is dropped, so the page
+  // waits for a fresh one instead of starting from the old.
+  loader: ({ context, deps, cause }) => {
+    const query = newGameQuery(deps.groupId, deps.fromGame)
+    dropIfStale(context.queryClient, query.queryKey)
+    return loadPageData(cause, async () => {
+      const setup = await context.queryClient.query(query)
+      if (!setup) throw notFound()
+    })
   },
+  pendingComponent: NewGameLoading,
   component: NewGamePage,
 })
 
@@ -68,7 +81,7 @@ const ROW_PITCH = 64
 function NewGamePage() {
   const { groupId, fromGame } = Route.useSearch()
   const setup = useSuspenseQuery(newGameQuery(groupId, fromGame)).data
-  if (!setup) return null
+  if (!setup) return <PageNotFound />
   // A new start (another Seating Order to begin from) starts the form afresh.
   return <NewGameForm key={fromGame ?? ""} groupId={groupId} setup={setup} />
 }
@@ -398,5 +411,28 @@ function NewGuest({
         <FieldError id="new-guest-error">{error}</FieldError>
       </Field>
     </form>
+  )
+}
+
+/** While the preselection loads: the seats and the button as placeholders. */
+function NewGameLoading() {
+  return (
+    <PageLoading>
+      <PageLoadingHeader>
+        <PageHeaderContent>
+          <PageHeaderTitle size="lg">Neues Spiel</PageHeaderTitle>
+          <PageLoadingDescription />
+        </PageHeaderContent>
+      </PageLoadingHeader>
+      <PageLoadingContent className="flex-1 gap-2">
+        <Skeleton variant="line" className="mx-1 mb-1 h-4 w-48" />
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} variant="card" className="h-14" />
+        ))}
+        <Skeleton variant="line" className="mx-1 mt-5 mb-1 h-4 w-28" />
+        <Skeleton className="h-12" />
+        <Skeleton className="mt-auto h-14" />
+      </PageLoadingContent>
+    </PageLoading>
   )
 }

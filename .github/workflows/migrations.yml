@@ -1,0 +1,95 @@
+# Database migrations (drizzle/): checked on every pull request that touches
+# them or the schema, applied to the production database once they are on
+# master.
+name: Migrations
+
+on:
+  pull_request:
+    paths:
+      - "drizzle/**"
+      - "src/server/db/schema.ts"
+      - "drizzle.config.ts"
+      - ".github/workflows/migrations.yml"
+  push:
+    branches: [master]
+    paths:
+      - "drizzle/**"
+  workflow_dispatch:
+
+# Never two runs against the production database at once; a newer run waits
+# for the one before instead of cancelling it halfway.
+concurrency:
+  group: migrations-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: swim
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/swim
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Migrations are consistent
+        run: pnpm drizzle-kit check
+
+      - name: Schema has no changes without a migration
+        run: |
+          pnpm drizzle-kit generate
+          if [ -n "$(git status --porcelain drizzle)" ]; then
+            git status --short drizzle
+            echo "::error::schema.ts has changes without a migration. Run 'pnpm db:generate' and commit drizzle/."
+            exit 1
+          fi
+
+      - name: Migrations apply to an empty database
+        run: pnpm db:migrate
+
+      - name: Migrations apply again without changes
+        run: pnpm db:migrate
+
+  apply:
+    name: Apply to production
+    needs: check
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Drizzle remembers applied migrations in drizzle.__drizzle_migrations
+      # and only runs the new ones; with none, nothing happens.
+      - name: Apply new migrations
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

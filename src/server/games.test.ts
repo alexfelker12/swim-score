@@ -13,6 +13,8 @@ import { addGuest, createGroup, getGroup } from "./groups"
 import { joinViaInvite } from "./testing/groups"
 import { createTestApp, signUp } from "./testing/test-app"
 import type { App } from "./app"
+import type { GameFilter, GameListEntry } from "./games"
+import type { Page } from "./paging"
 import type { GameEvent } from "@/rules-engine"
 
 /** Anna's Group "Donnerstagsrunde" with Ben (account) and the Guests Carla and Dario. */
@@ -502,13 +504,15 @@ describe("the Group's Games", () => {
       event: { type: "lost", loser: darioP.id },
     })
 
-    expect(await listGames(app, anna.headers, { groupId })).toEqual([
+    expect((await listGames(app, anna.headers, { groupId })).items).toEqual([
       {
         id: running,
         status: "running",
         startedAt: expect.any(Date),
+        finishedAt: null,
         participantCount: 2,
         round: 2,
+        rounds: 1,
         scorekeeper: "Ben",
         winner: null,
         swimmer: null,
@@ -517,8 +521,10 @@ describe("the Group's Games", () => {
         id: finished,
         status: "finished",
         startedAt: expect.any(Date),
+        finishedAt: expect.any(Date),
         participantCount: 3,
         round: 6,
+        rounds: 6,
         scorekeeper: "Anna",
         winner: "Anna",
         swimmer: "Ben",
@@ -533,6 +539,212 @@ describe("the Group's Games", () => {
     await expect(
       listGames(app, mallory.headers, { groupId })
     ).rejects.toMatchObject({ code: "groupNotFound" })
+  })
+})
+
+describe("the Group's Games, page by page", () => {
+  /** `count` cancelled Games, three of them started in the same millisecond. */
+  async function manyGames(count: number) {
+    const setup = await table()
+    const { app, anna, groupId, players } = setup
+    const ids: Array<string> = []
+    let at = Date.parse("2026-11-01T18:00:00Z")
+    for (let i = 0; i < count; i++) {
+      if (i % 4 !== 1) at += 60_000
+      const now = new Date(at)
+      app.now = () => now
+      const { id } = await startGame(app, anna.headers, {
+        groupId,
+        playerIds: [players.Anna, players.Ben],
+      })
+      await cancelGame(app, anna.headers, { gameId: id })
+      ids.push(id)
+    }
+    return { ...setup, ids }
+  }
+
+  it("hands out the newest first, as many as asked for, and where to go on", async () => {
+    const { app, anna, groupId } = await manyGames(20)
+    const first = await listGames(app, anna.headers, {
+      groupId,
+      page: { size: 15 },
+    })
+    expect(first.items).toHaveLength(15)
+    expect(first.next).toEqual(expect.any(String))
+    const second = await listGames(app, anna.headers, {
+      groupId,
+      page: { size: 15, after: first.next },
+    })
+    expect(second.items).toHaveLength(5)
+    expect(second.next).toBeNull()
+
+    const all = [...first.items, ...second.items]
+    expect(new Set(all.map((g) => g.id)).size).toBe(20)
+    const times = all.map((g) => g.startedAt.getTime())
+    expect(times).toEqual([...times].sort((a, b) => b - a))
+  })
+
+  it("goes on where it stopped, also when a Game starts in between", async () => {
+    const { app, anna, groupId, players, ids } = await manyGames(6)
+    const first = await listGames(app, anna.headers, {
+      groupId,
+      page: { size: 4 },
+    })
+    app.now = () => new Date("2026-11-02T18:00:00Z")
+    const { id: newer } = await startGame(app, anna.headers, {
+      groupId,
+      playerIds: [players.Anna, players.Carla],
+    })
+    const second = await listGames(app, anna.headers, {
+      groupId,
+      page: { size: 4, after: first.next },
+    })
+
+    const listed = [...first.items, ...second.items].map((g) => g.id)
+    expect(listed).not.toContain(newer)
+    expect([...listed].sort()).toEqual([...ids].sort())
+  })
+
+  it("keeps a filter across pages", async () => {
+    const { app, anna, ben, groupId, players, ids } = await manyGames(9)
+    // A Game without Ben in between, which his filter leaves out.
+    const { id: withoutBen } = await startGame(app, anna.headers, {
+      groupId,
+      playerIds: [players.Anna, players.Carla],
+    })
+    const pages = []
+    let after: string | null = null
+    do {
+      const page: Page<GameListEntry> = await listGames(app, ben.headers, {
+        groupId,
+        filter: { mine: true },
+        page: { size: 4, after },
+      })
+      pages.push(page.items.length)
+      after = page.next
+    } while (after)
+
+    expect(pages).toEqual([4, 4, 1])
+    const all = await listGames(app, ben.headers, {
+      groupId,
+      filter: { mine: true },
+      page: { size: 20 },
+    })
+    expect(all.items.map((g) => g.id)).not.toContain(withoutBen)
+    expect(all.items.map((g) => g.id).sort()).toEqual([...ids].sort())
+  })
+
+  it("puts running Games first, also one older than the first page", async () => {
+    const { app, anna, groupId, players } = await table()
+    app.now = () => new Date("2026-10-01T18:00:00Z")
+    const { id: running } = await startGame(app, anna.headers, {
+      groupId,
+      playerIds: [players.Anna, players.Dario],
+    })
+    for (let day = 2; day <= 5; day++) {
+      app.now = () => new Date(`2026-10-0${day}T18:00:00Z`)
+      const { id } = await startGame(app, anna.headers, {
+        groupId,
+        playerIds: [players.Anna, players.Ben],
+      })
+      await cancelGame(app, anna.headers, { gameId: id })
+    }
+
+    const first = await listGames(app, anna.headers, {
+      groupId,
+      page: { size: 2 },
+    })
+    const rest = await listGames(app, anna.headers, {
+      groupId,
+      page: { size: 10, after: first.next },
+    })
+
+    expect(first.items[0]).toMatchObject({ id: running, status: "running" })
+    expect([...first.items, ...rest.items]).toHaveLength(5)
+    expect(rest.items.map((g) => g.id)).not.toContain(running)
+  })
+
+  it("refuses a page that makes no sense", async () => {
+    const { app, anna, groupId } = await table()
+    for (const page of [
+      { size: 0 },
+      { size: 51 },
+      { size: 1.5 },
+      { size: 15, after: "kein-cursor" },
+      { size: 15, after: Buffer.from('["x"]').toString("base64url") },
+      { size: 15, after: Buffer.from("[1, 2]").toString("base64url") },
+    ]) {
+      await expect(
+        listGames(app, anna.headers, { groupId, page })
+      ).rejects.toMatchObject({ code: "invalidPage" })
+    }
+  })
+})
+
+describe("the Group's Games, filtered", () => {
+  /**
+   * Anna wins against Ben (the Swimmer) and Carla; Ben keeps score of a
+   * running Game of Ben and Dario; Anna cancels one with Carla.
+   */
+  async function threeGames() {
+    const setup = await playedToTheEnd()
+    const { app, anna, ben, groupId, players } = setup
+    const { id: running } = await startGame(app, ben.headers, {
+      groupId,
+      playerIds: [players.Ben, players.Dario],
+    })
+    const { id: cancelled } = await startGame(app, anna.headers, {
+      groupId,
+      playerIds: [players.Anna, players.Carla],
+    })
+    await cancelGame(app, anna.headers, { gameId: cancelled })
+    return { ...setup, finished: setup.gameId, running, cancelled }
+  }
+
+  async function ids(
+    app: App,
+    headers: Headers,
+    groupId: string,
+    filter: GameFilter
+  ) {
+    const page = await listGames(app, headers, { groupId, filter })
+    return page.items.map((g) => g.id).sort()
+  }
+
+  it("keeps the Games I took part in", async () => {
+    const { app, anna, ben, groupId, finished, running, cancelled } =
+      await threeGames()
+
+    expect(await ids(app, anna.headers, groupId, { mine: true })).toEqual(
+      [finished, cancelled].sort()
+    )
+    expect(await ids(app, ben.headers, groupId, { mine: true })).toEqual(
+      [finished, running].sort()
+    )
+  })
+
+  it("keeps the Games I was the Swimmer in, or won", async () => {
+    const { app, anna, ben, groupId, finished } = await threeGames()
+
+    expect(await ids(app, ben.headers, groupId, { swam: true })).toEqual([
+      finished,
+    ])
+    expect(await ids(app, anna.headers, groupId, { swam: true })).toEqual([])
+    expect(await ids(app, anna.headers, groupId, { won: true })).toEqual([
+      finished,
+    ])
+    expect(await ids(app, ben.headers, groupId, { won: true })).toEqual([])
+  })
+
+  it("leaves out Cancelled Games, combined with the others", async () => {
+    const { app, anna, groupId, finished, running } = await threeGames()
+
+    expect(
+      await ids(app, anna.headers, groupId, { hideCancelled: true })
+    ).toEqual([finished, running].sort())
+    expect(
+      await ids(app, anna.headers, groupId, { mine: true, hideCancelled: true })
+    ).toEqual([finished])
   })
 })
 
@@ -601,7 +813,7 @@ describe("undoing an Event", () => {
     const game = await getGame(app, anna.headers, { gameId })
     expect(game.events).toEqual([{ type: "lost", loser: ids[2] }])
     expect(game.state.participants.map((p) => p.lives)).toEqual([3, 3, 2])
-    const [listed] = await listGames(app, anna.headers, { groupId })
+    const [listed] = (await listGames(app, anna.headers, { groupId })).items
     expect(listed.round).toBe(2)
   })
 
@@ -664,7 +876,7 @@ describe("undoing after the end of a Game", () => {
     expect(game.undoableUntil).toBeNull()
     expect(game.state.winner).toBeNull()
     expect(game.participants.map((p) => p.summary)).toEqual([null, null, null])
-    const [listed] = await listGames(app, anna.headers, { groupId })
+    const [listed] = (await listGames(app, anna.headers, { groupId })).items
     expect(listed).toMatchObject({ status: "running", winner: null })
   })
 
@@ -730,7 +942,9 @@ describe("cancelling a Game", () => {
     expect(game.finishedAt).toBeInstanceOf(Date)
     expect(game.undoableUntil).toBeNull()
     expect(game.participants.map((p) => p.summary)).toEqual([null, null, null])
-    expect(await listGames(app, anna.headers, { groupId })).toMatchObject([
+    expect(
+      (await listGames(app, anna.headers, { groupId })).items
+    ).toMatchObject([
       { id: gameId, status: "cancelled", round: 3, winner: null },
     ])
   })

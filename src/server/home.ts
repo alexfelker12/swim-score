@@ -1,6 +1,8 @@
 import { and, desc, eq, exists, inArray, max, ne, or, sql } from "drizzle-orm"
 import { game, participant, player } from "./db/schema"
-import { listMyGroups, playerName } from "./groups"
+import { listMyGroups, myGroupRows, playerName } from "./groups"
+import { pageOfSorted } from "./paging"
+import type { Page, PageRequest } from "./paging"
 import { requireUser } from "./session"
 import { replay } from "@/rules-engine"
 import type { App } from "./app"
@@ -43,8 +45,6 @@ export type Home = {
     groupName: string
     lastPlayedAt: Date | null
   } | null
-  /** Played most recently first; Groups without a Game after them, newest first. */
-  groups: Array<HomeGroup>
 }
 
 /**
@@ -52,14 +52,14 @@ export type Home = {
  * - the running Games it plays in, to continue or watch;
  * - the Group for "Neues Spiel": that of the latest Game it started or took
  *   part in (cancelled ones aside, like "zuletzt gespielt"), otherwise the
- *   Group it created or joined last;
- * - its Groups, with whether a Game runs and when they last played.
- * Groups it has left no longer count.
+ *   Group it created or joined last.
+ * Its Groups come a page at a time from `listHomeGroups`. Groups it has left
+ * no longer count.
  */
 export async function getHome(app: App, headers: Headers): Promise<Home> {
   const me = await requireUser(app, headers)
   const mine = await listMyGroups(app, headers)
-  if (mine.length === 0) return { runningGames: [], newGame: null, groups: [] }
+  if (mine.length === 0) return { runningGames: [], newGame: null }
   const groupIds = mine.map((g) => g.id)
   const inMyGroups = inArray(game.groupId, groupIds)
   const iTakePart = exists(
@@ -70,7 +70,7 @@ export async function getHome(app: App, headers: Headers): Promise<Home> {
       .where(and(eq(participant.gameId, game.id), eq(player.userId, me.id)))
   )
 
-  const [running, lastPlayed, latestMine, runningGroups] = await Promise.all([
+  const [running, lastPlayed, latestMine] = await Promise.all([
     app.db.query.game.findMany({
       where: and(inMyGroups, eq(game.status, "running"), iTakePart),
       orderBy: desc(game.startedAt),
@@ -90,11 +90,7 @@ export async function getHome(app: App, headers: Headers): Promise<Home> {
         events: { orderBy: (e, { asc }) => asc(e.version) },
       },
     }),
-    app.db
-      .select({ groupId: game.groupId, at: max(game.startedAt) })
-      .from(game)
-      .where(and(inMyGroups, ne(game.status, "cancelled")))
-      .groupBy(game.groupId),
+    lastPlayedIn(app, groupIds),
     app.db
       .select({ groupId: game.groupId })
       .from(game)
@@ -107,28 +103,7 @@ export async function getHome(app: App, headers: Headers): Promise<Home> {
       )
       .orderBy(desc(game.startedAt))
       .limit(1),
-    app.db
-      .selectDistinct({ groupId: game.groupId })
-      .from(game)
-      .where(and(inMyGroups, eq(game.status, "running"))),
   ])
-
-  const lastPlayedAt = (groupId: string) =>
-    lastPlayed.find((row) => row.groupId === groupId)?.at ?? null
-  const groups = mine
-    .map((g) => ({
-      id: g.id,
-      name: g.name,
-      playerCount: g.playerCount,
-      running: runningGroups.some((row) => row.groupId === g.id),
-      lastPlayedAt: lastPlayedAt(g.id),
-    }))
-    // Stable: Groups without Games keep the newest-joined-first order.
-    .sort(
-      (a, b) =>
-        (b.lastPlayedAt?.getTime() ?? -Infinity) -
-          (a.lastPlayedAt?.getTime() ?? -Infinity) || 0
-    )
 
   const target = mine.find((g) => g.id === latestMine.at(0)?.groupId) ?? mine[0]
 
@@ -166,8 +141,71 @@ export async function getHome(app: App, headers: Headers): Promise<Home> {
     newGame: {
       groupId: target.id,
       groupName: target.name,
-      lastPlayedAt: lastPlayedAt(target.id),
+      lastPlayedAt: lastPlayedAtIn(lastPlayed, target.id),
     },
-    groups,
   }
+}
+
+/**
+ * The account's Groups for "Meine Gruppen", a page at a time (#59): played
+ * most recently first (cancelled Games aside), Groups without a Game after
+ * them, newest joined first; with whether a Game runs.
+ */
+export async function listHomeGroups(
+  app: App,
+  headers: Headers,
+  input: { page?: PageRequest } = {}
+): Promise<Page<HomeGroup>> {
+  const me = await requireUser(app, headers)
+  const mine = await myGroupRows(app, me.id)
+  if (mine.length === 0) return { items: [], next: null }
+  const groupIds = mine.map((g) => g.id)
+  const [lastPlayed, runningGroups] = await Promise.all([
+    lastPlayedIn(app, groupIds),
+    app.db
+      .selectDistinct({ groupId: game.groupId })
+      .from(game)
+      .where(and(inArray(game.groupId, groupIds), eq(game.status, "running"))),
+  ])
+  const groups = mine.map((g) => ({
+    id: g.id,
+    name: g.name,
+    playerCount: g.playerCount,
+    running: runningGroups.some((row) => row.groupId === g.id),
+    lastPlayedAt: lastPlayedAtIn(lastPlayed, g.id),
+    joinedAt: g.joinedAt,
+  }))
+  const page = pageOfSorted(groups, input.page, {
+    shape: ["number|null", "number", "string"],
+    keyOf: (g) => [
+      g.lastPlayedAt?.getTime() ?? null,
+      g.joinedAt.getTime(),
+      g.id,
+    ],
+    // Never played (null) last; then newest joined; then by id.
+    compare: (a, b) =>
+      Number(b[0] ?? -Infinity) - Number(a[0] ?? -Infinity) ||
+      Number(b[1]) - Number(a[1]) ||
+      String(a[2]).localeCompare(String(b[2])),
+  })
+  return {
+    next: page.next,
+    items: page.items.map(({ joinedAt: _, ...group }) => group),
+  }
+}
+
+function lastPlayedAtIn(
+  lastPlayed: Array<{ groupId: string; at: Date | null }>,
+  groupId: string
+) {
+  return lastPlayed.find((row) => row.groupId === groupId)?.at ?? null
+}
+
+/** When each Group last played, cancelled Games aside. */
+function lastPlayedIn(app: App, groupIds: Array<string>) {
+  return app.db
+    .select({ groupId: game.groupId, at: max(game.startedAt) })
+    .from(game)
+    .where(and(inArray(game.groupId, groupIds), ne(game.status, "cancelled")))
+    .groupBy(game.groupId)
 }

@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { Plus } from "lucide-react"
+import { ListEnd } from "@/components/list-end"
 import { PersonAvatar } from "@/components/person-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/card"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Item,
   ItemContent,
@@ -21,7 +23,8 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item"
-import { groupChanged } from "@/lib/queries"
+import { usePagedQuery } from "@/lib/paged-query"
+import { groupChanged, groupPlayersQuery } from "@/lib/queries"
 import { addGuestFn, confirmClaimFn, rejectClaimFn } from "@/server/functions"
 import { mergeErrors } from "./-link-guest-sheet"
 import type { GroupPlayer, GroupView } from "@/server/groups"
@@ -33,8 +36,9 @@ const guestErrors: Partial<Record<string, string>> = {
 }
 
 /**
- * Tab "Spieler": add a Guest, the Player list and, for the Group Admin
- * (`management`), open Claims. Linking a Guest is in "Gruppe verwalten".
+ * Tab "Spieler": add a Guest, the Player list (more load at its end, #59)
+ * and, for the Group Admin (`management`), open Claims. Linking a Guest is
+ * in "Gruppe verwalten".
  */
 export function PlayersTab({
   group,
@@ -44,6 +48,7 @@ export function PlayersTab({
   management: GroupManagement | null
 }) {
   const queryClient = useQueryClient()
+  const players = usePagedQuery(groupPlayersQuery(group.id))
   const [name, setName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -114,9 +119,13 @@ export function PlayersTab({
       </form>
 
       <ItemGroup className="gap-0">
-        {group.players.map((p) => (
+        {players.items.map((p) => (
           <PlayerRow key={p.id} player={p} />
         ))}
+        <ListEnd
+          list={players}
+          placeholder={<Skeleton variant="card" className="h-15" />}
+        />
       </ItemGroup>
 
       {group.formerPlayers.length > 0 ? (
@@ -128,6 +137,7 @@ export function PlayersTab({
             <Link
               to="/groups/$groupId/settings"
               params={{ groupId: group.id }}
+              hash="former"
             />
           }
           className="-ml-3.5 self-start"

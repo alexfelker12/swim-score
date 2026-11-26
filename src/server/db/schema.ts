@@ -109,9 +109,10 @@ const bytea = customType<{ data: Uint8Array; driverData: Uint8Array }>({
 export type AvatarCrop = { x: number; y: number; size: number }
 
 /**
- * An uploaded profile picture: the 256 px avatar everyone sees, plus the
- * (downscaled) source image and crop so its owner can adjust it later. One
- * per account; a new picture replaces all three.
+ * An uploaded profile picture: the 256 px avatar everyone sees, a large one
+ * (up to 1024 px) for the zoomed picture (#62), plus the (downscaled) source
+ * image and crop so its owner can adjust it later. One per account; a new
+ * picture replaces all of them.
  */
 export const avatar = pgTable("avatar", {
   userId: text("user_id")
@@ -119,6 +120,9 @@ export const avatar = pgTable("avatar", {
     .references(() => user.id, { onDelete: "cascade" }),
   contentType: text("content_type").notNull(),
   data: bytea("data").notNull(),
+  /** Missing for pictures stored before #62; the zoom then shows `data`. */
+  largeContentType: text("large_content_type"),
+  large: bytea("large"),
   /** Missing for pictures stored before cropping existed. */
   sourceContentType: text("source_content_type"),
   source: bytea("source"),

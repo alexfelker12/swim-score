@@ -99,6 +99,9 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
 
 /** Side of the stored avatar, in px. */
 export const AVATAR_SIDE = 256
+/** Longest side of the large picture for zooming in (#62), in px. */
+export const LARGE_SIDE = 1024
+export const LARGE_MAX_BYTES = 512 * 1024
 /** Longest side of the stored source image, in px. */
 export const SOURCE_MAX_SIDE = 1600
 export const SOURCE_MAX_BYTES = 1024 * 1024
@@ -108,21 +111,46 @@ export function renderAvatar(
   image: HTMLImageElement,
   crop: AvatarCrop
 ): Promise<Blob> {
+  return encode(renderCrop(image, crop, AVATAR_SIDE), 0.85)
+}
+
+/**
+ * The large picture for zooming in (#62): the crop at up to 1024 px, never
+ * larger than the source has pixels for it, and at most 512 KB.
+ */
+export async function renderLarge(
+  image: HTMLImageElement,
+  crop: AvatarCrop
+): Promise<Blob> {
+  const available = Math.round(
+    crop.size * Math.min(image.naturalWidth, image.naturalHeight)
+  )
+  const side = Math.max(AVATAR_SIDE, Math.min(LARGE_SIDE, available))
+  const canvas = renderCrop(image, crop, side)
+  for (const quality of [0.85, 0.7, 0.5]) {
+    const blob = await encode(canvas, quality)
+    if (blob.size <= LARGE_MAX_BYTES) return blob
+  }
+  throw new Error("The picture is too large")
+}
+
+/** The crop drawn on a square canvas of `side` px. */
+function renderCrop(image: HTMLImageElement, crop: AvatarCrop, side: number) {
   const short = Math.min(image.naturalWidth, image.naturalHeight)
-  const side = crop.size * short
-  const canvas = createCanvas(AVATAR_SIDE, AVATAR_SIDE)
+  const cropSide = crop.size * short
+  const canvas = createCanvas(side, side)
   context(canvas).drawImage(
     image,
     crop.x * image.naturalWidth,
     crop.y * image.naturalHeight,
-    side,
-    side,
+    cropSide,
+    cropSide,
     0,
     0,
-    AVATAR_SIDE,
-    AVATAR_SIDE
+    side,
+    side
   )
-  return encode(canvas, 0.85)
+  return canvas
 }
 
 /** The source image, scaled down to at most 1600 px on its longer side. */

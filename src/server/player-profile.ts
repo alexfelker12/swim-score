@@ -25,14 +25,18 @@ export type PersonalMetric = {
   value: number | null
 }
 
-/** The Personal Stats of one Group, on a card that links to its Leaderboard. */
+/**
+ * The Personal Stats of one Group, on a card that links to its Leaderboard:
+ * the rates as the Group Leaderboard computes them (#62). Null below the
+ * Leaderboard's minimum number of Games, like a Player it doesn't rank yet.
+ */
 export type GroupStats = {
   groupId: string
   name: string
   games: number
-  wins: number
-  /** Null without Games. */
   winRate: number | null
+  swimRate: number | null
+  bombsPerGame: number | null
 }
 
 export type PlayerProfile = {
@@ -59,6 +63,8 @@ export type PlayerProfile = {
    */
   groups: Array<GroupStats>
 }
+
+const METRIC_BY_ID = Object.fromEntries(METRICS.map((m) => [m.id, m]))
 
 /** Teilnahmen leads the tiles; every other metric follows in its order. */
 const TILE_ORDER = [
@@ -148,13 +154,19 @@ export async function getPlayerProfile(
       .map((g) => {
         const counts = perGroup.find((row) => row.groupId === g.id)
         const games = counts?.games ?? 0
-        const wins = counts?.wins ?? 0
+        const rate = (id: "winRate" | "swimRate" | "bombsPerGame") => {
+          const metric = METRIC_BY_ID[id]
+          return games < (metric.minGames ?? 0)
+            ? null
+            : metricValue(metric, counts?.[id] ?? 0, games)
+        }
         return {
           groupId: g.id,
           name: g.name,
           games,
-          wins,
-          winRate: games === 0 ? null : wins / games,
+          winRate: rate("winRate"),
+          swimRate: rate("swimRate"),
+          bombsPerGame: rate("bombsPerGame"),
         }
       })
       .sort((a, b) => b.games - a.games || byName.compare(a.name, b.name)),

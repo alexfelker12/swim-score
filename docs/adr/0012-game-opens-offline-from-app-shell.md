@@ -1,6 +1,6 @@
 # A running Game opens offline from the app shell and data kept on the device
 
-The Scorekeeper must be able to open a running Game and count on with no connection, also after the app was closed (#53, ADR 0003). Until now the queue (ADR 0007) survived a reload, but the page itself needed the server: it is rendered there, and the root route asks the server for the Viewer on every navigation. The prototype in #52 settled how the page starts without it.
+The Scorekeeper must be able to open a running Game and count on with no connection, also after the app was closed (#53, ADR 0003). Until now the queue (ADR 0007) survived a reload, but the page itself needed the server: it is rendered there, and the root route asks the server for the Viewer on every navigation (since #58 only when it doesn't know it yet, ADR 0016). The prototype in #52 settled how the page starts without it.
 
 ## Decision
 
