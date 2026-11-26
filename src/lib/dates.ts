@@ -187,3 +187,16 @@ export function formatAgo(date: Date, now = new Date()): string {
   if (minutes < 24 * 60) return `vor ${Math.floor(minutes / 60)} Std.`
   return formatWhen(date, now)
 }
+
+/**
+ * How long a Game took: "45 Min.", "1 Std. 20 Min."; null for no sensible
+ * length (missing, negative or over a day, as some imported Games have).
+ */
+export function formatDuration(from: Date, to: Date | null): string | null {
+  if (!to) return null
+  const minutes = Math.round((to.getTime() - from.getTime()) / 60_000)
+  if (minutes < 1 || minutes >= 24 * 60) return null
+  if (minutes < 60) return `${minutes} Min.`
+  const rest = minutes % 60
+  return `${Math.floor(minutes / 60)} Std.${rest > 0 ? ` ${rest} Min.` : ""}`
+}

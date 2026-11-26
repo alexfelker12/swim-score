@@ -35,17 +35,19 @@ import {
   groupManagementQuery,
   groupQuery,
 } from "@/lib/queries"
+import { gameFilterOf, withoutGameFilter } from "@/lib/game-filter"
 import { loadPageData } from "@/lib/page-data"
 import { periodFromSearch } from "@/lib/period-search"
 import { GamesTab } from "./-games-tab"
 import { LeaderboardTab } from "./-leaderboard-tab"
+import type { GameFilter } from "@/server/games"
 import type { Period } from "@/server/stats"
 import { PlayersTab } from "./-players-tab"
 
 const TABS = ["games", "leaderboard", "players"] as const
 type Tab = (typeof TABS)[number]
 
-type GroupSearch = {
+type GroupSearch = GameFilter & {
   tab?: Tab
   /** The Leaderboard's metric. */
   metric?: string
@@ -59,8 +61,10 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
     ...(TABS.includes(search.tab as Tab) ? { tab: search.tab as Tab } : {}),
     ...(typeof search.metric === "string" ? { metric: search.metric } : {}),
     ...periodFromSearch(search),
+    ...gameFilterOf(search),
   }),
   loaderDeps: ({ search }) => ({
+    games: gameFilterOf(search),
     leaderboard: search.tab === "leaderboard",
     players: search.tab === "players",
     from: search.from,
@@ -71,7 +75,9 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
       const { queryClient } = context
       const [group] = await Promise.all([
         queryClient.query(groupQuery(params.groupId)),
-        queryClient.fetchInfiniteQuery(groupGamesQuery(params.groupId)),
+        queryClient.fetchInfiniteQuery(
+          groupGamesQuery(params.groupId, deps.games)
+        ),
         deps.players
           ? queryClient.fetchInfiniteQuery(groupPlayersQuery(params.groupId))
           : null,
@@ -165,7 +171,19 @@ function GroupPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="games" className="flex flex-col">
-          <GamesTab groupId={group.id} />
+          <GamesTab
+            groupId={group.id}
+            filter={gameFilterOf(search)}
+            onFilterChange={(filter) =>
+              navigate({
+                search: (previous) => ({
+                  ...withoutGameFilter(previous),
+                  ...gameFilterOf(filter),
+                }),
+                replace: true,
+              })
+            }
+          />
         </TabsContent>
         <TabsContent value="leaderboard">
           <GroupLeaderboard

@@ -49,6 +49,7 @@ import {
 } from "./profile"
 import type { GameEvent } from "@/rules-engine"
 import type { App } from "./app"
+import type { GameFilter } from "./games"
 import type { Page, PageRequest } from "./paging"
 import type { AvatarCrop, Theme } from "./profile"
 
@@ -259,9 +260,12 @@ export const getSpectatorGameFn = createServerFn({ method: "GET" })
   .validator((input: { token: string }) => input)
   .handler(({ data }) => outcome(() => getSpectatorGame(getApp(), data)))
 
-/** The Group's Games, newest first, or none when the viewer is not its Player. */
+/**
+ * The Group's Games, running ones and then the newest first, as `filter`
+ * keeps them; none when the viewer is not its Player.
+ */
 export const listGamesFn = createServerFn({ method: "GET" })
-  .validator(pagedInput<{ groupId: string }>())
+  .validator(pagedInput<{ groupId: string; filter?: GameFilter }>())
   .handler(pageOrNone(listGames))
 
 /** The Group's current Players by name, or none when the viewer is not one. */

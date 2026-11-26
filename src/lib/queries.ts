@@ -1,8 +1,10 @@
+import { gameFilterOf } from "@/lib/game-filter"
 import { orKept } from "@/lib/kept-on-device"
 import { pagedQueryOptions } from "@/lib/paged-query"
 import { queryOptions } from "@tanstack/react-query"
 import type { QueryClient } from "@tanstack/react-query"
 import type { GameStatus } from "@/server/db/schema"
+import type { GameFilter } from "@/server/games"
 import {
   getGameFn,
   getGroupFn,
@@ -32,6 +34,7 @@ export const queryKeys = {
   /** Prefix of everything about one Group. */
   group: (groupId: string) => ["group", groupId] as const,
   groupView: (groupId: string) => ["group", groupId, "view"] as const,
+  /** Prefix of the Group's Games, filtered or not. */
   groupGames: (groupId: string) => ["group", groupId, "games"] as const,
   groupPlayers: (groupId: string) => ["group", groupId, "players"] as const,
   /** Every metric at once, for one period; `""` for an open end. */
@@ -108,11 +111,16 @@ export function groupQuery(groupId: string) {
   })
 }
 
-/** The Group's Games, newest first, 15 at a time (#59). */
-export function groupGamesQuery(groupId: string) {
+/**
+ * The Group's Games, running ones and then the newest first, 15 at a time
+ * (#59), as `filter` keeps them (#60).
+ */
+export function groupGamesQuery(groupId: string, filter: GameFilter = {}) {
+  // Only what is set, in one order: the same filter is the same query.
+  const set = gameFilterOf(filter)
   return pagedQueryOptions({
-    queryKey: queryKeys.groupGames(groupId),
-    queryFn: (page) => listGamesFn({ data: { groupId, page } }),
+    queryKey: [...queryKeys.groupGames(groupId), set],
+    queryFn: (page) => listGamesFn({ data: { groupId, filter: set, page } }),
   })
 }
 
