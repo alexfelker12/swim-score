@@ -10,6 +10,7 @@ import { TanStackDevtools } from "@tanstack/react-devtools"
 import { PageNotFound } from "@/components/page-not-found"
 import { UpdateNotice } from "@/components/update-notice"
 import { appHeadLinks, appHeadMeta, themeColorTags } from "@/lib/pwa"
+import { systemThemeScript, useTheme } from "@/lib/theme"
 // Catches the browser's install event early, see the module.
 import "@/lib/install-app"
 import { useNoLongPressMenu } from "@/lib/no-long-press-menu"
@@ -18,11 +19,6 @@ import { keepViewer, loadViewer } from "@/lib/viewer"
 import type { RouterContext } from "@/router"
 
 import appCss from "../styles.css?url"
-
-// For the "System" theme the class can only be decided in the browser,
-// before the first paint. Runs once in the server-rendered page; switching
-// themes later is handled by useSystemTheme.
-const systemThemeScript = `if(matchMedia("(prefers-color-scheme: dark)").matches)document.documentElement.classList.add("dark")`
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async () => ({ viewer: await loadViewer() }),
@@ -46,16 +42,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const theme = Route.useRouteContext({
     select: (context) => context.viewer?.theme ?? "dark",
   })
-  useSystemTheme(theme === "system")
+  const themeClass = useTheme(theme)
   useEffect(registerServiceWorker, [])
   useRememberHydratedViewer()
   useNoLongPressMenu()
   return (
-    <html
-      lang="de"
-      className={theme === "dark" ? "dark" : undefined}
-      suppressHydrationWarning
-    >
+    <html lang="de" className={themeClass} suppressHydrationWarning>
       <head>
         <HeadContent />
         {theme === "system" ? (
@@ -85,19 +77,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </body>
     </html>
   )
-}
-
-/** With the "System" theme, follow the device's setting, also when it changes. */
-function useSystemTheme(active: boolean) {
-  useEffect(() => {
-    if (!active) return
-    const query = matchMedia("(prefers-color-scheme: dark)")
-    const apply = () =>
-      document.documentElement.classList.toggle("dark", query.matches)
-    apply()
-    query.addEventListener("change", apply)
-    return () => query.removeEventListener("change", apply)
-  }, [active])
 }
 
 /**

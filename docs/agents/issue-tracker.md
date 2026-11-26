@@ -13,6 +13,8 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
 
+If `gh issue …` fails because GraphQL is blocked (some agent environments), use the REST API instead: read with `gh api repos/<owner>/<repo>/issues/<n> --jq .body`, update title or body (e.g. to tick acceptance criteria) with `gh api -X PATCH repos/<owner>/<repo>/issues/<n> -f title=… -F body=@file.md`.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_

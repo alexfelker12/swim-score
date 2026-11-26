@@ -14,7 +14,7 @@ Single-context: ein `CONTEXT.md` und `docs/adr/` im Repo-Root. See `docs/agents/
 
 ### Workflow
 
-Ein Ticket = ein Branch = ein PR; Agents committen und pushen nicht. See `docs/agents/workflow.md`.
+Ein Ticket = ein Branch = ein PR; Agents committen und pushen nicht, sondern geben Commit-Titel und PR-Text zum Kopieren mit. Kleine Ergänzungen des Menschen kommen ins laufende Issue, nicht in ein neues. Keine Screenshots oder Arbeitsdateien an den Menschen schicken. See `docs/agents/workflow.md`.
 
 ### UI
 
