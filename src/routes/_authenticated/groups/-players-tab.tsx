@@ -137,6 +137,7 @@ export function PlayersTab({
             <Link
               to="/groups/$groupId/settings"
               params={{ groupId: group.id }}
+              hash="former"
             />
           }
           className="-ml-3.5 self-start"
