@@ -1,6 +1,6 @@
 import { Unlink } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
-import { Logo } from "@/components/logo"
+import { PageHeader } from "@/components/page-header"
 import { Page } from "@/components/page"
 import { cn } from "@/lib/utils"
 import type { ComponentProps } from "react"
@@ -27,9 +27,7 @@ import type { ComponentProps } from "react"
 export function LinkGone({ children, ...props }: ComponentProps<"div">) {
   return (
     <Page data-slot="link-gone" {...props}>
-      <header className="flex h-14 shrink-0 items-center px-5">
-        <Logo />
-      </header>
+      <PageHeader variant="brand" />
       {children}
     </Page>
   )

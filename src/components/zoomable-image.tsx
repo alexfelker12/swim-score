@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import type { ComponentProps, PointerEvent } from "react"
 
@@ -9,18 +9,29 @@ const MAX_SCALE = 4
 /** Zoom of a double tap. */
 const TAP_SCALE = 2.5
 const DOUBLE_TAP_MS = 300
+/** How far a swipe has to go before it closes, in px. */
+const SWIPE_CLOSE = 96
 
 /**
  * An image to zoom into with two fingers or a double tap, and to move while
  * zoomed in (the zoomed profile picture, #62). Never smaller than it fits,
- * never moved out of its box.
+ * never moved out of its box. Not zoomed in, a single tap or a swipe down
+ * calls `onDismiss`. Under a finger the image follows at once; on its own
+ * (double tap, snapping back after a short swipe) it moves smoothly.
  */
 export function ZoomableImage({
   className,
   style,
+  onDismiss,
   ...props
-}: ComponentProps<"img">) {
+}: ComponentProps<"img"> & { onDismiss?: () => void }) {
   const [view, setView] = useState<View>({ scale: 1, x: 0, y: 0 })
+  /** How far a swipe to close has moved the image, in px. */
+  const [swipe, setSwipe] = useState(0)
+  /** A finger is on the image: it follows without a transition. */
+  const [touching, setTouching] = useState(false)
+  const singleTap = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => () => clearTimeout(singleTap.current), [])
   const box = useRef<HTMLDivElement>(null)
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const gesture = useRef<{
@@ -83,6 +94,7 @@ export function ZoomableImage({
       y: event.clientY,
     })
     lastTap.current.moved = false
+    setTouching(true)
     if (pointers.current.size === 2) startPinch()
   }
 
@@ -100,6 +112,9 @@ export function ZoomableImage({
       const scale =
         (start.view.scale * Math.hypot(a.x - b.x, a.y - b.y)) / start.distance
       setView(zoomAround(start.view, scale, start.focus))
+    } else if (pointers.current.size === 1 && view.scale === 1) {
+      // Only down: up there is nothing to close towards.
+      setSwipe((y) => Math.max(0, y + point.y - previous.y))
     } else if (pointers.current.size === 1 && view.scale > 1) {
       setView((v) =>
         clamp({
@@ -114,10 +129,17 @@ export function ZoomableImage({
   function onPointerUp(event: PointerEvent<HTMLDivElement>) {
     pointers.current.delete(event.pointerId)
     if (pointers.current.size < 2) gesture.current = null
-    if (pointers.current.size > 0 || lastTap.current.moved) return
+    if (pointers.current.size > 0) return
+    setTouching(false)
+    if (swipe !== 0) {
+      if (swipe > SWIPE_CLOSE && onDismiss) onDismiss()
+      else setSwipe(0)
+    }
+    if (lastTap.current.moved) return
     const now = performance.now()
     if (now - lastTap.current.at < DOUBLE_TAP_MS) {
       lastTap.current.at = 0
+      clearTimeout(singleTap.current)
       setView((v) =>
         v.scale > 1
           ? { scale: 1, x: 0, y: 0 }
@@ -125,6 +147,9 @@ export function ZoomableImage({
       )
     } else {
       lastTap.current.at = now
+      if (view.scale === 1 && onDismiss) {
+        singleTap.current = setTimeout(onDismiss, DOUBLE_TAP_MS)
+      }
     }
   }
 
@@ -141,9 +166,14 @@ export function ZoomableImage({
     >
       <img
         draggable={false}
-        className={cn("size-full object-contain", className)}
+        data-touching={touching || undefined}
+        className={cn(
+          "size-full object-contain transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] data-touching:transition-none motion-reduce:transition-none",
+          className
+        )}
         style={{
-          transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,
+          transform: `translate(${view.x}px, ${view.y + swipe}px) scale(${view.scale})`,
+          opacity: 1 - Math.min(0.5, swipe / (SWIPE_CLOSE * 4)),
           ...style,
         }}
         {...props}

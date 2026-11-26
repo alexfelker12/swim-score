@@ -37,7 +37,7 @@ export function AuthPage({
       <header
         className={cn(
           "flex h-18 shrink-0 items-center",
-          back ? "gap-3 px-3" : "px-6"
+          back ? "gap-3 px-2" : "px-6"
         )}
       >
         {back ? (
