@@ -22,6 +22,7 @@ export type Profile = {
 const MAX_NAME_LENGTH = 30
 const MAX_AVATAR_BYTES = 256 * 1024
 const MAX_SOURCE_BYTES = 1024 * 1024
+const MAX_LARGE_BYTES = 512 * 1024
 
 export async function getProfile(app: App, headers: Headers): Promise<Profile> {
   const { id } = await requireUser(app, headers)
@@ -100,21 +101,30 @@ export async function setTheme(
 }
 
 /**
- * Stores a profile picture the browser has already cropped and resized,
+ * Stores a profile picture the browser has already cropped and resized, in
+ * the small size for avatars and the large one for the zoomed picture,
  * together with the downscaled source image and the crop, replacing any
  * earlier picture.
  */
 export async function setAvatar(
   app: App,
   headers: Headers,
-  input: { avatar: Uint8Array; source: Uint8Array; crop: AvatarCrop }
+  input: {
+    avatar: Uint8Array
+    large: Uint8Array
+    source: Uint8Array
+    crop: AvatarCrop
+  }
 ): Promise<void> {
   const { id } = await requireUser(app, headers)
   const contentType = imageType(input.avatar)
+  const largeContentType = imageType(input.large)
   const sourceContentType = imageType(input.source)
   if (
     !contentType ||
     input.avatar.byteLength > MAX_AVATAR_BYTES ||
+    !largeContentType ||
+    input.large.byteLength > MAX_LARGE_BYTES ||
     !sourceContentType ||
     input.source.byteLength > MAX_SOURCE_BYTES
   ) {
@@ -125,6 +135,8 @@ export async function setAvatar(
   const values = {
     contentType,
     data: input.avatar,
+    largeContentType,
+    large: input.large,
     sourceContentType,
     source: input.source,
     crop: { x, y, size },
@@ -220,17 +232,25 @@ function imageType(data: Uint8Array): string | null {
   return null
 }
 
-/** A player's uploaded profile picture; only for signed-in accounts. */
+/**
+ * A player's uploaded profile picture, small or large (the zoomed picture,
+ * #62; the small one for pictures from before); only for signed-in accounts.
+ */
 export async function getAvatar(
   app: App,
   headers: Headers,
-  userId: string
+  userId: string,
+  size: "small" | "large" = "small"
 ): Promise<{ contentType: string; data: Uint8Array } | null> {
   await requireUser(app, headers)
   const row = await app.db.query.avatar.findFirst({
     where: eq(avatar.userId, userId),
   })
-  return row ? { contentType: row.contentType, data: row.data } : null
+  if (!row) return null
+  if (size === "large" && row.large && row.largeContentType) {
+    return { contentType: row.largeContentType, data: row.large }
+  }
+  return { contentType: row.contentType, data: row.data }
 }
 
 /**

@@ -131,22 +131,25 @@ export const setThemeFn = createServerFn({ method: "POST" })
 export const setAvatarFn = createServerFn({ method: "POST" })
   .validator((input: FormData) => {
     const avatar = input.get("avatar")
+    const large = input.get("large")
     const source = input.get("source")
     const crop = input.get("crop")
     if (
       !(avatar instanceof File) ||
+      !(large instanceof File) ||
       !(source instanceof File) ||
       typeof crop !== "string"
     ) {
-      throw new Error("avatar, source and crop are required")
+      throw new Error("avatar, large, source and crop are required")
     }
     // The command checks the crop's shape; malformed JSON becomes no crop.
-    return { avatar, source, crop: parseJson(crop) as AvatarCrop }
+    return { avatar, large, source, crop: parseJson(crop) as AvatarCrop }
   })
   .handler(({ data }) =>
     outcome(async () =>
       setAvatar(getApp(), headers(), {
         avatar: new Uint8Array(await data.avatar.arrayBuffer()),
+        large: new Uint8Array(await data.large.arrayBuffer()),
         source: new Uint8Array(await data.source.arrayBuffer()),
         crop: data.crop,
       })

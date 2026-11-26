@@ -57,6 +57,13 @@
       "when": 1794502717487,
       "tag": "0007_takeover",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795719346248,
+      "tag": "0008_avatar_large",
+      "breakpoints": true
     }
   ]
-}
+}

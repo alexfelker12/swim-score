@@ -182,6 +182,7 @@ function AdminSettings({
                   variant={p.guest ? "guest" : "account"}
                   name={p.name}
                   image={p.image}
+                  zoomable
                 />
               </ItemMedia>
               <ItemContent className="min-w-0 gap-0.5">

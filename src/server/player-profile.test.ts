@@ -112,15 +112,17 @@ describe("Player Profile", () => {
         groupId: thursday,
         name: "Donnerstagsrunde",
         games: 2,
-        wins: 1,
         winRate: 0.5,
+        swimRate: 0.5,
+        bombsPerGame: 0,
       },
       {
         groupId: family,
         name: "Familie am See",
         games: 1,
-        wins: 1,
         winRate: 1,
+        swimRate: 0,
+        bombsPerGame: 0,
       },
     ])
   })
@@ -150,8 +152,9 @@ describe("Player Profile", () => {
         groupId: thursday,
         name: "Donnerstagsrunde",
         games: 1,
-        wins: 1,
         winRate: 1,
+        swimRate: 0,
+        bombsPerGame: 0,
       },
     ])
   })

@@ -117,7 +117,12 @@ function ProfilePage() {
       </PageHeader>
 
       <ProfileHeading className="px-5 pt-1 pb-3.5">
-        <PersonAvatar size="lg" name={profile.name} image={profile.image} />
+        <PersonAvatar
+          size="lg"
+          name={profile.name}
+          image={profile.image}
+          zoomable
+        />
         <ProfileHeadingContent>
           <ProfileHeadingTitle>{profile.name}</ProfileHeadingTitle>
           <ProfileHeadingDescription>

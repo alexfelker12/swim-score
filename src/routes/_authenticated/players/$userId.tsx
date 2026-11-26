@@ -69,7 +69,12 @@ function PlayerProfilePage() {
         ) : null}
       </PageHeader>
       <ProfileHeading size="lg" className="px-5 pt-1 pb-4">
-        <PersonAvatar size="xl" name={profile.name} image={profile.image} />
+        <PersonAvatar
+          size="xl"
+          name={profile.name}
+          image={profile.image}
+          zoomable
+        />
         <ProfileHeadingContent>
           <ProfileHeadingTitle as="h1">{profile.name}</ProfileHeadingTitle>
           <ProfileHeadingDescription>
