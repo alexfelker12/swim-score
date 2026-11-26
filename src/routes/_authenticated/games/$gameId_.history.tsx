@@ -32,7 +32,10 @@ import {
 import { gameQuery } from "@/lib/queries"
 import type { GameView } from "@/server/games"
 
-/** "Spielverlauf": the Game Round by Round, for every Player of the Group. */
+/**
+ * "Spielverlauf": the Game Round by Round, the last one first, for every
+ * Player of the Group.
+ */
 export const Route = createFileRoute("/_authenticated/games/$gameId_/history")({
   loader: ({ context, params, cause }) =>
     loadPageData(cause, async () => {
@@ -79,18 +82,29 @@ function HistoryPage() {
             Noch keine Runde gezählt.
           </SectionDescription>
         ) : (
+          // Newest first, under the outcome: the history is read looking
+          // back, and a running Game shows its last Round at the top. The
+          // start closes the list at the bottom.
           <HistoryList>
-            {entries.map((entry, index) => (
-              <HistoryEntry
-                key={index}
-                round={entry.round}
-                text={entry.text}
-                meta={entry.meta}
-                bomb={entry.bomb}
-                end={entry.end}
-                muted={entry.extraRound || entry.takeover}
-              />
-            ))}
+            {entries
+              .map((entry, index) => (
+                <HistoryEntry
+                  key={index}
+                  round={entry.round}
+                  text={entry.text}
+                  meta={entry.meta}
+                  bomb={entry.bomb}
+                  end={entry.end}
+                  muted={entry.extraRound || entry.takeover}
+                />
+              ))
+              .reverse()}
+            <HistoryEntry
+              round={null}
+              text="Spielbeginn"
+              meta={`${formatTime(game.startedAt)}, ${game.participants.length} Teilnehmer`}
+              muted
+            />
           </HistoryList>
         )}
       </main>

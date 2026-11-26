@@ -204,9 +204,21 @@ type Drag = {
   pageY: number
 }
 
+/**
+ * How far a row dragged from `from` moves for a pointer `offset` pixels
+ * away: never above the first seat or below the last (#63), however far
+ * or fast the pointer goes.
+ */
+function dragOffset(from: number, offset: number, count: number) {
+  return Math.max(
+    -from * ROW_PITCH,
+    Math.min((count - 1 - from) * ROW_PITCH, offset)
+  )
+}
+
 /** Where a row dragged from `from` by `offset` pixels lands. */
 function dropIndex(from: number, offset: number, count: number) {
-  return Math.max(0, Math.min(count - 1, from + Math.round(offset / ROW_PITCH)))
+  return from + Math.round(dragOffset(from, offset, count) / ROW_PITCH)
 }
 
 /** Pixels from the screen's top and bottom edge in which dragging scrolls. */
@@ -293,7 +305,9 @@ function SeatingList({
     abandon.current = stop
   }
 
-  const offset = drag ? drag.pageY - drag.startY : 0
+  const offset = drag
+    ? dragOffset(drag.from, drag.pageY - drag.startY, ids.length)
+    : 0
   const to = drag ? dropIndex(drag.from, offset, ids.length) : 0
   /** The order as it would be if the dragged row were released now. */
   const order = drag ? moved(ids, drag.from, to) : ids
