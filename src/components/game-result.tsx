@@ -1,5 +1,5 @@
 import { cva } from "class-variance-authority"
-import { Trophy } from "lucide-react"
+import { Trophy, Waves } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -41,8 +41,10 @@ export function WinnerHeading({
 }
 
 /**
- * The places at the end: Platz, name, lives lost, Bombs. The winner's place
- * in the primary colour, the Swimmer's row tinted.
+ * The places at the end: Platz, name, lives lost, Bombs (#63). Place, name
+ * and values stand evenly apart; a long name wraps, the values never do.
+ * The winner's place in the primary colour; the Swimmer's row tinted, with
+ * the Swimmer icon left of the name.
  *
  * ```tsx
  * <ResultTable>
@@ -55,12 +57,18 @@ export function ResultTable({ children }: { children: ReactNode }) {
     <Table className="tabular-nums">
       <TableHeader>
         <TableRow>
-          <TableHead className="w-14 pl-3">Platz</TableHead>
-          <TableHead>
+          <TableHead className={cellVariants({ column: "place" })}>
+            Platz
+          </TableHead>
+          <TableHead className={cellVariants({ column: "name" })}>
             <span className="sr-only">Name</span>
           </TableHead>
-          <TableHead className="w-18 text-right">Leben</TableHead>
-          <TableHead className="w-22 pr-3 text-right">Bomben</TableHead>
+          <TableHead className={cellVariants({ column: "lives" })}>
+            Leben
+          </TableHead>
+          <TableHead className={cellVariants({ column: "bombs" })}>
+            Bomben
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody className="[&_tr:last-child]:border-b">{children}</TableBody>
@@ -68,7 +76,23 @@ export function ResultTable({ children }: { children: ReactNode }) {
   )
 }
 
-const placeVariants = cva("pl-3 text-lg", {
+/**
+ * One column, the same in the header and in every row: 10 px on both sides
+ * of every cell, 12 px at the table's edges. Place and values only as wide
+ * as their widest entry; the name takes the rest.
+ */
+const cellVariants = cva("px-2.5 first:pl-3 last:pr-3", {
+  variants: {
+    column: {
+      place: "w-px text-center",
+      name: "py-3 whitespace-normal",
+      lives: "w-px text-right text-muted-foreground",
+      bombs: "w-px text-right text-muted-foreground",
+    },
+  },
+})
+
+const placeVariants = cva("text-lg", {
   variants: {
     first: {
       true: "font-bold text-primary",
@@ -77,7 +101,7 @@ const placeVariants = cva("pl-3 text-lg", {
   },
 })
 
-const nameVariants = cva("text-lg whitespace-normal", {
+const nameVariants = cva("text-lg leading-snug break-words hyphens-auto", {
   variants: {
     first: { true: "font-bold", false: "font-medium" },
   },
@@ -94,7 +118,7 @@ export function ResultRow({
 }: ComponentProps<typeof TableRow> & {
   place: number
   name: string
-  /** Swam in this Game: the row is tinted. */
+  /** Swam in this Game: the row is tinted, the Swimmer icon before the name. */
   swimmer: boolean
   /** "−3", or "0". */
   livesLost: string
@@ -107,15 +131,32 @@ export function ResultRow({
       className={cn("data-swimmer:bg-swimmer/12", className)}
       {...props}
     >
-      <TableCell className={placeVariants({ first })}>{place}</TableCell>
-      <TableCell className={nameVariants({ first })}>
-        {name}
-        {swimmer ? <span className="sr-only">, Schwimmer</span> : null}
+      <TableCell
+        className={cn(
+          cellVariants({ column: "place" }),
+          placeVariants({ first })
+        )}
+      >
+        {place}
       </TableCell>
-      <TableCell className="text-right text-muted-foreground">
+      <TableCell className={cellVariants({ column: "name" })}>
+        <span className="flex items-center gap-2">
+          {swimmer ? (
+            <Waves
+              className="size-5 shrink-0 text-swimmer"
+              aria-hidden="true"
+            />
+          ) : null}
+          <span className={nameVariants({ first })}>
+            {name}
+            {swimmer ? <span className="sr-only">, Schwimmer</span> : null}
+          </span>
+        </span>
+      </TableCell>
+      <TableCell className={cellVariants({ column: "lives" })}>
         {livesLost}
       </TableCell>
-      <TableCell className="pr-3 text-right text-muted-foreground">
+      <TableCell className={cellVariants({ column: "bombs" })}>
         {bombs}
       </TableCell>
     </TableRow>
