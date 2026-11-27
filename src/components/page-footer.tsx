@@ -7,8 +7,11 @@ const pageFooterVariants = cva("flex shrink-0 flex-col gap-2.5 px-4 pb-6", {
     variant: {
       /** The page's main actions at its end, without a frame. */
       default: "pt-4",
-      /** Stays at the bottom while the page scrolls, with a line on top. */
-      sticky: "sticky bottom-0 border-t border-border bg-background pt-3",
+      /**
+       * Stays at the bottom while the page scrolls, with a line on top;
+       * above the page, also above a row being dragged.
+       */
+      sticky: "sticky bottom-0 z-20 border-t border-border bg-background pt-3",
       /** Under a scrolling area, with a line on top. */
       bordered: "border-t border-border pt-4",
     },

@@ -221,16 +221,39 @@ function dropIndex(from: number, offset: number, count: number) {
   return from + Math.round(dragOffset(from, offset, count) / ROW_PITCH)
 }
 
-/** Pixels from the screen's top and bottom edge in which dragging scrolls. */
-const SCROLL_ZONE = { top: 96, bottom: 150 }
-const MAX_SCROLL_SPEED = 14
+/**
+ * Pixels from the screen's top and bottom edge in which dragging scrolls;
+ * the bottom one is larger because the start button covers that edge.
+ */
+const SCROLL_ZONE = { top: 64, bottom: 112 }
+/** Pixels per frame, reached only at the very edge of the screen. */
+const MAX_SCROLL_SPEED = 10
+/** Over the last this many pixels before it stops, scrolling slows down. */
+const SCROLL_EASE_OUT = 64
+
+/**
+ * How fast the page scrolls along while dragging with the pointer at
+ * `clientY`: nothing outside the edge zones, inside them slowly at first and
+ * faster the deeper the pointer goes (eased in), the full speed only at the
+ * edge itself. Negative scrolls up.
+ */
+function edgeScrollSpeed(clientY: number, height: number) {
+  const intoTop = (SCROLL_ZONE.top - clientY) / SCROLL_ZONE.top
+  const intoBottom =
+    (clientY - (height - SCROLL_ZONE.bottom)) / SCROLL_ZONE.bottom
+  const depth = Math.min(1, Math.max(intoTop, intoBottom))
+  if (depth <= 0) return 0
+  return (intoTop > 0 ? -1 : 1) * MAX_SCROLL_SPEED * depth ** 2
+}
 
 /**
  * The Seating Order. A row moves by dragging its grip (finger or mouse) or
  * with the arrow keys while the grip has focus. While dragging, the order
  * stays as it is: the dragged row follows the pointer, the rows it passes
  * make room, and the new order is set on release. Near the top or bottom of
- * the screen the page scrolls along.
+ * the screen the page scrolls along, only until the first or last seat is
+ * in view outside that edge's zone (so the last one clear of the start
+ * button), slowing down before it stops; pulling further doesn't scroll.
  */
 function SeatingList({
   players,
@@ -258,6 +281,13 @@ function SeatingList({
     event.preventDefault()
     const from = ids.indexOf(id)
     const startY = event.clientY + window.scrollY
+    // Where the first seat starts and the last one ends, on the page.
+    const row = event.currentTarget
+      .closest("[data-slot=seat-row]")
+      ?.getBoundingClientRect()
+    const firstTop = (row?.top ?? 0) + window.scrollY - from * ROW_PITCH
+    const lastBottom =
+      (row?.bottom ?? 0) + window.scrollY + (ids.length - 1 - from) * ROW_PITCH
     let clientY = event.clientY
     let current: Drag = { id, from, startY, pageY: startY }
     setDrag(current)
@@ -268,16 +298,20 @@ function SeatingList({
     }
     // Scroll while the pointer is near an edge, every frame until released.
     let frame = requestAnimationFrame(function scroll() {
-      const fromTop = clientY - SCROLL_ZONE.top
-      const fromBottom = window.innerHeight - SCROLL_ZONE.bottom - clientY
-      const speed =
-        fromTop < 0
-          ? Math.max(-MAX_SCROLL_SPEED, fromTop / 6)
-          : fromBottom < 0
-            ? Math.min(MAX_SCROLL_SPEED, -fromBottom / 6)
-            : 0
-      if (speed !== 0) {
-        window.scrollBy(0, speed)
+      const speed = edgeScrollSpeed(clientY, window.innerHeight)
+      // How far the page may still go before the end seat is in view.
+      const room =
+        speed > 0
+          ? lastBottom -
+            window.scrollY -
+            (window.innerHeight - SCROLL_ZONE.bottom)
+          : SCROLL_ZONE.top - (firstTop - window.scrollY)
+      if (speed !== 0 && room >= 1) {
+        const eased = Math.abs(speed) * Math.min(1, room / SCROLL_EASE_OUT)
+        window.scrollBy(
+          0,
+          Math.sign(speed) * Math.min(room, Math.max(1, eased))
+        )
         update()
       }
       frame = requestAnimationFrame(scroll)
